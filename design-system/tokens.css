@@ -1,0 +1,203 @@
+/**
+ * VICROUND Design Tokens
+ * 來源：/Users/tim/webapps/Vicround/output/design-system.md
+ * 所有色號取自 CIS Guide Book（VICROUND_CIS Guide BooK_瀏覽檔.pdf）第 6-10, 27, 31, 34-37 頁。
+ * 標註〔推估值〕的 token 為 CIS 手冊未明確定義、依現有素材合理推算之建議值，
+ * 正式印刷/精確校色請另核對 Pantone Colour Formula Guide 最新版本。
+ */
+
+:root {
+  /* ============================================================
+   * 1. 品牌主色 Brand Main Colours（CIS p.6）
+   * ============================================================ */
+  --color-brand-black: #000000;   /* PANTONE Black C | K100 | CIS p.6 */
+  --color-brand-white: #ffffff;   /* White | K0 | CIS p.6 */
+
+  /* ============================================================
+   * 2. 品牌行銷輔助色 Brand Secondary Colour（CIS p.7）
+   * ============================================================ */
+  --color-primary: #5e3de7;       /* PANTONE 2097 C | C80 M90 Y0 K10 | R97 G69 B186 | CIS p.7 */
+  --color-primary-hover: #4a2fc0; /* 〔推估值〕明度降低約 15%，供 hover/active 狀態使用 */
+  --color-primary-active: #3d26a3;/* 〔推估值〕明度再降低，供 pressed 狀態使用 */
+  --color-primary-subtle: #efebfd;/* 〔推估值〕品牌紫 10% 混白，供淺色底標籤/badge 背景 */
+
+  /* ============================================================
+   * 3. 產品分類標準色 Product Main Colours（CIS p.8）
+   * ============================================================ */
+  --color-product-optical-film: #71d6e0; /* PANTONE 3105 C | Optical Film 光學膜類 | CIS p.8 */
+  --color-product-textile-foam: #e7004b; /* PANTONE 1925 C | Textile and Foam 紡織泡棉類 | CIS p.8 */
+  --color-product-acoustic: #cfcfcd;     /* PANTONE Cool Gray 2C | Acoustic 聲學類 | CIS p.8 */
+
+  /* ============================================================
+   * 4. 中性灰階〔推估值，依 CIS p.6 黑白階層線性內插〕
+   * ============================================================ */
+  --color-neutral-950: #0d0d0d;
+  --color-neutral-900: #1a1a1a;
+  --color-neutral-800: #333333;
+  --color-neutral-700: #4d4d4d;
+  --color-neutral-600: #666666;
+  --color-neutral-500: #808080;
+  --color-neutral-400: #999999;
+  --color-neutral-300: #b3b3b3;
+  --color-neutral-200: #cccccc;
+  --color-neutral-100: #e6e6e6;
+  --color-neutral-50:  #f2f2f2;
+
+  /* ============================================================
+   * 5. 語意色〔推估值，CIS 手冊未定義，僅供表單/系統訊息使用，
+   *    不可用於品牌識別相關版位〕
+   * ============================================================ */
+  --color-success: #12b76a;
+  --color-success-subtle: #e7f9f1;
+  --color-warning: #f79009;
+  --color-warning-subtle: #fef3e2;
+  --color-danger: #d92d20;
+  --color-danger-subtle: #fbeae9;
+  --color-info: #5e3de7; /* 與品牌紫共用，維持識別一致性 */
+  --color-info-subtle: #efebfd;
+
+  /* ============================================================
+   * 6. 語意化角色 token（供元件直接引用，依 Light Mode 預設）
+   * ============================================================ */
+  --color-bg-page: var(--color-brand-white);
+  --color-bg-surface: var(--color-brand-white);
+  --color-bg-surface-alt: var(--color-neutral-50);
+  --color-bg-inverse: var(--color-brand-black);
+  --color-text-primary: var(--color-brand-black);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-text-tertiary: var(--color-neutral-500);
+  --color-text-inverse: var(--color-brand-white);
+  --color-text-link: var(--color-primary);
+  --color-border-default: var(--color-neutral-200);
+  --color-border-strong: var(--color-neutral-400);
+  --color-border-focus: var(--color-primary);
+
+  /* Logo 用色（依 CIS p.27 規則：淺底用黑、深底/紫底用白） */
+  --color-logo-on-light: var(--color-brand-black);
+  --color-logo-on-dark: var(--color-brand-white);
+  --color-logo-on-primary: var(--color-brand-white);
+
+  /* ============================================================
+   * 7. 字體家族（CIS p.31；網站風格參考 p.9）
+   * ============================================================ */
+  /* Geologica：Google Fonts 開放授權，英文/數字/拉丁字符優先 */
+  --font-sans-en: "Geologica", "Noto Sans TC", sans-serif;
+  /* 中文採 Noto Sans TC 取代 CIS 指定之「源樣黑體 GenYoGothic」
+     （兩者同源自 Source Han Sans，Noto Sans TC 具完整 Google Fonts 網頁授權，
+     若需精確還原源樣黑體需另購網頁字體授權，詳見 design-system.md §4.2） */
+  --font-sans-zh: "Noto Sans TC", "Geologica", sans-serif;
+  --font-sans: var(--font-sans-en);
+
+  /* 字重（對應 CIS p.31：英文 Thin/ExtraLight/Light/Regular/Medium/SemiBold/Bold；
+     中文 N/R/M/B = Normal/Regular/Medium/Bold，此處統一映射為數值字重） */
+  --font-weight-thin: 100;
+  --font-weight-extralight: 200;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ============================================================
+   * 8. 字級尺度〔推估值，design-system.md §4.3〕— Desktop 基準
+   * ============================================================ */
+  --font-size-h1: 3.5rem;    /* 56px */
+  --font-size-h1-lg: 4rem;   /* 64px，桌機大版型可選用上限值 */
+  --font-size-h2: 2.25rem;   /* 36px */
+  --font-size-h3: 1.5rem;    /* 24px */
+  --font-size-h4: 1.125rem;  /* 18px */
+  --font-size-body: 1rem;    /* 16px */
+  --font-size-caption: 0.8125rem; /* 13px */
+  --font-size-button: 0.9375rem;  /* 15px */
+  --font-size-nav-item: 0.9375rem; /* 15px */
+
+  /* 行高：中文採較高行高以因應方塊字視覺密度（design-system.md §7） */
+  --line-height-heading-en: 1.15;
+  --line-height-heading-zh: 1.3;
+  --line-height-body-en: 1.6;
+  --line-height-body-zh: 1.7;
+
+  /* ============================================================
+   * 9. 間距尺度〔推估值，design-system.md §5.3，4px 基準〕
+   * ============================================================ */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-24: 6rem;    /* 96px */
+  --space-32: 8rem;    /* 128px */
+
+  /* ============================================================
+   * 10. 圓角〔推估值，design-system.md §6〕
+   * ============================================================ */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ============================================================
+   * 11. 陰影〔推估值〕
+   * ============================================================ */
+  --shadow-sm: 0 1px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-focus-ring: 0 0 0 3px rgba(94, 61, 231, 0.15); /* 品牌紫 focus ring */
+
+  /* ============================================================
+   * 12. 響應式斷點〔推估值，design-system.md §5.2〕
+   *     （CSS custom properties 無法直接用於 media query，
+   *      此處僅作為文件/JS 讀值使用，實際 breakpoint 仍需寫死於 media query 或
+   *      Tailwind config 中）
+   * ============================================================ */
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-desktop-lg: 1440px;
+  --container-max-desktop: 1140px;
+  --container-max-desktop-lg: 1280px;
+
+  /* ============================================================
+   * 13. Logo 尺寸規則（CIS p.11-26，換算供網頁導覽列使用，詳見 design-system.md §1.2）
+   * ============================================================ */
+  --logo-height-desktop: 32px;
+  --logo-height-mobile: 24px;
+
+  /* 輔助圖形（V Pattern）最小尺寸（CIS p.34-37：印刷最小 20mm）〔推估值換算為網頁 px〕 */
+  --pattern-min-size: 24px;
+}
+
+/* ============================================================
+ * Dark Mode（CIS p.27：深底/黑底時 Logo 與主要用色反白）
+ * ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-page: var(--color-brand-black);
+    --color-bg-surface: var(--color-neutral-950);
+    --color-bg-surface-alt: var(--color-neutral-900);
+    --color-bg-inverse: var(--color-brand-white);
+    --color-text-primary: var(--color-brand-white);
+    --color-text-secondary: var(--color-neutral-300);
+    --color-text-tertiary: var(--color-neutral-500);
+    --color-text-inverse: var(--color-brand-black);
+    --color-border-default: var(--color-neutral-800);
+    --color-border-strong: var(--color-neutral-600);
+  }
+}
+
+/* 若專案採用 class-based dark mode（如 Tailwind darkMode: 'class'），可改用： */
+.dark {
+  --color-bg-page: var(--color-brand-black);
+  --color-bg-surface: var(--color-neutral-950);
+  --color-bg-surface-alt: var(--color-neutral-900);
+  --color-bg-inverse: var(--color-brand-white);
+  --color-text-primary: var(--color-brand-white);
+  --color-text-secondary: var(--color-neutral-300);
+  --color-text-tertiary: var(--color-neutral-500);
+  --color-text-inverse: var(--color-brand-black);
+  --color-border-default: var(--color-neutral-800);
+  --color-border-strong: var(--color-neutral-600);
+}

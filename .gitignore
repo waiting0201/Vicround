@@ -1,0 +1,44 @@
+# ── .NET / Azure Functions ────────────────────────────────────────────
+**/bin/
+**/obj/
+**/temp/
+.vs/
+
+# Azure Functions local settings（含連線字串與金鑰 — 絕不進版控）
+**/local.settings.json
+
+# Azurite Storage Emulator
+AzuriteConfig/
+__azurite_db_*__.json
+__blobstorage__/
+__queuestorage__/
+.azurite/
+azurite-debug.log
+
+# ── Next.js / Node ────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.vercel/
+
+# ── 工具與編輯器 ──────────────────────────────────────────────────────
+.vscode/
+.wrangler/
+.DS_Store
+Thumbs.db
+
+# ── 本機產出 ──────────────────────────────────────────────────────────
+output/
+
+# ── 客戶素材：僅同步至 NAS，不進 GitHub ───────────────────────────────
+# 由 scripts/sync-nas-assets.sh 快照到 Remote_NAS 的 assets 分支。
+# reference/ 約 260MB（字型 TTC、CIS Guide Book .ai/.pdf、官網圖片 zip），
+# 且含客戶未公開素材，不可推上 public GitHub repo。
+mockup/
+reference/
