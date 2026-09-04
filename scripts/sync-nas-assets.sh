@@ -70,5 +70,5 @@ git update-ref "refs/heads/$BRANCH" "$COMMIT" ${PARENT:+"$PARENT"}
 # ── 只推 NAS，絕不推 GitHub ───────────────────────────────────────────
 git push "$REMOTE" "$BRANCH:$BRANCH"
 
-echo "✓ 已推送 $BRANCH → $REMOTE（${COMMIT:0:8}）"
+echo "✓ 已推送 ${BRANCH} → ${REMOTE}（${COMMIT:0:8}）"
 git ls-tree -r --name-only "$COMMIT" | wc -l | xargs echo "  檔案數："
