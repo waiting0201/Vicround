@@ -9,10 +9,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 VicRound (盈絲實業有限公司) corporate + product-catalog website rebuild. VicRound is a
-materials manufacturer with two product lines — **Optical Film** and **Textile & Foam** —
-plus industry **Application** case pages, **News**, and ESG/sustainability content. The
-public site is bilingual (English `en`, Traditional Chinese `zh-Hant`) and SEO-critical
-(~118 indexed pages today). Content is editor-managed through a headless CMS.
+materials manufacturer with three product lines — **Optical Film**, **Textile & Foam** and
+**Acoustic** — plus industry **Solution** pages (7 industries; the entity formerly called
+*Application*), a **Technologies** section, a **Resources** hub (News & Exhibitions, Insights,
+Technical articles, FAQ, Downloads), ESG/sustainability + certifications, **Partnership**, and a
+gated **member area** for spec sheets and sample requests. The public site is bilingual
+(English `en`, Traditional Chinese `zh-Hant`) and SEO-critical (~118 indexed pages today).
+Content is editor-managed through a headless CMS.
+
+> Information architecture follows **Sitemap-0819**, i.e. the version implemented in
+> `mockup/Rounded Design/` (32 pages).
 
 > Status: greenfield. This repo currently holds planning docs only — no application code yet.
 > Build the solution to match the architecture in [docs/](docs/) before writing features.
@@ -26,7 +32,8 @@ public site is bilingual (English `en`, Traditional Chinese `zh-Hant`) and SEO-c
 - **CMS** — **self-built** admin app (Next.js admin area) on top of the Admin Functions API;
   no third-party/headless CMS product
 - **Database** — Azure SQL Database (SQL Server)
-- **Auth** — self-built **JWT** (access + refresh) issued by the Admin API; roles `Admin`/`Editor`
+- **Auth** — self-built **JWT** (access + refresh); two fully separate identities: Admin API
+  (`Users`, roles `Admin`/`Editor`) and front-of-site members (`Members`, `/api/v1/account/**`)
 - **Hosting** — Azure (Functions for the API, **Azure Static Web Apps — Free plan** hybrid-
   Next.js for the site, Blob Storage). SWA Free runs SSR on its managed backend and provides the
   built-in CDN + TLS. Caveats: hybrid Next.js is **Preview**, 250 MB app cap → build with
@@ -41,27 +48,28 @@ that no single source file makes obvious.
 | Doc | Read it when |
 | --- | --- |
 | [docs/architecture.md](docs/architecture.md) | Understanding overall layout, projects, request flow, i18n & caching strategy |
-| [docs/cms-api.md](docs/cms-api.md) | Adding/changing API endpoints — public Content API vs. authenticated Admin API |
+| [docs/cms-api.md](docs/cms-api.md) | Adding/changing API endpoints — public Content API, member Account API, authenticated Admin API |
 | [docs/cms.md](docs/cms.md) | The self-built CMS — admin UI stack, JWT auth flow, publish→revalidate |
-| [docs/database.md](docs/database.md) | Schema, the translation-table i18n pattern, migrations, seeding |
-| [docs/sitemap.md](docs/sitemap.md) | URL/route map, dynamic `sitemap.xml`, hreflang, legacy `/store/*` redirects |
+| [docs/database.md](docs/database.md) | Schema（依 14 個功能單元分章）, the translation-table i18n pattern, migrations, seeding, super-admin seed |
+| [docs/sitemap.md](docs/sitemap.md) | URL/route map, dynamic `sitemap.xml`, hreflang, JSON-LD, legacy `/store/*` + `/application` redirects |
 | [docs/azure-deployment.md](docs/azure-deployment.md) | Provisioning, CI/CD, environments, secrets, scaling |
 
 ## Conventions (the "規範" / standards)
 
 These are project-specific decisions a future instance can't infer from the code alone.
 
-- **Two API surfaces, never mixed.** Public Content API (`/api/v1/**`) is read-only,
-  anonymous, and cacheable. Admin API (`/api/admin/**`) is authenticated CRUD for editors.
-  They are separate Function apps/triggers with separate DTOs and validation — the public app
-  has no write path at all.
+- **Three API surfaces, never mixed.** Public Content API (`/api/v1/**`) is read-only,
+  anonymous, and cacheable. Account API (`/api/v1/account/**`) is member-authenticated and writes
+  only member-owned rows (`no-store`, never cached). Admin API (`/api/admin/**`) is authenticated
+  CRUD for editors. Separate DTOs and validation throughout — the public app has **no content
+  write path** at all.
 - **The CMS is ours.** The admin UI is a self-built Next.js area calling the Admin Functions
   API; don't pull in a third-party CMS. Content modeling lives in our SQL schema. See
   [docs/cms.md](docs/cms.md) for the CMS stack and JWT auth flow.
 - **i18n via translation tables, not duplicated rows.** Every content entity has a base row
-  + an `*Translation` row per culture (see [docs/database.md](docs/database.md)). Resolve
-  culture from the `Accept-Language` header (fallback `en`). Never hard-code UI strings or
-  content in source.
+  + an `*Translation` row per culture (see [docs/database.md](docs/database.md)). Culture comes
+  from the URL's `[locale]` segment — `Accept-Language` is only a fallback when no locale is in
+  the path (default `en`). Never hard-code UI strings or content in source.
 - **URLs are content, not derived.** Each entity carries an editor-set `Slug`; public paths are
   `/{locale}/{slug}` (locale ∈ `en`, `zh-Hant`). Changing a slug — or a legacy `.html`/`store`
   URL — must resolve via a 301 in the `Redirects` table; never silently break an indexed URL.
@@ -74,7 +82,19 @@ These are project-specific decisions a future instance can't infer from the code
   tags**; on publish the Admin API calls a Next.js `revalidateTag` webhook (both locales) so
   content refreshes without hitting the DB on every request. The sitemap is generated from the
   DB, not hand-maintained.
+- **Members are not CMS users.** The front-of-site member system (`Members`, `SampleRequests`)
+  is fully isolated from the admin identity (`Users`, `Roles`): separate tables, separate JWT
+  issuer/audience/signing key/cookie. A token from one surface is always `401` on the other. The
+  Account API (`/api/v1/account/**`) lives on `fn-public` but can only touch the member tables —
+  it has no content write path. See [docs/database.md](docs/database.md) §14.
+- **No audit tables.** We keep business data (inquiries, sample requests and their per-stage
+  timestamps) but build no `AuditLogs` / `ContentVersions` / `LoginAttempts` / download-history
+  tables. Every table still carries `CreatedAt` / `UpdatedAt` / `PublishedAt`.
+- **Strongly-typed table vs content block** is a judgement call with three written criteria
+  (cross-page reuse, queryable/structured-data, own lifecycle) — see
+  [docs/database.md](docs/database.md) §09. Don't add a table or a block type without checking them.
 - **Media lives in Blob Storage**, referenced by URL in the DB — never store binaries in SQL.
+  Two containers: `public-media` (CDN URL) and `member-documents` (private, SAS-only).
 - **Migrations are the only way to change schema.** Add an EF Core migration; never edit the
   DB by hand or check in ad-hoc ALTER scripts.
 
