@@ -142,8 +142,9 @@ GET    /api/admin/auth/me
 ```
 
 All other `/api/admin/**` calls require `Authorization: Bearer <accessToken>`; `fn-admin`
-validates signature/issuer/audience/expiry and the role claim. The Next.js admin stores tokens
-in **httpOnly cookies** and never exposes them to client JS. See [cms.md](cms.md).
+validates signature/issuer/audience/expiry and the role claim. The admin SPA keeps the access
+token **in memory only** and relies on an **httpOnly refresh cookie** issued by `fn-admin`;
+nothing is written to `localStorage`. See [cms.md](cms.md).
 
 ```
 GET    /api/admin/{type}

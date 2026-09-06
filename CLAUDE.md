@@ -29,8 +29,11 @@ Content is editor-managed through a headless CMS.
   EF Core + SQL Server
 - **Frontend** — **Next.js (App Router, React/TypeScript)**, **SSR** for SEO, **locale-prefixed
   routing** (`/en`, `/zh-Hant`, default `en`)
-- **CMS** — **self-built** admin app (Next.js admin area) on top of the Admin Functions API;
-  no third-party/headless CMS product
+- **CMS** — **self-built** admin app: a **Vite + React SPA** (`apps/admin`) built into
+  `apps/web/public/admin` and served at `/admin` on the same origin, calling the Admin Functions
+  API; no third-party/headless CMS product. It is deliberately *not* part of the Next.js route
+  tree — the front-of-site bundle carries none of the editor's weight, and the admin carries no
+  SEO machinery (2026-09-06 決定，作法對齊 EuniceMed)
 - **Database** — Azure SQL Database (SQL Server)
 - **Auth** — self-built **JWT** (access + refresh); two fully separate identities: Admin API
   (`Users`, roles `Admin`/`Editor`) and front-of-site members (`Members`, `/api/v1/account/**`)
@@ -47,6 +50,7 @@ that no single source file makes obvious.
 
 | Doc | Read it when |
 | --- | --- |
+| [STATUS.md](STATUS.md) | 想知道**做到哪裡了**（各子系統狀態、擋住的事項、下一步順序） |
 | [docs/architecture.md](docs/architecture.md) | Understanding overall layout, projects, request flow, i18n & caching strategy |
 | [docs/cms-api.md](docs/cms-api.md) | Adding/changing API endpoints — public Content API, member Account API, authenticated Admin API |
 | [docs/cms.md](docs/cms.md) | The self-built CMS — admin UI stack, JWT auth flow, publish→revalidate |
@@ -93,6 +97,10 @@ These are project-specific decisions a future instance can't infer from the code
 - **Strongly-typed table vs content block** is a judgement call with three written criteria
   (cross-page reuse, queryable/structured-data, own lifecycle) — see
   [docs/database.md](docs/database.md) §09. Don't add a table or a block type without checking them.
+- **設計 token 的真相來源是 mockup。** 客戶已確認 `mockup/Rounded Design/` 的視覺，其
+  `_ds/` 設計系統由 `pnpm sync:tokens` 逐字複製進 `apps/web/app/ds/` 與 `apps/admin/src/ds/`；
+  要改視覺就改 mockup 再同步，不要直接改 app 裡的副本。根目錄 `design-system/tokens.css` 是更早
+  的 CIS 推導版（另一套命名與色值），只作溯源，**不可**拿來接程式。前台全站為深色底（#0a0a12）。
 - **Media lives in Blob Storage**, referenced by URL in the DB — never store binaries in SQL.
   Two containers: `public-media` (CDN URL) and `member-documents` (private, SAS-only).
 - **Migrations are the only way to change schema.** Add an EF Core migration; never edit the
@@ -121,3 +129,18 @@ npm run lint
 npm test                                     # unit tests (Jest/Vitest)
 npm test -- product.service                  # single test file
 ```
+
+## 前台頁面現況（2026-09-06）
+
+**客戶確認稿的 25 個頁面已全數實作**（版型、色彩、字級、間距逐項對照
+`mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。另有 6 條路由仍是鷹架，
+因為**確認稿裡沒有對應頁**：
+
+- `/{locale}/products/{category}/{slug}` 產品詳情 —— 確認稿只做到三個產品線頁
+- `/{locale}/account/**`（5 條）會員專區 —— 確認稿只做到 `/member` 登入註冊入口
+
+進度明細見 [STATUS.md](STATUS.md)。
+
+版面文案暫存在 `apps/web/content/*.ts`：**英文逐字取自確認稿、繁中是暫譯（待客戶校稿）**。
+接上 Content API 之後整個 `content/` 目錄刪除，版型元件不動。
+`node scripts/check-content-language.mjs` 會擋掉輸入法誤植與英文欄位混入中文。

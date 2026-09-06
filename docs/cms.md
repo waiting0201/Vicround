@@ -7,15 +7,17 @@ of our own layers:
    This *is* the CMS's content types.
 2. **Admin API** — `fn-admin` in Azure Functions (.NET 10), `/api/admin/**`, JWT-protected. See
    [cms-api.md](cms-api.md).
-3. **Admin UI** — a self-built Next.js area in the same `web/` app: `app/(admin)/admin/**`,
-   server-rendered, **not** indexed (robots `Disallow`), locale-independent (editor UI in one
-   language; it edits *both* content locales).
+3. **Admin UI** — a self-built **Vite + React SPA** (`apps/admin`), built into
+   `apps/web/public/admin` and served at `/admin` on the same origin. **Not** indexed
+   (robots `Disallow` + `<meta name="robots" content="noindex, nofollow">`), locale-independent
+   (editor UI in one language; it edits *both* content locales). It is not part of the Next.js
+   route tree — see [architecture.md](architecture.md) for why.
 
 ## Admin UI stack
 
 | Concern | Choice |
 | --- | --- |
-| Framework | Next.js App Router (same app, `(admin)` route group), React + TypeScript |
+| Framework | Vite + React 19 + TypeScript, `react-router` (`basename="/admin"`) |
 | UI / styling | shadcn/ui + Tailwind |
 | Forms + validation | React Hook Form + Zod |
 | Data tables | TanStack Table (sort / paginate / filter) |
@@ -61,7 +63,8 @@ No Entra ID. `fn-admin` owns identity against `Users` / `Roles` / `RefreshTokens
 ```
 login    POST /api/admin/auth/login    {email,password}
          → verify password hash (e.g. PBKDF2/Argon2) → issue access + refresh
-         → Next.js sets both as httpOnly, Secure, SameSite=Strict cookies
+         → access token 回在 response body（SPA 只放記憶體）；refresh token 由 fn-admin
+           以 Set-Cookie 寫成 httpOnly, Secure, SameSite=Strict（Path=/api/admin/auth）
 call     every /api/admin/** request carries the access token; fn-admin validates
          signature / iss / aud / exp + role claim, authorizes per endpoint
 refresh  POST /api/admin/auth/refresh  → rotate refresh, mint new access
@@ -70,7 +73,10 @@ logout   POST /api/admin/auth/logout   → revoke refresh row, clear cookies
 
 **Rules**
 
-- Tokens live in **httpOnly cookies** — never in `localStorage` or client-readable JS.
+- **Refresh token 只存在 httpOnly cookie**；**access token 只存在記憶體**（模組層變數）——
+  兩者都不得進 `localStorage` / `sessionStorage`。後台是 SPA，重新整理後記憶體是空的，
+  由 `POST /auth/refresh` 帶著 cookie 換一顆新的 access token，所以「維持登入」不需要
+  在瀏覽器留下任何長期憑證。前後端同源（`/admin` 與 `/api` 同一網域）是這個做法成立的前提。
 - Authorize by role on the server: `Editor` can author/publish content; `Admin` additionally
   manages users, redirects, and settings.
 - The public app (`fn-public`) has **no** auth and no write path — JWT exists only on `fn-admin`.

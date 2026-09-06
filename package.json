@@ -1,0 +1,12 @@
+{
+  "name": "vicround",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "build": "pnpm --filter admin build && pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "sync:tokens": "node scripts/sync-design-tokens.mjs"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

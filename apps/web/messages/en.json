@@ -1,0 +1,205 @@
+{
+  "site": {
+    "name": "VICROUND",
+    "legalName": "© 2026 VICROUND 盈絲實業有限公司. All rights reserved.",
+    "tagline": "Vicround engineers optical film, technical textile & foam, and acoustic materials that ship inside the world's consumer electronics, vehicles, medical devices and solar hardware."
+  },
+  "nav": {
+    "products": "Products",
+    "solutions": "Solutions",
+    "technologies": "Technologies",
+    "about": "About Us",
+    "sustainability": "Sustainability",
+    "partnership": "Partnership",
+    "resources": "Resources",
+    "faq": "FAQ",
+    "downloads": "Downloads",
+    "news": "News & Exhibitions",
+    "contact": "Contact Us",
+    "privacy": "Privacy & Legal",
+    "member": "Member Area",
+    "account": "My Account"
+  },
+  "megaTitle": {
+    "products": "Products — what we make",
+    "solutions": "Solutions — what problems we solve",
+    "technologies": "Technical capabilities",
+    "resources": "Resources"
+  },
+  "mega": {
+    "products": {
+      "opticalFilm": {
+        "label": "Optical Film",
+        "note": "Eight coated surface families"
+      },
+      "textileFoam": {
+        "label": "Textile & Foam",
+        "note": "Cushioning, sealing and shielding"
+      },
+      "acoustic": {
+        "label": "Acoustic",
+        "note": "Four IP-rated mesh grades"
+      }
+    },
+    "solutions": {
+      "consumerElectronics": {
+        "label": "Consumer Electronics",
+        "note": "Phones, tablets, laptops, wearables"
+      },
+      "automotive": {
+        "label": "Automotive",
+        "note": "Cockpit displays and sensor windows"
+      },
+      "smartHealthcare": {
+        "label": "Smart Healthcare",
+        "note": "Antimicrobial and privacy surfaces"
+      },
+      "renewableEnergy": {
+        "label": "Renewable Energy",
+        "note": "PV modules and storage enclosures"
+      },
+      "acousticSolutions": {
+        "label": "Acoustic Solutions",
+        "note": "IP-rated speaker and mic protection"
+      },
+      "ePaper": {
+        "label": "E-Paper",
+        "note": "Paper-feel and front-light film"
+      },
+      "sportsEyewear": {
+        "label": "Sports Eye-Wear",
+        "note": "Anti-fog, polarised and comfort foam"
+      }
+    },
+    "technologies": {
+      "coreProcesses": {
+        "label": "Core Processes",
+        "note": "Coating, laminating, die-cutting, QC"
+      },
+      "innovation": {
+        "label": "R&D / Material Innovation",
+        "note": "Formulation through pilot line"
+      },
+      "compliance": {
+        "label": "Product Compliance",
+        "note": "RoHS, REACH, IEC and OEM protocols"
+      }
+    },
+    "resources": {
+      "news": {
+        "label": "News & Exhibitions",
+        "note": "Meet us on the show floor"
+      },
+      "faq": {
+        "label": "FAQ",
+        "note": "Specification, ordering, compliance"
+      },
+      "insights": {
+        "label": "Insights",
+        "note": "Industry insight and trend reports"
+      },
+      "downloads": {
+        "label": "Downloads",
+        "note": "Spec sheets, catalogues, white papers"
+      }
+    }
+  },
+  "search": {
+    "label": "Search",
+    "placeholder": "Search products, specifications, applications…",
+    "submit": "Search",
+    "frequent": "Frequent searches",
+    "chips": {
+      "antiGlare": "Anti-glare film",
+      "emiFoam": "EMI shielding foam",
+      "acousticMesh": "IP67 acoustic mesh",
+      "isoCert": "ISO 14001 certificate",
+      "specSheet": "Spec sheet download"
+    }
+  },
+  "cta": {
+    "eyebrow": "Vicround",
+    "headline": "Start a build with Vicround.",
+    "subcopy": "Tell us your application and target spec — our engineering team responds within two business days.",
+    "button": "Let's Connect!"
+  },
+  "contactDialog": {
+    "eyebrow": "Contact Us",
+    "title": "Let's connect.",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "company": "Company",
+    "companyPlaceholder": "Company name",
+    "email": "Business Email",
+    "emailPlaceholder": "you@company.com",
+    "productLine": "Product Line",
+    "productLineOther": "Other",
+    "application": "Application",
+    "applicationPlaceholder": "e.g. automotive cockpit display",
+    "targetSpec": "Target Spec",
+    "targetSpecPlaceholder": "e.g. AG 60–120 GU, 3H hard coat",
+    "consent": "I agree that Vicround may use the information above to respond to this inquiry, as described in the",
+    "consentLink": "Privacy Policy",
+    "submit": "Send message",
+    "sentTitle": "Thank you — we've received your message.",
+    "sentBody": "Our team responds within two business days.",
+    "close": "Close",
+    "consentSuffix": "."
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "readMore": "Read more",
+    "backToList": "Back to list",
+    "emptyState": "No content published yet.",
+    "language": "Language",
+    "menu": "Menu",
+    "breadcrumb": "Breadcrumb",
+    "close": "Close"
+  },
+  "account": {
+    "dashboard": "Dashboard",
+    "downloads": "Documents",
+    "sampleRequests": "Sample requests",
+    "profile": "Profile",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "certification": {
+    "issuer": "Issuing body",
+    "validity": "Validity",
+    "scope": "Scope",
+    "sites": "Sites",
+    "placeholder": "Awaiting the client's certificate details — shown here as a layout placeholder.",
+    "cta": "Request the certificate",
+    "label": "Certifications",
+    "partners": "Partner Brands",
+    "exhibitions": "Exhibition Records"
+  },
+  "spec": {
+    "property": "Property",
+    "value": "Typical value",
+    "note": "Method / note",
+    "download": "Download spec sheet",
+    "sample": "Request a sample"
+  },
+  "products": {
+    "whereUsed": "Where it is used"
+  },
+  "solutions": {
+    "other": "Other applications"
+  },
+  "faq": {
+    "result": "{count} questions",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all"
+  },
+  "article": {
+    "contents": "Contents",
+    "keepReading": "Keep reading",
+    "share": "Share",
+    "copyLink": "Copy link"
+  },
+  "news": {
+    "more": "More news"
+  }
+}

@@ -1,0 +1,28 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/radii.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Corner system: a BLEND of the two candidate website styles from the kickoff deck
+   ("Angular / cut-corner" vs "Rounded corners"). Cards & frames use soft rounded corners;
+   buttons and small accents use a cut/chamfered corner — a nod to the angular "V" brand mark. */
+
+:root {
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --chamfer-sm: 6px;   /* corner cut size for small controls (chips, inputs) */
+  --chamfer-md: 12px;  /* corner cut size for buttons */
+  --chamfer-lg: 20px;  /* corner cut size for feature panels / hero frames */
+}
+
+/* Utility: clip a single-corner chamfer (cut corner) — apply alongside a --chamfer-* var.
+   Usage: class="chamfer" style="--cut: var(--chamfer-md)" */
+.chamfer {
+  --cut: var(--chamfer-md);
+  clip-path: polygon(
+    0 0, calc(100% - var(--cut)) 0, 100% var(--cut),
+    100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))
+  );
+}

@@ -1,0 +1,23 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/shadows.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Elevation & border system.
+   Aesthetic is precise/technical, not soft — shadows are minimal and diffuse, closer to a
+   1px hairline border with a faint ambient shadow than a heavy drop shadow. No inner shadows,
+   no glassmorphism/blur (nothing in the source material suggests it). */
+
+:root {
+  --shadow-xs: 0 1px 2px rgba(20, 20, 31, 0.06);
+  --shadow-sm: 0 2px 8px rgba(20, 20, 31, 0.07);
+  --shadow-md: 0 8px 24px rgba(20, 20, 31, 0.09);
+  --shadow-lg: 0 16px 48px rgba(20, 20, 31, 0.12);
+  --shadow-brand: 0 12px 32px rgba(100, 54, 239, 0.22);
+
+  --border-w: 1px;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --duration-fast: 120ms; /* @kind other */
+  --duration-standard: 200ms; /* @kind other */
+  --duration-slow: 360ms; /* @kind other */
+}

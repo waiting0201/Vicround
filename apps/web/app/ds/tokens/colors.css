@@ -1,0 +1,88 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/colors.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Color tokens
+   Brand purple sampled directly from Trademark&Pattern/VICROUND-pattern-2097C.png (#6436EF, "Pantone 2097C").
+   Category colors (Optical Film / Textile & Foam / Acoustic) are DESIGNED — the source CIS deck assigns each
+   application area its own color on a "Colour & Pattern" page, but that page is a flat image with no
+   hex/Pantone text, so exact values could not be read. These are harmonious inferred substitutes (same
+   saturation/lightness treatment as brand purple, spaced around the wheel) — flagged in readme.md. */
+
+:root {
+  /* ---- Base: Brand purple ---- */
+  --purple-50:  #f8f7fd;
+  --purple-100: #e9e3fd;
+  --purple-200: #ccbdfa;
+  --purple-300: #a184f5;
+  --purple-400: #7c55f1;
+  --purple-500: #6436ef; /* sampled brand mark color, "Pantone 2097C" */
+  --purple-600: #4612e2;
+  --purple-700: #380fb3;
+  --purple-800: #290b84;
+  --purple-900: #1a0755;
+
+  /* ---- Base: Neutrals (cool gray, pairs with the geometric/technical mark) ---- */
+  --gray-0:   #ffffff;
+  --gray-50:  #f7f7f9;
+  --gray-100: #eeeef2;
+  --gray-200: #dfdfe6;
+  --gray-300: #c5c6d0;
+  --gray-400: #9c9dac;
+  --gray-500: #74748a;
+  --gray-600: #55566a;
+  --gray-700: #3d3e4f;
+  --gray-800: #26263a;
+  --gray-900: #14141f;
+  --gray-950: #0a0a12;
+
+  /* ---- Base: Category colors (inferred — see note above) ---- */
+  --optical-50:  #e5f0fa;
+  --optical-500: #2f85da;
+  --optical-700: #1c568e;
+  --optical-900: #11385f;
+
+  --textile-50:  #faeee5;
+  --textile-500: #da762f;
+  --textile-700: #8e4d1c;
+  --textile-900: #5f3211;
+
+  --acoustic-50:  #e5faf7;
+  --acoustic-500: #2fdabe;
+  --acoustic-700: #1c8e7a;
+  --acoustic-900: #115f52;
+
+  /* ---- Base: Semantic status ---- */
+  --success-500: #1e9a5a;
+  --success-50:  #e5f7ee;
+  --warning-500: #d98a12;
+  --warning-50:  #fbf1de;
+  --danger-500:  #d93a2f;
+  --danger-50:   #fbe8e6;
+  --info-500: var(--optical-500);
+  --info-50:  var(--optical-50);
+
+  /* ============ Semantic aliases ============ */
+  --brand: var(--purple-500);
+  --brand-strong: var(--purple-600);
+  --brand-soft: var(--purple-100);
+
+  --fg-1: var(--gray-900);      /* primary text */
+  --fg-2: var(--gray-600);      /* secondary text */
+  --fg-3: var(--gray-400);      /* muted/placeholder text */
+  --fg-on-brand: #ffffff;
+  --fg-on-dark: #ffffff;
+
+  --surface-page: var(--gray-0);
+  --surface-sunken: var(--gray-50);
+  --surface-card: var(--gray-0);
+  --surface-card-alt: var(--gray-50);
+  --surface-dark: var(--gray-950);
+  --surface-dark-alt: #17172a;
+  --surface-overlay: rgba(10, 10, 18, 0.6);
+
+  --border-1: var(--gray-200);
+  --border-2: var(--gray-300);
+  --border-on-dark: rgba(255, 255, 255, 0.14);
+
+  --focus-ring: var(--purple-400);
+}

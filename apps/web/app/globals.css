@@ -1,0 +1,591 @@
+@import 'tailwindcss';
+
+/*
+ * 字型改為**自架子集**（scripts/build-fonts.py 從 reference/ 的原始字型檔產生），
+ * 取代 ds/tokens/fonts.css 的 CDN 版 —— 家族名與字重對應完全相同，
+ * 差別只在檔案來源與體積。ds 那一支刻意不再 import：
+ * 它的 @font-face 指向第三方鏡像上未子集化的 5.6MB TTF，而它的兩行遠端 @import
+ * 被 inline 到檔案中段之後本來就會被打包器丟掉（build 不報錯，字型卻沒載到）。
+ */
+@import './fonts.css';
+@import './ds/tokens/colors.css';
+@import './ds/tokens/typography.css';
+@import './ds/tokens/spacing.css';
+@import './ds/tokens/radii.css';
+@import './ds/tokens/shadows.css';
+
+/*
+ * ds/ 是**客戶已確認**的設計系統（Rounded Design），由 scripts/sync-design-tokens.mjs
+ * 從 `mockup/Rounded Design/_ds/` 逐字複製過來。色值、字體、間距、圓角一律以它為準。
+ *
+ * 下面的 @theme inline 只是把它接成 Tailwind utility；**不重新定義任何值**，
+ * 一律 `var(--...)` 指回 ds 的 token（inline 才不會把變數再寫進 :root 而與 ds 打架）。
+ */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+
+  --color-surface-page: var(--surface-page);
+  --color-surface-card: var(--surface-card);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-dark-alt: var(--surface-dark-alt);
+
+  --color-border-1: var(--border-1);
+  --color-border-on-dark: var(--border-on-dark);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+/*
+ * 頁面外殼 —— 逐字取自 mockup 各頁的 <helmet> 與最外層 div：
+ *   html { scroll-behavior: smooth; }
+ *   body { margin: 0; background: #0a0a12; }
+ *   ::selection { background: #6436ef; color: #fff; }
+ *   div { min-height: 100vh; background: #0a0a12; color: #ffffff; font-family: … }
+ * 全站是深色底，不是淺色底加深色區塊 —— 這是確認稿的基調，不要改。
+ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* 確認稿多數頁面是淺色底；深色的三頁（首頁／About／會員）由 PageShell 覆寫 */
+  background: #ffffff;
+  color: #14141f;
+  font-family: 'Geologica', 'GenYoGothic TW', 'Noto Sans TC', system-ui, sans-serif;
+}
+
+/*
+ * 頁面色調。mockup 的每一頁最外層都寫死一組
+ * `background: #ffffff; color: #14141f`（22 頁）或 `#0a0a12 / #ffffff`（首頁、About、會員），
+ * 而區塊內的文字、邊框、eyebrow 顏色都跟著那一組走。
+ *
+ * 這裡把那兩組收斂成 CSS 變數，版型元件一律讀 `var(--page-*)`，
+ * 就不必為每個元件加一個 tone prop、也不會出現「某個區塊忘了換色」。
+ * 值全部取自 mockup，成對對照如下：
+ *
+ *   eyebrow  #6436ef / #a184f5      （PageBanner 的 eyebrowColor）
+ *   title    #14141f / #ffffff      （titleColor）
+ *   內文     rgba(20,20,31,0.62) / rgba(255,255,255,0.62)
+ *   次區底   #f5f4fb / #10101d
+ */
+.vr-page {
+  min-height: 100%;
+  background: var(--page-bg);
+  color: var(--page-fg);
+}
+
+.vr-page[data-tone='light'] {
+  --page-bg: #ffffff;
+  --page-raised: #f5f4fb;
+  --page-fg: #14141f;
+  --page-muted: rgba(20, 20, 31, 0.62);
+  --page-faint: rgba(20, 20, 31, 0.45);
+  --page-border: rgba(20, 20, 31, 0.12);
+  --page-accent: #6436ef;
+}
+
+.vr-page[data-tone='dark'] {
+  --page-bg: #0a0a12;
+  --page-raised: #10101d;
+  --page-fg: #ffffff;
+  --page-muted: rgba(255, 255, 255, 0.62);
+  --page-faint: rgba(255, 255, 255, 0.45);
+  --page-border: rgba(255, 255, 255, 0.12);
+  --page-accent: #a184f5;
+}
+
+/* products.dc.html — 分類卡的 hover（上浮 + 邊框轉紫） */
+.vr-card-link {
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--page-border);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.vr-card-link:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+  transform: translateY(-4px);
+}
+
+/* products.dc.html — 區段內的文字連結（→ 結尾那種） */
+.vr-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 14px/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-fg);
+  text-decoration: none;
+  width: fit-content;
+}
+.vr-inline-link:hover {
+  color: #6436ef;
+}
+.vr-inline-link[data-accent='true'] {
+  color: #6436ef;
+}
+.vr-inline-link[data-accent='true']:hover {
+  color: #4612e2;
+}
+
+::selection {
+  background: #6436ef;
+  color: #fff;
+}
+
+/*
+ * mockup 的 hover 是它自己的 `style-hover` 屬性（Claude Design 的執行期功能），
+ * 搬進 React 之後只能用 CSS 表達。**下面每一條的值都與 mockup 逐字對應**，
+ * 對照來源寫在各段註解裡；改動前先回去看那一支 .dc.html。
+ */
+
+/* Header.dc.html — navItems.hoverStyle（rounded 變體） */
+.vr-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+.vr-nav-link:hover,
+.vr-nav-link:focus-visible {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.vr-nav-link[data-active='true'] {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Header.dc.html — ctaStyle / ctaHoverStyle */
+.vr-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  background: #6436ef;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  transition: background-color 0.15s ease;
+}
+.vr-cta:hover {
+  background: #4612e2;
+}
+
+/* Header.dc.html — iconBtnStyle + 其 style-hover */
+.vr-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  border-radius: 999px;
+}
+.vr-icon-btn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Header.dc.html — menuChildren.style + style-hover */
+.vr-mega-link {
+  display: block;
+  padding: 14px 16px;
+  text-decoration: none;
+  border-radius: 14px;
+}
+.vr-mega-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Header.dc.html — searchChips */
+.vr-chip {
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.72);
+  font: 500 13px/1.2 'Geologica', 'GenYoGothic TW', sans-serif;
+  text-decoration: none;
+}
+.vr-chip:hover {
+  border-color: rgba(161, 132, 245, 0.7);
+  color: #ffffff;
+}
+
+/* Footer.dc.html — linkStyle + style-hover */
+.vr-footer-link {
+  font: 500 0.875rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.vr-footer-link:hover {
+  color: #ffffff;
+}
+
+/* Footer.dc.html — socialStyle / socialHoverStyle */
+.vr-social {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #14141f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+.vr-social:hover {
+  background: #1c1c2e;
+  border-color: rgba(161, 132, 245, 0.5);
+}
+
+/* PageCTA.dc.html — primaryStyle / primaryHoverStyle */
+.vr-cta-invert {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 28px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1a0755;
+  border: none;
+  cursor: pointer;
+}
+.vr-cta-invert:hover {
+  background: #e9e3fd;
+  color: #1a0755;
+}
+
+/* FloatingButton.dc.html — contactBtnStyle / contactBtnHoverStyle */
+.vr-float {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 20px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 999px;
+  box-shadow: 0 12px 32px rgba(100, 54, 239, 0.22);
+  background: #6436ef;
+  color: #ffffff;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.vr-float:hover {
+  background: #4612e2;
+  color: #ffffff;
+}
+
+/* 鍵盤焦點框：ds 的 --focus-ring（#a184f5）。a11y，不可拿掉。 */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* index.dc.html — certs[].style / style-hover（認證 chip，比一般 chip 大一號） */
+.vr-cert-chip {
+  padding: 14px 26px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font: 500 17px/1.4 'IBM Plex Mono', monospace;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.vr-cert-chip:hover {
+  border-color: rgba(161, 132, 245, 0.7);
+  color: #ffffff;
+}
+
+/* product-*.dc.html — 規格區的兩顆按鈕（實心／外框） */
+.vr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: #6436ef;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.vr-btn:hover {
+  background: #4612e2;
+}
+.vr-btn[data-variant='ghost'] {
+  background: transparent;
+  color: var(--page-fg);
+  border: 1px solid var(--page-border-strong, rgba(20, 20, 31, 0.24));
+}
+.vr-btn[data-variant='ghost']:hover {
+  background: rgba(20, 20, 31, 0.05);
+}
+.vr-page[data-tone='dark'] .vr-btn[data-variant='ghost'] {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.vr-page[data-tone='dark'] .vr-btn[data-variant='ghost']:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* product-*.dc.html — 「Where it is used」的產業 chip 連結 */
+.vr-pill-link {
+  border-radius: 999px;
+  padding: 8px 14px;
+  border: 1px solid var(--page-border);
+  font: 500 13px/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+  text-decoration: none;
+}
+.vr-pill-link:hover {
+  color: #6436ef;
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
+/* solutions.dc.html — 產業卡 hover（只換邊框色，不上浮） */
+.vr-solution-card {
+  transition: border-color 0.15s ease;
+}
+.vr-solution-card:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
+/* sustainability.dc.html — 認證與標準的四張卡（可點開認證彈窗） */
+.vr-cert-card {
+  background: var(--page-bg);
+  border: 1px solid var(--page-border);
+  border-radius: 22px;
+  padding: 24px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.vr-cert-card:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
+/* about-us.dc.html — 深色頁的卡片與外框按鈕 */
+.vr-dark-card {
+  transition: border-color 0.15s ease;
+}
+.vr-dark-card:hover {
+  border-color: rgba(161, 132, 245, 0.5);
+}
+
+.vr-dark-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  font: 600 14px/1 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: #ffffff;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.vr-dark-btn:hover {
+  border-color: rgba(161, 132, 245, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 認證卡在深色頁：透明底、細白框；待提供的那些用虛線 */
+.vr-page[data-tone='dark'] .vr-cert-card {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+}
+.vr-page[data-tone='dark'] .vr-cert-card[data-pending='true'] {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.vr-page[data-tone='dark'] .vr-cert-card:hover {
+  border-color: rgba(161, 132, 245, 0.6);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* faq.dc.html — 分類軌與問題標題列 */
+.vr-faq-cat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 18px;
+  margin-left: -1px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  font: 600 14px/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+  cursor: pointer;
+}
+.vr-faq-cat:hover {
+  color: var(--page-fg);
+}
+.vr-faq-cat[data-active='true'] {
+  border-left-color: #6436ef;
+  color: var(--page-fg);
+}
+
+.vr-faq-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  text-align: left;
+  padding: 24px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* resources.dc.html — 下載列（標題 + 圓形下載鈕） */
+.vr-download-row {
+  text-decoration: none;
+  background: var(--page-bg);
+  border: 1px solid var(--page-border);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: border-color 0.15s ease;
+}
+.vr-download-row:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
+/* article.dc.html — 側欄目錄 */
+.vr-toc-link {
+  padding: 8px 18px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font: 500 13px/1.5 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+  text-decoration: none;
+}
+.vr-toc-link:hover {
+  border-left-color: #6436ef;
+  color: #6436ef;
+}
+
+/* news.dc.html — 分類篩選 chip 與新聞列 */
+.vr-filter-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--page-border);
+  background: transparent;
+  font: 500 13px/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+.vr-filter-chip:hover {
+  color: #6436ef;
+  border-color: rgba(100, 54, 239, 0.5);
+}
+.vr-filter-chip[data-active='true'] {
+  background: #6436ef;
+  border-color: #6436ef;
+  color: #ffffff;
+}
+
+.vr-news-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  border: 1px solid var(--page-border);
+  border-radius: 22px;
+  text-decoration: none;
+  background: var(--page-bg);
+  transition: border-color 0.15s ease;
+}
+.vr-news-row:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
+/* member.dc.html — 登入／註冊分頁鈕 */
+.vr-member-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  font: 600 14px/1.4 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.vr-member-tab:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.vr-member-tab[data-active='true'] {
+  background: #6436ef;
+  border-color: #6436ef;
+  color: #ffffff;
+}

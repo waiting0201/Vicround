@@ -42,3 +42,10 @@ output/
 # 且含客戶未公開素材，不可推上 public GitHub repo。
 mockup/
 reference/
+
+# 版位照片由 scripts/sync-design-tokens.mjs 從 mockup 複製，屬客戶素材，同樣不進 GitHub。
+# 正式站的圖片來自 CMS 的 Blob 媒體庫；沒有這些檔時前台會顯示虛線佔位框。
+apps/web/public/assets/
+
+# ── 後台 SPA 的建置產物（由 apps/admin build 產生，進 apps/web/public/admin）─────
+apps/web/public/admin/

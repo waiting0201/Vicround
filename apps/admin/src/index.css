@@ -1,0 +1,42 @@
+/*
+ * ⚠️ token 檔要**逐支**列出來，不能只 import ds/styles.css。
+ * ds/styles.css 的內容是 6 行 `@import url('./tokens/…')`，被 inline 進來之後位置
+ * 不在檔首，整批會被 CSS 打包器靜默丟掉（build 不報錯，顏色全部 fallback）。
+ * 順序與 ds/styles.css 相同。
+ */
+@import 'tailwindcss';
+@import './fonts.css'; /* 自架子集，取代 ds 的 CDN 版，見 scripts/build-fonts.py */
+@import './ds/tokens/colors.css';
+@import './ds/tokens/typography.css';
+@import './ds/tokens/spacing.css';
+@import './ds/tokens/radii.css';
+@import './ds/tokens/shadows.css';
+
+/*
+ * ds/ 與前台是**同一份**客戶確認的設計系統（由 scripts/sync-design-tokens.mjs 從
+ * mockup 複製）。後台不對外，但屬同一個品牌，不另立一套顏色。
+ *
+ * 差別在於：前台走深色底（確認稿的基調），後台走 ds 的**淺色語意別名**
+ * （`--surface-page` / `--fg-1`）—— 編輯者要在強光辦公室裡看一整天表格。
+ */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-page: var(--surface-page);
+  --color-surface: var(--surface-card);
+  --color-body: var(--fg-1);
+  --color-muted: var(--fg-2);
+  --color-line: var(--border-1);
+}
+
+body {
+  background: var(--surface-page);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+
+# sharp 是 Next.js 圖片優化用的原生套件。本站不使用 SWA 的圖片優化
+# （圖片走 Blob 直連，見 docs/azure-deployment.md），但 next build 仍會參照它。
+onlyBuiltDependencies:
+  - sharp
+  # Vite/ESLint 的原生二進位檔，postinstall 不跑就會在 build 時找不到
+  - esbuild
+  - unrs-resolver

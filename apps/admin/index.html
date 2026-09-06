@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      後台不做 SEO，而且必須確保「絕對不被索引」。
+      robots.txt 的 Disallow 只是請求，被外部連到時仍可能進索引 —— noindex 才是攔截。
+      後台介面固定為繁體中文（編輯者的語言），與站台的 en / zh-Hant 兩套內容無關。
+    -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>VicRound CMS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

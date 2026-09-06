@@ -1,0 +1,205 @@
+{
+  "site": {
+    "name": "VICROUND",
+    "legalName": "© 2026 VICROUND 盈絲實業有限公司。版權所有。",
+    "tagline": "盈絲實業開發光學膜、機能性紡織與泡棉、聲學材料，供應全球消費性電子、車輛、醫療器材與太陽能硬體。"
+  },
+  "nav": {
+    "products": "產品",
+    "solutions": "應用解決方案",
+    "technologies": "技術與製程",
+    "about": "關於我們",
+    "sustainability": "永續發展",
+    "partnership": "合作夥伴",
+    "resources": "資源中心",
+    "faq": "常見問題",
+    "downloads": "技術文件下載",
+    "news": "新聞與展會",
+    "contact": "聯絡我們",
+    "privacy": "隱私權與法律聲明",
+    "member": "會員專區",
+    "account": "我的帳戶"
+  },
+  "megaTitle": {
+    "products": "產品 — 我們製造什麼",
+    "solutions": "解決方案 — 我們解決什麼問題",
+    "technologies": "技術能力",
+    "resources": "資源中心"
+  },
+  "mega": {
+    "products": {
+      "opticalFilm": {
+        "label": "光學膜",
+        "note": "八大塗佈表面系列"
+      },
+      "textileFoam": {
+        "label": "紡織與泡棉",
+        "note": "緩衝、密封與遮蔽"
+      },
+      "acoustic": {
+        "label": "聲學材料",
+        "note": "四種 IP 等級網布"
+      }
+    },
+    "solutions": {
+      "consumerElectronics": {
+        "label": "消費性電子",
+        "note": "手機、平板、筆電、穿戴裝置"
+      },
+      "automotive": {
+        "label": "車用",
+        "note": "座艙顯示器與感測器視窗"
+      },
+      "smartHealthcare": {
+        "label": "智慧醫療",
+        "note": "抗菌與防窺表面"
+      },
+      "renewableEnergy": {
+        "label": "再生能源",
+        "note": "太陽能模組與儲能機櫃"
+      },
+      "acousticSolutions": {
+        "label": "聲學解決方案",
+        "note": "IP 等級喇叭與麥克風防護"
+      },
+      "ePaper": {
+        "label": "電子紙",
+        "note": "紙感表面與前光膜"
+      },
+      "sportsEyewear": {
+        "label": "運動眼鏡",
+        "note": "防霧、偏光與舒適泡棉"
+      }
+    },
+    "technologies": {
+      "coreProcesses": {
+        "label": "核心製程",
+        "note": "塗佈、貼合、模切、品管"
+      },
+      "innovation": {
+        "label": "研發與材料創新",
+        "note": "從配方到試產線"
+      },
+      "compliance": {
+        "label": "產品法規符合",
+        "note": "RoHS、REACH、IEC 與客戶規範"
+      }
+    },
+    "resources": {
+      "news": {
+        "label": "新聞與展會",
+        "note": "展場與我們見面"
+      },
+      "faq": {
+        "label": "常見問題",
+        "note": "規格、下單與法規符合"
+      },
+      "insights": {
+        "label": "產業洞察",
+        "note": "產業觀察與趨勢報告"
+      },
+      "downloads": {
+        "label": "技術文件下載",
+        "note": "規格書、型錄、白皮書"
+      }
+    }
+  },
+  "search": {
+    "label": "搜尋",
+    "placeholder": "搜尋產品、規格、應用…",
+    "submit": "搜尋",
+    "frequent": "熱門搜尋",
+    "chips": {
+      "antiGlare": "抗眩光膜",
+      "emiFoam": "EMI 遮蔽泡棉",
+      "acousticMesh": "IP67 聲學網布",
+      "isoCert": "ISO 14001 證書",
+      "specSheet": "規格書下載"
+    }
+  },
+  "cta": {
+    "eyebrow": "盈絲實業",
+    "headline": "與盈絲展開您的專案。",
+    "subcopy": "告訴我們您的應用與目標規格 —— 工程團隊將於兩個工作天內回覆。",
+    "button": "立即聯繫！"
+  },
+  "contactDialog": {
+    "eyebrow": "聯絡我們",
+    "title": "與我們聯繫。",
+    "name": "姓名",
+    "namePlaceholder": "您的姓名",
+    "company": "公司",
+    "companyPlaceholder": "公司名稱",
+    "email": "公司電子郵件",
+    "emailPlaceholder": "you@company.com",
+    "productLine": "產品線",
+    "productLineOther": "其他",
+    "application": "應用",
+    "applicationPlaceholder": "例如：車用座艙顯示器",
+    "targetSpec": "目標規格",
+    "targetSpecPlaceholder": "例如：AG 60–120 GU、3H 硬塗層",
+    "consent": "我同意盈絲實業依",
+    "consentLink": "隱私權政策",
+    "consentSuffix": "使用上述資訊回覆本次詢問。",
+    "submit": "送出訊息",
+    "sentTitle": "感謝您 —— 我們已收到您的訊息。",
+    "sentBody": "團隊將於兩個工作天內回覆。",
+    "close": "關閉"
+  },
+  "common": {
+    "skipToContent": "跳至主要內容",
+    "readMore": "了解更多",
+    "backToList": "返回列表",
+    "emptyState": "尚未發佈內容。",
+    "language": "語言",
+    "menu": "選單",
+    "breadcrumb": "麵包屑導覽",
+    "close": "關閉"
+  },
+  "account": {
+    "dashboard": "總覽",
+    "downloads": "文件",
+    "sampleRequests": "樣品申請",
+    "profile": "帳戶資料",
+    "signIn": "登入",
+    "signOut": "登出"
+  },
+  "certification": {
+    "issuer": "發證機構",
+    "validity": "效期",
+    "scope": "範疇",
+    "sites": "適用據點",
+    "placeholder": "待客戶提供證書明細 —— 此處先以版位呈現。",
+    "cta": "索取證書",
+    "label": "認證",
+    "partners": "合作品牌",
+    "exhibitions": "參展紀錄"
+  },
+  "spec": {
+    "property": "項目",
+    "value": "典型值",
+    "note": "方法／備註",
+    "download": "下載規格書",
+    "sample": "索取樣品"
+  },
+  "products": {
+    "whereUsed": "應用領域"
+  },
+  "solutions": {
+    "other": "其他應用"
+  },
+  "faq": {
+    "result": "{count} 個問題",
+    "expandAll": "全部展開",
+    "collapseAll": "全部收合"
+  },
+  "article": {
+    "contents": "目錄",
+    "keepReading": "延伸閱讀",
+    "share": "分享",
+    "copyLink": "複製連結"
+  },
+  "news": {
+    "more": "更多消息"
+  }
+}

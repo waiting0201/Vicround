@@ -1,0 +1,26 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/spacing.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Spacing, layout & radii scale.
+   No source codebase to copy exact pixel values from (this is a new site, pre-production) —
+   an 8px-based scale is used as a clean, original default for this design system. */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  --container-max: 1280px;
+  --container-pad: clamp(20px, 5vw, 80px);
+  --section-pad-y: clamp(64px, 9vw, 128px);
+}

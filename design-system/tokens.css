@@ -1,3 +1,11 @@
+/*
+ * ⚠️ 這一份**不是**網站實際使用的 token。
+ *
+ * 2026-09-06 決議：實作一律採用客戶已確認的 `mockup/Rounded Design/_ds/`
+ * （`--purple-500: #6436ef`、`--fg-1` / `--surface-*` 命名），由
+ * `scripts/sync-design-tokens.mjs` 同步進 apps/web 與 apps/admin。
+ * 本檔保留為 CIS Guide Book 的推導紀錄與溯源用，不要拿去接程式。
+ */
 /**
  * VICROUND Design Tokens
  * 來源：/Users/tim/webapps/Vicround/output/design-system.md

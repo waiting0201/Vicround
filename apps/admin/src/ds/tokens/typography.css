@@ -1,0 +1,37 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/typography.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Type tokens.
+   English: Geologica (Semi Bold per CIS guide) — loaded from Google Fonts in fonts.css.
+   Chinese: GenYoGothic TW / 源樣黑體 (Semi Bold per CIS guide) — see fonts.css for the substitution note. */
+
+:root {
+  --font-display: "Geologica", "GenYoGothic TW", "Noto Sans TC", system-ui, sans-serif;
+  --font-body: "Geologica", "GenYoGothic TW", "Noto Sans TC", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Weights actually available (see fonts.css) */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600; /* Geologica ships a true 600; GenYoGothic falls back to its Bold, see fonts.css */
+  --weight-bold: 700;
+
+  /* Type scale — display/heading sizes lean large & tight, matching a technical/precision brand voice */
+  --text-display-1: 700 4.5rem/1.02 var(--font-display); /* clamp down to 2.75rem on small viewports in layout CSS */
+  --text-display-2: 600 3.375rem/1.05 var(--font-display); /* clamp down to 2.25rem on small viewports in layout CSS */
+  --text-h1: 600 2.5rem/1.1 var(--font-display);
+  --text-h2: 600 2rem/1.15 var(--font-display);
+  --text-h3: 600 1.5rem/1.25 var(--font-display);
+  --text-h4: 600 1.25rem/1.35 var(--font-display);
+  --text-h5: 600 1.0625rem/1.4 var(--font-display);
+  --text-eyebrow: 600 0.8125rem/1.2 var(--font-display);
+  --text-body-lg: 400 1.1875rem/1.6 var(--font-body);
+  --text-body: 400 1rem/1.6 var(--font-body);
+  --text-body-sm: 400 0.875rem/1.55 var(--font-body);
+  --text-caption: 500 0.75rem/1.4 var(--font-body);
+  --text-mono: 400 0.875rem/1.5 var(--font-mono);
+
+  --tracking-eyebrow: 0.12em;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+}

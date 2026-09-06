@@ -46,15 +46,25 @@ src/
   Application/         Use-cases, DTOs, validators, mapping, culture resolution
   Domain/              Entities + translation entities, enums, domain rules
   Infrastructure/      EF Core DbContext, migrations, repositories, Blob/email clients
-  web/                 Next.js app — public site (app/[locale]/**) + self-built /admin CMS area
+apps/
+  web/                 Next.js app — public site only (app/[locale]/**), SSR + SEO/GEO
+  admin/               Vite + React SPA — the CMS; builds into apps/web/public/admin, served /admin
 tests/
   Functions.Tests/     integration tests against the Functions host
   Application.Tests/    unit tests
 docs/                  this folder
 ```
 
-The admin CMS is a route group inside the Next.js app (e.g. `app/(admin)/admin/**`), auth-
-gated and pointed at the Admin API — it is *not* statically generated.
+**前台與後台是兩個獨立的 app，只共用一個網域。** `apps/web` 是公開站，每一條路由都在
+`[locale]` 之下、server-render、帶完整 metadata 與 JSON-LD；`apps/admin` 是後台 SPA，
+產物落在 `apps/web/public/admin`，由 web 的 `middleware.ts` 把 `/admin/**` 的深層網址
+rewrite 回 `index.html`（SPA 自己接路由）。
+
+這樣切的理由有兩個：後台的重量級套件（富文字編輯器、資料表格）不進 Next.js 的 standalone
+產物 —— SWA Free 的 250MB 上限是與公開站共用的；而後台完全不需要 SSR、metadata、sitemap
+與 hreflang，混在同一棵路由樹裡只會讓「哪些頁面要 SEO」變成每次新增頁面都要重想的問題。
+後台以 `robots.txt` 的 `Disallow` 加 `<meta name="robots" content="noindex, nofollow">`
+雙重排除索引。
 
 ## Request flows
 

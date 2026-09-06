@@ -1,0 +1,54 @@
+/* 由 scripts/sync-design-tokens.mjs 從 mockup/Rounded Design/_ds/<ds>/tokens/fonts.css 逐字複製 —— 不要手改這一份。
+   要改視覺請改 mockup 的原始檔並重跑 `pnpm sync:tokens`（客戶確認稿是那一份）。 */
+
+/* Vicround — Webfonts.
+   English: Geologica Semi Bold, per the CIS Guide Book. Geologica is a real Google Font — loaded here,
+   self-hosted is unnecessary since Google's CDN is stable and it's already the authoritative source.
+
+   Chinese: 源樣黑體 / GenYoGothic TW Semi Bold, per the CIS Guide Book. FLAGGED SUBSTITUTION:
+   - The official repo (github.com/ButTaiwan/genyog-font) ships .otf/.ttc, not raw web-servable files,
+     and does not publish a discrete "Semi Bold" weight — the lineup is Light/Regular/Medium/Bold/etc.
+   - No font binary was attached to this project, so headings below use GenYoGothic TW **Bold** (closest
+     weight above Medium) and body text uses **Regular**, loaded from a public CDN mirror of the
+     OFL-licensed release. Files are large (~5.6MB/weight, full CJK charset) so they are linked, not
+     vendored into this repo.
+   - ACTION NEEDED: please attach the real GenYoGothic TW Semi Bold .otf/.ttf (or point us at the exact
+     release asset) so we can self-host the correct weight and drop this CDN dependency. */
+
+@import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&display=swap');
+
+@font-face {
+  font-family: "GenYoGothic TW";
+  src: url('https://cdn.jsdelivr.net/gh/yuleshow/chinese-fonts/ButTaiwan-%E6%BA%90%E6%A8%A3%E9%AB%94/GenYoGothicTW-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GenYoGothic TW";
+  src: url('https://cdn.jsdelivr.net/gh/yuleshow/chinese-fonts/ButTaiwan-%E6%BA%90%E6%A8%A3%E9%AB%94/GenYoGothicTW-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  /* Standing in for "Semi Bold" — see note above */
+  font-family: "GenYoGothic TW";
+  src: url('https://cdn.jsdelivr.net/gh/yuleshow/chinese-fonts/ButTaiwan-%E6%BA%90%E6%A8%A3%E9%AB%94/GenYoGothicTW-Bold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GenYoGothic TW";
+  src: url('https://cdn.jsdelivr.net/gh/yuleshow/chinese-fonts/ButTaiwan-%E6%BA%90%E6%A8%A3%E9%AB%94/GenYoGothicTW-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* IBM Plex Mono for technical spec / mono contexts (spec tables, part numbers) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
