@@ -18,7 +18,7 @@ const pStyle: React.CSSProperties = {
 
 export function ArticleBody({ blocks }: { blocks: LocalizedBlocks<Block>[] }) {
   return (
-    <div style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 40 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
       {blocks.map((block, index) => {
         switch (block.type) {
           case 'heading':

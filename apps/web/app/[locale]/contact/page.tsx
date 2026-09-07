@@ -228,7 +228,6 @@ export default async function ContactPage({ params }: Params) {
                 margin: '16px 0 0',
                 font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: 'var(--page-muted)',
-                maxWidth: 720,
               }}
             >
               {c.locations.lead}

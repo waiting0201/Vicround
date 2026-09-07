@@ -75,7 +75,7 @@ export function FaqAccordion({
         ))}
       </nav>
 
-      <div style={{ maxWidth: 820 }}>
+      <div>
         <div
           style={{
             display: 'flex',
@@ -153,7 +153,6 @@ export function FaqAccordion({
                     margin: 0,
                     font: "400 0.9375rem/1.75 'Geologica', 'GenYoGothic TW', sans-serif",
                     color: 'var(--page-muted)',
-                    maxWidth: 680,
                   }}
                 >
                   {item.answer}

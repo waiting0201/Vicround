@@ -78,7 +78,6 @@ export default async function PartnershipPage({ params }: Params) {
                 margin: '16px 0 0',
                 font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: 'var(--page-muted)',
-                maxWidth: 720,
                 textWrap: 'pretty',
               }}
             >
@@ -161,7 +160,6 @@ export default async function PartnershipPage({ params }: Params) {
                   margin: 0,
                   font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
                   color: 'var(--page-muted)',
-                  maxWidth: 520,
                   textWrap: 'pretty',
                 }}
               >

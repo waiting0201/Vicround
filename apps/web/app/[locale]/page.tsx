@@ -102,7 +102,6 @@ export default async function HomePage({ params }: Params) {
               margin: '24px 0 0',
               font: "400 1.1875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
               color: 'rgba(255,255,255,0.78)',
-              maxWidth: 860,
               textWrap: 'pretty',
             }}
           >
@@ -145,7 +144,7 @@ export default async function HomePage({ params }: Params) {
                     {item.title}
                   </Link>
                 </h3>
-                <p style={{ ...bodyStyle, maxWidth: 440 }}>{item.body}</p>
+                <p style={bodyStyle}>{item.body}</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {item.tags.map((tag) => (
                     <MonoChip key={tag}>{tag}</MonoChip>
@@ -290,7 +289,6 @@ export default async function HomePage({ params }: Params) {
                 margin: '20px 0 0',
                 font: "400 1.0625rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: 'rgba(255,255,255,0.65)',
-                maxWidth: 760,
                 textWrap: 'pretty',
               }}
             >

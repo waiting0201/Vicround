@@ -69,7 +69,6 @@ export function PageCTA({
             margin: '16px 0 0',
             font: "400 1.0625rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
             color: 'rgba(255,255,255,0.65)',
-            maxWidth: 760,
             textWrap: 'pretty',
           }}
         >

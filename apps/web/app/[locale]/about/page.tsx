@@ -108,7 +108,6 @@ export default async function AboutPage({ params }: Params) {
                   margin: 0,
                   font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
                   color: 'rgba(255,255,255,0.62)',
-                  maxWidth: 520,
                   textWrap: 'pretty',
                 }}
               >
@@ -182,7 +181,6 @@ export default async function AboutPage({ params }: Params) {
                 margin: '16px 0 0',
                 font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: 'rgba(255,255,255,0.62)',
-                maxWidth: 720,
                 textWrap: 'pretty',
               }}
             >
@@ -320,7 +318,6 @@ export default async function AboutPage({ params }: Params) {
                 margin: '16px 0 0',
                 font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: 'rgba(255,255,255,0.62)',
-                maxWidth: 720,
               }}
             >
               {c.certification.lead}
@@ -343,7 +340,6 @@ export default async function AboutPage({ params }: Params) {
                       margin: '8px 0 0',
                       font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                       color: 'rgba(255,255,255,0.55)',
-                      maxWidth: 720,
                     }}
                   >
                     {group.body}

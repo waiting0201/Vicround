@@ -75,7 +75,7 @@ export default async function ArticlePage({ params }: Params) {
           <Container style={{ padding: 'clamp(28px, 4vw, 48px) clamp(24px, 5vw, 80px) 0' }}>
             <Breadcrumb locale={locale} items={crumbs} label={t('common.breadcrumb')} />
 
-            <div style={{ maxWidth: 780, marginTop: 28 }}>
+            <div style={{ marginTop: 28 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span
                   style={{

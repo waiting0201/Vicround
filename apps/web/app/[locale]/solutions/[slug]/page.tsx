@@ -125,7 +125,6 @@ export default async function SolutionPage({ params }: Params) {
             margin: 0,
             font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
             color: 'var(--page-muted)',
-            maxWidth: 480,
             textWrap: 'pretty',
           }}
         >
@@ -214,7 +213,6 @@ export default async function SolutionPage({ params }: Params) {
                   margin: '16px 0 0',
                   font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                   color: 'var(--page-muted)',
-                  maxWidth: 620,
                   textWrap: 'pretty',
                 }}
               >
@@ -291,7 +289,6 @@ export default async function SolutionPage({ params }: Params) {
                   margin: '16px 0 0',
                   font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                   color: 'var(--page-muted)',
-                  maxWidth: 620,
                 }}
               >
                 {c.grades.lead}

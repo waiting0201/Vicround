@@ -74,7 +74,7 @@ export default async function PrivacyPage({ params }: Params) {
               ))}
             </nav>
 
-            <div style={{ maxWidth: 760, display: 'flex', flexDirection: 'column', gap: 36 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
               <p
                 style={{
                   margin: 0,

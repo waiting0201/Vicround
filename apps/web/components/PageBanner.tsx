@@ -100,7 +100,6 @@ export function PageBanner({
                 margin: '20px 0 0',
                 font: "400 1.125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                 color: light ? 'rgba(20,20,31,0.66)' : 'rgba(255,255,255,0.66)',
-                maxWidth: 900,
                 textWrap: 'pretty',
               }}
             >

@@ -112,7 +112,7 @@ export default async function ProductsPage({ params }: Params) {
               >
                 {line.title}
               </h2>
-              <p style={{ ...bodyStyle, maxWidth: 460 }}>{line.body}</p>
+              <p style={bodyStyle}>{line.body}</p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 8 }}>
                 {line.features.map((feature) => (

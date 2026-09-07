@@ -55,7 +55,6 @@ export default async function SustainabilityPage({ params }: Params) {
     margin: 0,
     font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
     color: 'var(--page-muted)',
-    maxWidth: 520,
     textWrap: 'pretty',
   };
 
