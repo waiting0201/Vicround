@@ -1,44 +1,121 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router';
+import { ToastProvider } from '@/ui';
 import { Shell } from '@/components/Shell';
 import { Login } from '@/routes/Login';
-import { Placeholder } from '@/routes/Placeholder';
 import { auth, refresh } from '@/lib/api';
-import { ALL_ITEMS, HOME_PATH } from '@/lib/menu';
+import { HOME_PATH } from '@/lib/menu';
+import { RESOURCES, type ResourceDef } from '@/lib/resources';
+import { CollectionScreen } from '@/screens/CollectionScreen';
+import { EditorScreen } from '@/screens/EditorScreen';
+import { EntityEditor } from '@/screens/EntityEditor';
+import { InquiriesScreen } from '@/screens/InquiriesScreen';
+import { InquiryDetail } from '@/screens/InquiryDetail';
+import { MediaScreen } from '@/screens/MediaScreen';
+import { MemberDetail } from '@/screens/MemberDetail';
+import { MembersScreen } from '@/screens/MembersScreen';
+import { NavigationScreen } from '@/screens/NavigationScreen';
+import { OrderedScreen } from '@/screens/OrderedScreen';
+import { RedirectsScreen } from '@/screens/RedirectsScreen';
+import { SampleRequestDetail } from '@/screens/SampleRequestDetail';
+import { SampleRequestsScreen } from '@/screens/SampleRequestsScreen';
+import { SettingsScreen } from '@/screens/SettingsScreen';
 
 /**
  * 後台路由。`basename` 是 `/admin` —— 後台掛在公開站底下，
  * 深層網址由 web 的 middleware rewrite 回 `index.html`（見 apps/web/middleware.ts）。
  *
  * <p>
- * 畫面清單由 `lib/menu.ts` 產生，所以側欄與路由不可能對不起來。
- * 實作某一個畫面時，在下面加一條寫死的 `<Route>` 蓋過自動產生的那一條。
+ * 用 `createBrowserRouter`（data router）而不是宣告式的 `<BrowserRouter>`：
+ * react-router v7 的 `useBlocker` 只在 data router 下可用，而「編輯到一半按了側欄
+ * 就把改的東西丟掉」是後台最貴的一種錯誤（見 docs/admin-ui.md §5.9）。
+ * </p>
+ *
+ * <p>
+ * 畫面清單由 `lib/resources.ts` 產生，所以側欄、路由與資料字典不可能對不起來。
+ * 每個實體的畫面型別（清單抽屜／獨立編輯頁／看板…）也寫在那一份，這裡只負責把
+ * 型別對應到元件。
  * </p>
  */
+
+/** 畫面型別 → 清單元件。型別的定義與各畫面的歸屬見 docs/admin-ui.md §3。 */
+function listElement(resource: ResourceDef) {
+  switch (resource.screen) {
+    case 'editor':
+      return <EditorScreen resource={resource} />;
+    case 'ordered':
+      return resource.type === 'navigation' ? (
+        <NavigationScreen resource={resource} />
+      ) : (
+        <OrderedScreen resource={resource} />
+      );
+    case 'queue':
+      return <MembersScreen resource={resource} />;
+    case 'board':
+      return <SampleRequestsScreen resource={resource} />;
+    case 'inbox':
+      return <InquiriesScreen resource={resource} />;
+    case 'media':
+      return <MediaScreen resource={resource} />;
+    case 'settings':
+      return <SettingsScreen resource={resource} />;
+    case 'collection':
+    default:
+      return resource.type === 'redirects' ? (
+        <RedirectsScreen resource={resource} />
+      ) : (
+        <CollectionScreen resource={resource} />
+      );
+  }
+}
+
+/** 有獨立詳情頁的型別才配 `/{type}/:id` 路由；抽屜型的編輯不換網址。 */
+function detailElement(resource: ResourceDef) {
+  switch (resource.screen) {
+    case 'editor':
+      return <EntityEditor resource={resource} />;
+    case 'queue':
+      return <MemberDetail resource={resource} />;
+    case 'board':
+      return <SampleRequestDetail resource={resource} />;
+    case 'inbox':
+      return <InquiryDetail resource={resource} />;
+    default:
+      return null;
+  }
+}
+
+const router = createBrowserRouter(
+  [
+    { path: '/login', element: <Login /> },
+    {
+      element: <RequireAuth />,
+      children: [
+        {
+          element: <Shell />,
+          children: [
+            { index: true, element: <Navigate to={`/${HOME_PATH}`} replace /> },
+            ...RESOURCES.flatMap((resource) => {
+              const detail = detailElement(resource);
+              return [
+                { path: `/${resource.type}`, element: listElement(resource) },
+                ...(detail ? [{ path: `/${resource.type}/:id`, element: detail }] : []),
+              ];
+            }),
+          ],
+        },
+      ],
+    },
+    { path: '*', element: <Navigate to={`/${HOME_PATH}`} replace /> },
+  ],
+  { basename: '/admin' },
+);
+
 export function App() {
   return (
-    <BrowserRouter basename="/admin">
-      <Routes>
-        <Route path="/login" element={<Login />} />
-
-        <Route element={<RequireAuth />}>
-          <Route element={<Shell />}>
-            {ALL_ITEMS.map((item) => (
-              <Route key={item.path} path={`/${item.path}`} element={<Placeholder item={item} />} />
-            ))}
-            {ALL_ITEMS.filter((item) => item.hasDetail).map((item) => (
-              <Route
-                key={`${item.path}-detail`}
-                path={`/${item.path}/:id`}
-                element={<Placeholder item={item} detail />}
-              />
-            ))}
-          </Route>
-        </Route>
-
-        <Route path="*" element={<Navigate to={`/${HOME_PATH}`} replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
   );
 }
 
@@ -60,6 +137,8 @@ function RequireAuth() {
     };
   }, [state]);
 
-  if (state === 'checking') return <div className="p-6 text-sm">載入中…</div>;
+  if (state === 'checking') {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-[var(--fg-2)]">載入中…</div>;
+  }
   return state === 'in' ? <Outlet /> : <Navigate to="/login" replace />;
 }

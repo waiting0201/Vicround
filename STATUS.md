@@ -5,19 +5,20 @@
 > 分工：本檔記錄**狀態**；[CLAUDE.md](CLAUDE.md) 記錄**慣例與檢索地圖**；
 > [docs/](docs/) 記錄各子系統的**設計**。三份不要互相抄，各司其職。
 
-**最後更新**：2026-09-06
+**最後更新**：2026-09-07
 
 ---
 
 ## 一句話現況
 
-**前台網站的版型已完成，後端一行都還沒寫。**
+**前後台的版型都已完成，後端一行都還沒寫。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
 19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址）；SEO 與 GEO 的基礎建設
 （metadata／hreflang／sitemap／robots／llms.txt／六種 JSON-LD）已就緒並實測通過。
-`apps/admin` 是可登入、側欄完整、畫面待實作的 Vite SPA 外框。
+`apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 8 種畫面型別），
+開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
 
 **尚未開始**：Azure Functions API、EF Core 與資料庫、CI/CD 與 Azure 佈署。
 前台目前吃的是 `apps/web/content/*.ts` 的暫代文案，**不是 CMS**。
@@ -40,8 +41,8 @@
 | 子系統 | 狀態 | 說明 |
 | --- | --- | --- |
 | 前台 `apps/web` | 🟡 | 確認稿 25 頁全數實作（19 條路由檔）；資料來自暫代文案，未接 API |
-| 後台 `apps/admin` | 🟡 | 登入 + 側欄 + 27 個畫面的路由骨架；無任何實作畫面 |
-| 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集 |
+| 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
+| 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
 | Content API（`fn-public`） | ⬜ | 未開工 |
 | Account API（會員） | ⬜ | 未開工 |
@@ -162,15 +163,44 @@ apps/web/
 
 ## 五、後台 `apps/admin`
 
+介面規格見 [docs/admin-ui.md](docs/admin-ui.md)（設計原則、8 種畫面型別、狀態色彩對照、文案語氣）。
+
 | 項目 | 狀態 | 說明 |
 | --- | --- | --- |
-| 應用外框 | ✅ | Vite + React 19 + react-router，`basename="/admin"`，build 進 `apps/web/public/admin` |
+| 應用外框 | ✅ | Vite + React 19 + react-router **data router**（`createBrowserRouter`，`basename="/admin"`），build 進 `apps/web/public/admin` |
 | 不被索引 | ✅ | `robots.txt` Disallow + `index.html` 的 `noindex, nofollow` 雙重排除 |
 | 登入頁 | 🟡 | 版面完成；access token 只放記憶體、refresh 靠 httpOnly cookie（**需後端配合 `Set-Cookie`**） |
-| 側欄與路由 | ✅ | 27 個畫面依 [docs/cms.md](docs/cms.md) 的六個分區產生，含 `/{type}/:id` 編輯路由 |
-| 實際畫面 | ⬜ | 全部是 `Placeholder`，只標出「這個畫面要打哪一支 API」 |
+| UI 元件庫 | ✅ | `src/ui/` 24 支（Button／Table／Drawer／Dialog／Toast／Tabs／Field…）＋內嵌 SVG 圖示，零新增套件 |
+| 資料字典 | ✅ | `src/lib/resources.ts`：27 個實體的列表欄位與表單欄位，並區分**不分語系／分語系**兩層 |
+| 實際畫面 | ✅ | **27 個全部實作**，見下表 |
+| 開發用假 API | ✅ | `src/lib/mock.ts`：路徑形狀與 Admin API 契約一致，後端上線設 `VITE_ADMIN_MOCK=0` 即切換 |
+| 接真的 Admin API | ⬜ | 等 `fn-admin`；只需要關掉假資料旗標，畫面不用改 |
 
----
+### 27 個畫面
+
+| 型別 | 畫面 | 實作 |
+| --- | --- | --- |
+| 清單＋獨立編輯頁 | categories／products／solutions／articles／pages／exhibitions／faq-items／downloads／certifications／process-flows | `EditorScreen` + `EntityEditor`（含子項編輯器：規格列、版塊、製程步驟） |
+| 清單＋編輯抽屜 | article-tags／authors／locations／testimonials／partner-brands／contact-channels／business-domains／users | `CollectionScreen` |
+| 排序清單 | faq-categories／milestones | `OrderedScreen`（上移／下移 + 批次存排序） |
+| 導覽（樹狀＋位置分頁） | navigation | `NavigationScreen` |
+| 審核佇列 | members | `MembersScreen` + `MemberDetail`（列上直接核准／拒絕，拒絕須填理由） |
+| 收件匣 | contact-inquiries | `InquiriesScreen` + `InquiryDetail` |
+| 看板 | sample-requests | `SampleRequestsScreen` + `SampleRequestDetail`（只列合法的下一個狀態，不做拖曳） |
+| 媒體庫 | media | `MediaScreen`（縮圖網格 + 上傳，上傳前先選公開／私有容器） |
+| 轉址 | redirects | `RedirectsScreen`（存檔前先算轉址鏈與環，鏈會自動壓平成最終目標） |
+| 站台設定 | site-settings | `SettingsScreen`（依 key 前綴自動分區，分語系設定另有語系分頁） |
+
+### 已處理的跨畫面規則
+
+| 規則 | 實作位置 |
+| --- | --- |
+| 雙語編輯與**翻譯缺漏標示**（分頁黃點、清單語系欄、「缺 zh-Hant」篩選） | `components/EntityForm.tsx`、`components/ResourceList.tsx`、`lib/format.ts` |
+| 改 slug 會寫 301 的提示 | `screens/EntityEditor.tsx` |
+| 未存變更離開攔截（站內導覽 + 關閉分頁） | `useBlocker` + `beforeunload`，見 `lib/draft.ts` |
+| 發布／取消發布／封存的具體後果寫在確認框裡 | `components/RecordActions.tsx` |
+| Editor 角色看不到 `adminOnly` 項目 | `components/Shell.tsx` |
+| 測試環境標示 | `components/Shell.tsx`（假資料模式時顯示） |
 
 ## 六、後端與部署
 
@@ -204,7 +234,7 @@ apps/web/
 
 1. 建 `src/` 的 .NET solution 與 EF Core 模型（[docs/database.md](docs/database.md) 的 14 個功能單元）
 2. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支，讓前台可以拔掉 `content/`
-3. Admin API + 後台前三個畫面（Products / Pages / Articles）
+3. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
 4. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
 5. Account API 與會員專區（需先補設計稿）
 

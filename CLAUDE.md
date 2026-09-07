@@ -54,6 +54,7 @@ that no single source file makes obvious.
 | [docs/architecture.md](docs/architecture.md) | Understanding overall layout, projects, request flow, i18n & caching strategy |
 | [docs/cms-api.md](docs/cms-api.md) | Adding/changing API endpoints — public Content API, member Account API, authenticated Admin API |
 | [docs/cms.md](docs/cms.md) | The self-built CMS — admin UI stack, JWT auth flow, publish→revalidate |
+| [docs/admin-ui.md](docs/admin-ui.md) | 動後台介面時 —— 8 種畫面型別、清單／編輯頁樣式、狀態色彩對照、文案語氣 |
 | [docs/database.md](docs/database.md) | Schema（依 14 個功能單元分章）, the translation-table i18n pattern, migrations, seeding, super-admin seed |
 | [docs/sitemap.md](docs/sitemap.md) | URL/route map, dynamic `sitemap.xml`, hreflang, JSON-LD, legacy `/store/*` + `/application` redirects |
 | [docs/azure-deployment.md](docs/azure-deployment.md) | Provisioning, CI/CD, environments, secrets, scaling |
