@@ -109,26 +109,40 @@ These are project-specific decisions a future instance can't infer from the code
 
 ## Common commands
 
-> Commands below are the intended workflow once the solution is scaffolded; adjust paths to
-> the actual project names when they exist.
-
 ```bash
-# API — Azure Functions (.NET 10 isolated), from src/Functions
-dotnet build
-func start                                   # run Functions host locally (Core Tools)
-dotnet test                                  # run all tests
-dotnet test --filter "FullyQualifiedName~ProductServiceTests.GetBySlug"   # single test
-dotnet ef migrations add <Name> -p ../Infrastructure -s .   # add migration
-dotnet ef database update                    # apply migrations
+# ── 後端 — 從 repo 根目錄 ────────────────────────────────────────────
+dotnet build VicRound.slnx
+dotnet test  VicRound.slnx
+dotnet test  VicRound.slnx --filter "FullyQualifiedName~Pbkdf2PasswordHasherTests"   # 單一組測試
 
-# Frontend — Next.js, from src/web
-npm install
-npm run dev                                  # dev server
-npm run build                                # production build — must emit `output: 'standalone'` (SWA Free 250MB cap)
-npm run start                                # serve production build
-npm run lint
-npm test                                     # unit tests (Jest/Vitest)
-npm test -- product.service                  # single test file
+# EF Core：-p 是 migration 所在的專案，-s 是提供設定的 startup 專案
+dotnet ef migrations add <Name> -p src/Infrastructure -s src/Functions
+dotnet ef database update       -p src/Infrastructure -s src/Functions
+dotnet ef migrations has-pending-model-changes -p src/Infrastructure -s src/Functions
+
+# 連線字串一律走環境變數，永不進版控。本機（SQL Server container，資料庫 VicRound）：
+export VICROUND_SQL_CONNECTION='Server=localhost,1433;Database=VicRound;User Id=sa;Password=<local-password>;TrustServerCertificate=True'
+
+# 三層 seeder / 匯入（全部冪等，只補缺不覆寫）。VR=src/Functions/bin/Debug/net10.0/VicRound.Functions.dll
+dotnet $VR seed [--migrate]        # B 層：super admin、產品線、Solutions、Pages、導覽…
+node scripts/export-content.mjs    # 把 apps/web/content/*.ts 倒成 artifacts/content-export.json
+dotnet $VR import-content          # C 層：確認稿文案進翻譯表
+dotnet $VR import-legacy           # C 層：舊站圖片→Blob、blog→Articles、舊網址→301
+                                   #（需 Azurite；reference/ 不在版控，本機才跑得動）
+
+# Functions host（需 Core Tools 與 Azurite；設定放 src/Functions/local.settings.json）
+azurite --silent --location ~/.azurite &
+cd src/Functions && func start               # GET http://localhost:7071/api/v1/health
+
+# ── 前台與後台 — 從 repo 根目錄（pnpm workspace）─────────────────────
+pnpm install
+pnpm dev                                     # 前台 apps/web（Next.js）
+pnpm dev:admin                               # 後台 apps/admin（Vite SPA）
+pnpm build                                   # 先 build admin 進 apps/web/public/admin，再 build web
+pnpm lint
+pnpm sync:tokens                             # 從 mockup 同步設計 token 進兩個 app
+
+node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位混入中文
 ```
 
 ## 前台頁面現況（2026-09-06）

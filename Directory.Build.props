@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- InvariantGlobalization 不可開：Microsoft.Data.SqlClient 不支援，開了連線一開就擲
+         NotSupportedException。Azure Functions 的 Linux 映像本來就帶 ICU。 -->
+  </PropertyGroup>
+</Project>

@@ -5,13 +5,13 @@
 > 分工：本檔記錄**狀態**；[CLAUDE.md](CLAUDE.md) 記錄**慣例與檢索地圖**；
 > [docs/](docs/) 記錄各子系統的**設計**。三份不要互相抄，各司其職。
 
-**最後更新**：2026-09-07
+**最後更新**：2026-09-08
 
 ---
 
 ## 一句話現況
 
-**前後台的版型都已完成，後端一行都還沒寫。**
+**前後台的版型都已完成；後端的資料層已完成，API 尚未開工。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
@@ -20,8 +20,17 @@
 `apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 8 種畫面型別），
 開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
 
-**尚未開始**：Azure Functions API、EF Core 與資料庫、CI/CD 與 Azure 佈署。
-前台目前吃的是 `apps/web/content/*.ts` 的暫代文案，**不是 CMS**。
+**後端**已建立 `src/` 的 .NET 10 方案（Domain / Application / Infrastructure / Functions），
+[docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
+migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
+17 CHECK / 162 FK 建置無誤，B 層 seeder 建了 78 列且重跑為 0 列，Functions host 的
+`GET /api/v1/health` 實測回 `{"status":"healthy","database":"up"}`。24 項慣例守門測試通過。
+
+**內容已進資料庫**：`apps/web/content/*.ts` 的 1355 組雙語字串與舊站 `www.vicround.com`
+的可用資料都已匯入並實跑驗證（見第六節）。前台**仍在讀 `content/`** —— 要等 Content API
+上線才切換，屆時整個目錄刪除。
+
+**尚未開始**：三個 API surface 的端點、CI/CD 與 Azure 佈署。
 
 ---
 
@@ -44,10 +53,12 @@
 | 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
-| Content API（`fn-public`） | ⬜ | 未開工 |
+| Content API（`fn-public`） | ⬜ | 未開工；Functions host 與 DI 已就緒 |
 | Account API（會員） | ⬜ | 未開工 |
 | Admin API（`fn-admin`） | ⬜ | 未開工 |
-| 資料庫 / EF Core | ⬜ | 只有 [docs/database.md](docs/database.md) 的規劃 |
+| 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
+| 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
+| 媒體 / Blob | 🟡 | 212 張舊站圖已進 `public-media`（本機 Azurite）；正式 Azure Storage 未建 |
 | CI/CD 與 Azure | ⬜ | 無 workflow、未建任何 Azure 資源 |
 
 ---
@@ -221,7 +232,9 @@ apps/web/
 | 項目 | 擋在哪 | 影響 |
 | --- | --- | --- |
 | ⛔ 認證清單與證書明細 | 等客戶提供 | `content/certifications.ts` 多數欄位是 `[待客戶提供]`，About／Sustainability 的認證卡顯示待提供樣式 |
-| ⛔ 版位照片與 partner logo | 等客戶提供 | 目前顯示 mockup 自己的虛線佔位框；照片依 .gitignore 政策不進 GitHub，正式站走 CMS 的 Blob 媒體庫 |
+| ⛔ 版位照片與 partner logo | 等客戶提供 | 目前顯示 mockup 自己的虛線佔位框。舊站 212 張圖已在 Blob，但**內文引用的 2863 個檔名只有約 10% 在匯出裡**，其餘須另外取得 |
+| ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
+| ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
 | ⛔ 產品詳情頁設計 | 確認稿沒有這一頁 | `/products/{category}/{slug}` 維持鷹架 |
 | ⛔ 會員專區內頁設計 | 確認稿只到 `/member` | `/account/**` 五頁維持鷹架 |
 | ⛔ 繁中文案校稿 | 等客戶 | `content/*.ts` 的繁中為暫譯 |
@@ -232,11 +245,13 @@ apps/web/
 
 ## 八、下一步的合理順序
 
-1. 建 `src/` 的 .NET solution 與 EF Core 模型（[docs/database.md](docs/database.md) 的 14 個功能單元）
-2. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支，讓前台可以拔掉 `content/`
-3. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
-4. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
-5. Account API 與會員專區（需先補設計稿）
+1. ~~建 `src/` 的 .NET solution 與 EF Core 模型~~ ✅ 2026-09-08
+2. ~~在能跑的 SQL Server 上套用 migration 與 seeder~~ ✅ 2026-09-08（本機 container）
+2b. ~~把確認稿文案與舊站資料匯入資料庫與 Blob~~ ✅ 2026-09-08
+3. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支，讓前台可以拔掉 `content/`
+4. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
+5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
+6. Account API 與會員專區（需先補設計稿）
 
 ---
 

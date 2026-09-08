@@ -1437,20 +1437,34 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
 
 ### 18.4 舊站匯入（C 層）
 
-來源：`reference/sbk/data/1d0216ed-c6f4-45a4-b718-ac1f81163452/`（舊站完整匯出）
+來源：`reference/sbk/data/`（Weebly 匯出）＋ 線上舊站 `https://www.vicround.com/`。
 
-| 來源檔 | 目標 | 備註 |
+> **2026-09-08 實地清點**：這份匯出比原先假設的少很多，以下為逐檔核對後的事實。
+> 匯入器：`src/Infrastructure/Seeding/LegacyImport/LegacyImportSeeder.cs`，
+> 執行 `dotnet VicRound.Functions.dll import-legacy`。
+
+| 來源 | 實際內容 | 目標 |
 | --- | --- | --- |
-| `website-site-*-data.csv`（pages 區段） | `Products` / `Solutions` / `Pages` | ~118 頁；`LegacySourceKey = 'weebly:page:{id}'`；**slug 對照表需人工審核** |
-| `blog_post.csv` | `Articles`（Type 預設 `CompanyNews`，人工調整） | `LegacySourceKey = 'weebly:blog:{slug}'`；HTML 需清洗（移除 `wsite-*` class、`/uploads/**` 圖片改寫成新 Blob URL） |
-| `blog_post_tag.csv` | `ArticleTags` + `ArticleTagLinks` | 值為 `knowledge` / `activity` |
-| `url_redirects.csv` | `Redirects` | 僅 5 列，其餘 301 由對照表產生 |
-| `官網圖片/`（289 檔） | Blob + `MediaAssets` | 用 SHA-256 去重；`LegacySourceKey = 'weebly:media:{filename}'` |
-| `form_submissions.csv` | `ContactInquiries`（選擇性） | 133 列歷史詢問；是否匯入待確認 |
-| `certificates.csv` | `Certifications` | 內容極少，實質靠人工建 |
+| `website-site-*-data.csv` 的 `pages` 區段 | **只有 `id` 與 `title`**（主站 226 頁、次站 97 頁）；`properties` 區段 2000 多列全是版型設定，**含長 HTML 的列數 = 0** | 只能推導舊網址 → `Redirects` |
+| 線上站爬取 | 112 個真頁面（104 個 `.html`）；舊站對任何不存在的路徑都回 200＋首頁，沒有 sitemap 也沒有 404 | `Redirects` |
+| `blog_post.csv` | **4 篇**，無標題列，三欄為 title / html / `{slug}.html` | `Articles`（`CompanyNews`，以 **Draft** 匯入待編輯確認）；HTML 清掉 `class` / `style` / `<font>` |
+| `blog_post_tag.csv` | 3 列（`knowledge` 等） | `ArticleTags` — 尚未接 |
+| `url_redirects.csv` | 5 列，格式是 **`類型,路徑`**，不是 from→to 對照 | 併入舊網址清單 |
+| `官網圖片/` | 287 個檔（含 1 個 .zip），SHA-256 去重後 **212 張**；內文引用 2863 個檔名，**只有約 10% 在這裡** | Blob `public-media/legacy/*` + `MediaAssets` |
+| `form_submissions.csv` + `form_submission_values.csv` | **無法使用**：133 列只有 IP 一欄（第二欄全空），692 個欄位值 **0 個非空**——Weebly 匯出時把內容抽掉了 | 不匯入 |
+| `certificates.csv` | **零筆資料**，且欄位是 `id,email,country,organization,ip_address,domains`——這是 **SSL 憑證**紀錄，與產品認證無關 | 不匯入（原對應表寫錯） |
 
-**冪等做法**：所有 upsert 以 `LegacySourceKey` 為鍵，已存在則**跳過**（不覆寫），並在報告中列出
-「已存在、略過」的筆數。匯入在 transaction 內分批（每 200 筆一批）。
+### 18.4.1 舊網址一律 301 到首頁（專案決策，2026-09-08）
+
+舊站網址不做逐頁對照，**全部 301 到 `/en`**。
+
+- 逐條建立 `Redirects` 列（目前 241 條）而不是用萬用規則：新站對真正不存在的網址仍要回 404，
+  catch-all 會讓每個打錯的網址都回 200 首頁。
+- ⚠️ **SEO 代價**：大量網址集中導向首頁會被 Google 視為 soft-404，舊頁的排名與連結權重不會傳遞。
+  緩解方式是日後在後台把重要的幾條改指到對應新頁——改 `Redirects` 那一列即可，不需改程式。
+
+**冪等做法**：`LegacySourceKey` 為鍵（媒體用 `weebly:media:{sha256}`——檔名會超過
+`nvarchar(128)`，且以內容雜湊為鍵正好達成去重），已存在則**跳過**，不覆寫。
 
 ---
 

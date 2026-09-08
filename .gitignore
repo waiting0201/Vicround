@@ -1,6 +1,9 @@
 # ── .NET / Azure Functions ────────────────────────────────────────────
 **/bin/
 **/obj/
+# dotnet ef 的 Roslyn BuildHost 在 macOS 上會建出字面名為 `bin\Debug` 的目錄
+# （Windows 風格路徑未轉換）。它不是 `bin/`，所以上面那條擋不住。
+**/bin\\Debug/
 **/temp/
 .vs/
 
@@ -35,6 +38,9 @@ Thumbs.db
 
 # ── 本機產出 ──────────────────────────────────────────────────────────
 output/
+
+# 匯入用的中繼檔（由 scripts/export-content.mjs 與舊站稽核產生，可隨時重建）
+artifacts/
 
 # ── 客戶素材：僅同步至 NAS，不進 GitHub ───────────────────────────────
 # 由 scripts/sync-nas-assets.sh 快照到 Remote_NAS 的 assets 分支。
