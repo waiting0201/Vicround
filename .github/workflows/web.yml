@@ -46,8 +46,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      # `node-linker=hoisted`：pnpm 預設的符號連結版 node_modules **搬不動** ——
+      # standalone 產物裡只會留下指向 .pnpm store 的連結，換一台機器就 MODULE_NOT_FOUND。
+      # 只有 CI 這樣裝；本機開發維持 pnpm 預設。
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
 
       - name: Lint
         run: pnpm lint
@@ -67,13 +70,24 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
         run: pnpm build
 
-      # `output: 'standalone'` 只搬會用到的相依，但 static 與 public 要自己複製
-      # （Next.js 的已知行為，docs/azure-deployment.md 也記了這一條）。
-      - name: Assemble standalone output
+      # 組出要上傳的資料夾。三件事：
+      # 1. `output: 'standalone'` 不會複製 static 與 public，得自己搬（Next.js 的已知行為）
+      # 2. monorepo 的 standalone 會把應用巢狀在 apps/web/ 底下，而 SWA 期待應用就在根，
+      #    因此攤平
+      # 3. 攤平後大小約 80MB，遠低於 SWA Free 的 250MB 上限
+      - name: Assemble deployment folder
         run: |
-          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
-          cp -r apps/web/public apps/web/.next/standalone/apps/web/public
-          du -sh apps/web/.next/standalone
+          rm -rf deploy && mkdir -p deploy
+          cp -R apps/web/.next/standalone/. deploy/
+          mv deploy/apps/web/.next deploy/.next
+          mv deploy/apps/web/server.js deploy/server.js
+          mv deploy/apps/web/package.json deploy/package.json
+          [ -d deploy/apps/web/messages ] && mv deploy/apps/web/messages deploy/messages || true
+          [ -d deploy/apps/web/node_modules ] && cp -R deploy/apps/web/node_modules/. deploy/node_modules/ || true
+          rm -rf deploy/apps
+          cp -R apps/web/.next/static deploy/.next/static
+          cp -R apps/web/public deploy/public
+          du -sh deploy
 
       - name: Azure login (OIDC)
         if: github.event_name != 'pull_request'
@@ -97,7 +111,7 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
           action: upload
-          app_location: apps/web
+          app_location: deploy
           output_location: ''
           skip_app_build: true
           skip_api_build: true
