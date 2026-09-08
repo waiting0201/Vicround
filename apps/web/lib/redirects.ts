@@ -52,10 +52,14 @@ async function load(): Promise<Map<string, RedirectRule>> {
     });
     if (!res.ok) return map;
 
+    // Content API 一律回統一信封（docs/cms-api.md），這一支是 edge middleware 用的
+    // 原生 fetch，因此得自己拆一層。
     const body = (await res.json()) as {
-      items?: { from: string; to: string; statusCode?: number }[];
+      success?: boolean;
+      data?: { items?: { from: string; to: string; statusCode?: number }[] };
     };
-    for (const row of body.items ?? []) {
+
+    for (const row of body.data?.items ?? []) {
       map.set(normalize(row.from), {
         to: row.to,
         status: (row.statusCode ?? 301) as RedirectRule['status'],

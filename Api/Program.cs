@@ -107,6 +107,7 @@ services.AddScoped<ITechnologyReadService, TechnologyReadService>();
 services.AddScoped<IContactInquiryService, ContactInquiryService>();
 services.AddScoped<IAdminAuthService, AdminAuthService>();
 services.AddScoped<IAdminCrudService, AdminCrudService>();
+services.AddScoped<IRevalidationService, RevalidationService>();
 services.AddScoped<HealthHandler>();
 services.AddScoped<CatalogHandler>();
 services.AddScoped<SolutionHandler>();
@@ -118,6 +119,8 @@ services.AddScoped<TechnologyHandler>();
 services.AddScoped<ContactHandler>();
 services.AddScoped<AdminAuthHandler>();
 services.AddScoped<AdminContentHandler>();
+services.AddScoped<AdminMediaHandler>();
+services.AddScoped<AdminActionHandler>();
 services.AddScoped<AppRouter>();
 services.AddHttpContextAccessor();
 

@@ -36,7 +36,10 @@ public interface IAdminCrudService
 /// 逐筆 diff 只會多出中間狀態，而它們沒有獨立的生命週期。
 /// </para>
 /// </summary>
-public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connection) : IAdminCrudService
+public sealed class AdminCrudService(
+    VicRoundDbContext db,
+    IDbConnection connection,
+    IRevalidationService revalidation) : IAdminCrudService
 {
     private const int MaxPageSize = 200;
 
@@ -130,6 +133,8 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
             await transaction.CommitAsync(ct);
         });
 
+        await RevalidateAsync(resource, instance, ct);
+
         // 讀取走 Dapper 的另一條連線，因此一定要在 commit 之後才讀得到。
         return await GetAsync(resource, id.ToString()!, ct)
             ?? throw new InvalidOperationException("剛建立的資料讀不回來。");
@@ -144,6 +149,10 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
         var instance = await FindTrackedAsync(resource.Entity, key, ct)
             ?? throw AppException.NotFound($"{resource.Slug} {id}");
 
+        // 改 slug 等於改網址：舊路徑要在同一個交易裡變成 301，否則既有連結會直接 404
+        // （database.md §0.5、docs/sitemap.md）。
+        var previousPath = await PublicPathAsync(resource, instance, ct);
+
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -153,8 +162,18 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
 
             await SaveLinksAndChildrenAsync(resource, key, body, ct);
 
+            var currentPath = await PublicPathAsync(resource, instance, ct);
+
+            if (previousPath is not null && currentPath is not null && previousPath != currentPath)
+            {
+                await WriteRedirectAsync(previousPath, currentPath, 301, ct);
+                await db.SaveChangesAsync(ct);
+            }
+
             await transaction.CommitAsync(ct);
         });
+
+        await RevalidateAsync(resource, instance, ct);
 
         return await GetAsync(resource, id, ct) ?? throw AppException.NotFound($"{resource.Slug} {id}");
     }
@@ -202,6 +221,11 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
 
         await db.SaveChangesAsync(ct);
 
+        if (await db.FindAsync(resource.Entity, [key], ct) is { } saved)
+        {
+            await RevalidateAsync(resource, saved, ct);
+        }
+
         return await GetAsync(resource, id, ct) ?? throw AppException.NotFound($"{resource.Slug} {id}");
     }
 
@@ -219,7 +243,16 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
 
         if (instance is ContentEntity content)
         {
+            // 封存的內容不再有替代頁：寫 410 讓搜尋引擎下架，而不是留一個 404
+            // 讓它一直回訪（docs/sitemap.md）。
+            var path = await PublicPathAsync(resource, instance, ct);
+
             content.Status = ContentStatus.Archived;
+
+            if (path is not null)
+            {
+                await WriteRedirectAsync(path, path, 410, ct);
+            }
         }
         else
         {
@@ -227,6 +260,7 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
         }
 
         await db.SaveChangesAsync(ct);
+        await RevalidateAsync(resource, instance, ct);
     }
 
     public async Task<Dictionary<string, object?>> SetStatusAsync(
@@ -249,6 +283,7 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
         }
 
         await db.SaveChangesAsync(ct);
+        await RevalidateAsync(resource, content, ct);
 
         return await GetAsync(resource, id, ct) ?? throw AppException.NotFound($"{resource.Slug} {id}");
     }
@@ -291,6 +326,89 @@ public sealed class AdminCrudService(VicRoundDbContext db, IDbConnection connect
         }
 
         return instance;
+    }
+
+
+    // ── 內部：轉址與快取失效 ────────────────────────────────────────────────
+
+    /// <summary>
+    /// 這一筆內容的公開路徑（不含語系前綴）。沒有自己網址的實體回 <c>null</c>——
+    /// 錨點型的（下載）不算，替它寫轉址只會produce 一條永遠不會命中的規則。
+    /// </summary>
+    private async Task<string?> PublicPathAsync(AdminResource resource, object instance, CancellationToken ct)
+    {
+        if (!resource.IsRoutable || instance is not SluggedEntity slugged || slugged.Slug.Length == 0)
+        {
+            return null;
+        }
+
+        return resource.Slug switch
+        {
+            "categories" => PublicPaths.Category(slugged.Slug),
+            "solutions" => PublicPaths.Solution(slugged.Slug),
+            "articles" => instance is Article article ? PublicPaths.Article(article.Type, article.Slug) : null,
+            "pages" => instance is Page page ? PublicPaths.Page(page.Slug, page.PathPrefix) : null,
+            "products" => await ProductPathAsync((Product)instance, ct),
+            _ => null,
+        };
+    }
+
+    private async Task<string?> ProductPathAsync(Product product, CancellationToken ct)
+    {
+        var category = await connection.ExecuteScalarAsync<string?>(new CommandDefinition(
+            "SELECT Slug FROM Categories WHERE Id = @Id", new { Id = product.CategoryId }, cancellationToken: ct));
+
+        return category is null ? null : PublicPaths.Product(category, product.Slug);
+    }
+
+    /// <summary>
+    /// 寫一條轉址，並且<b>不留下鏈與環</b>（database.md §10）：
+    /// 原本指向舊路徑的規則直接改指新路徑，指向自己的規則刪掉。
+    /// </summary>
+    private async Task WriteRedirectAsync(string from, string to, short statusCode, CancellationToken ct)
+    {
+        var normalized = Normalize(from);
+        var target = Normalize(to);
+
+        var existing = await db.Redirects.AsTracking().Where(r => r.FromPath == normalized || r.ToPath == normalized)
+            .ToListAsync(ct);
+
+        foreach (var rule in existing)
+        {
+            if (rule.FromPath == normalized)
+            {
+                rule.ToPath = target;
+                rule.StatusCode = statusCode;
+                rule.IsEnabled = true;
+            }
+            else if (statusCode != 410)
+            {
+                // 舊路徑成了別人的目標 → 把鏈壓平，改指最終目標。
+                rule.ToPath = target;
+            }
+        }
+
+        if (existing.All(rule => rule.FromPath != normalized))
+        {
+            db.Redirects.Add(new Redirect
+            {
+                FromPath = normalized,
+                ToPath = target,
+                StatusCode = statusCode,
+                IsEnabled = true,
+                Notes = statusCode == 410 ? "內容已封存" : "slug 變更",
+            });
+        }
+    }
+
+    /// <summary>比對前一律小寫、去尾斜線（與前台的 middleware 同一條規則）。</summary>
+    private static string Normalize(string path) =>
+        path.Length > 1 ? path.ToLowerInvariant().TrimEnd('/') : path.ToLowerInvariant();
+
+    private async Task RevalidateAsync(AdminResource resource, object instance, CancellationToken ct)
+    {
+        var slug = instance is SluggedEntity slugged ? slugged.Slug : null;
+        await revalidation.RevalidateAsync(RevalidationTags.For(resource.Slug, slug), ct);
     }
 
     // ── 內部：關聯與子項 ────────────────────────────────────────────────────

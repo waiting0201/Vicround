@@ -10,6 +10,7 @@ public interface IPageReadService
 {
     Task<PageDetailDto?> GetAsync(string culture, string slug);
     Task<IReadOnlyList<SitemapEntryDto>> SitemapAsync();
+    Task<IReadOnlyList<RedirectRuleDto>> RedirectsAsync();
 }
 
 /// <summary>敘事型頁面與 sitemap（database.md §09、§10）。</summary>
@@ -103,6 +104,27 @@ public sealed class PageReadService(IDbConnection db) : IPageReadService
             .OrderBy(e => e.Path, StringComparer.Ordinal)
             .ToList();
     }
+
+    /// <summary>
+    /// 轉址表。前台的 middleware 每隔幾分鐘取一次整份（`apps/web/lib/redirects.ts`）——
+    /// 逐次查詢會讓每一個 404 都多一趟 DB。只回啟用中的規則。
+    /// </summary>
+    public async Task<IReadOnlyList<RedirectRuleDto>> RedirectsAsync()
+    {
+        var rows = await db.QueryAsync<RedirectRow>(
+            """
+            SELECT FromPath, ToPath, StatusCode, TargetCulture
+            FROM Redirects
+            WHERE IsEnabled = 1
+            ORDER BY FromPath
+            """);
+
+        return rows
+            .Select(r => new RedirectRuleDto(r.FromPath, r.ToPath, r.StatusCode, r.TargetCulture))
+            .ToList();
+    }
+
+    private sealed record RedirectRow(string FromPath, string ToPath, short StatusCode, string? TargetCulture);
 
     private sealed record SitemapRow(string Path, DateTime UpdatedAt, string Culture);
 

@@ -204,5 +204,11 @@ public sealed record PageDetailDto
     public IReadOnlyList<ContentBlockDto> Blocks { get; init; } = [];
 }
 
+/// <summary>
+/// 一條轉址規則。<c>from</c> 已經 normalize（小寫、去尾斜線），
+/// middleware 直接拿來比對（database.md §10）。
+/// </summary>
+public sealed record RedirectRuleDto(string From, string To, short StatusCode, string? TargetCulture);
+
 /// <summary>`sitemap.xml` 的資料來源——只給路徑與 lastmod，XML 由 Next.js 產生。</summary>
 public sealed record SitemapEntryDto(string Path, DateTime LastModified, string[] Cultures);

@@ -17,6 +17,17 @@ public sealed class PageHandler(IPageReadService pages)
         return new OkObjectResult(ApiResponse.Ok(page));
     }
 
+    /// <summary>
+    /// 轉址表。middleware 在每個未命中的請求前都會用到它，因此整份回傳並讓前台自己快取。
+    /// </summary>
+    public async Task<IActionResult> RedirectsAsync(HttpRequest req)
+    {
+        var rules = await pages.RedirectsAsync();
+
+        CacheControl.Public(req.HttpContext.Response, 300);
+        return new OkObjectResult(ApiResponse.Ok(new { Items = rules }));
+    }
+
     /// <summary>sitemap 的資料；XML 由 Next.js 的 app/sitemap.ts 產生。</summary>
     public async Task<IActionResult> SitemapAsync(HttpRequest req)
     {

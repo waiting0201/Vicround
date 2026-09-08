@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using VicRound.Api.Services;
 using VicRound.Api.Models.Entities;
 using VicRound.Api.Data.Seeding.ContentImport;
+using VicRound.Api.Common;
 
 namespace VicRound.Api.Data.Seeding.LegacyImport;
 

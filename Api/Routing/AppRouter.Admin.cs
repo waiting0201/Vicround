@@ -167,6 +167,14 @@ public sealed partial class AppRouter
             ("GET", ["admin", "auth", "me"]) => Nullable(adminAuth.MeAsync(req)),
             ("POST", ["admin", "auth", "change-password"]) => Nullable(adminAuth.ChangePasswordAsync(req)),
 
+            // 媒體上傳是 multipart，不能走一般的 JSON 路徑。
+            ("POST", ["admin", "media"]) => Nullable(adminMedia.UploadAsync(req)),
+
+            // 有狀態機的動作：能不能走到下一步由後端決定，不是前端傳什麼就是什麼。
+            ("POST", ["admin", "members", var memberId, var action]) => Nullable(adminAction.MemberAsync(req, memberId, action)),
+            ("PUT", ["admin", "sample-requests", var requestId, "status"]) =>
+                Nullable(adminAction.SampleRequestStatusAsync(req, requestId)),
+
             // 27 個單元共用同一組 CRUD（AdminResources 的登記表）。
             ("GET", ["admin", var type]) => Nullable(adminContent.ListAsync(req, type)),
             ("POST", ["admin", var type, "reorder"]) => Nullable(adminContent.ReorderAsync(req, type)),

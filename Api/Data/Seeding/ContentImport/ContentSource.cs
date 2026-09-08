@@ -117,20 +117,3 @@ internal static class JsonContentExtensions
 }
 
 /// <summary>把來源的 slug 正規化成符合 <c>CK_*_Slug</c>（只允許小寫英數與連字號）。</summary>
-internal static class SlugRules
-{
-    public static string Normalize(string value)
-    {
-        var chars = value.Trim().ToLowerInvariant()
-            .Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-');
-
-        var slug = new string(chars.ToArray());
-
-        while (slug.Contains("--", StringComparison.Ordinal))
-        {
-            slug = slug.Replace("--", "-", StringComparison.Ordinal);
-        }
-
-        return slug.Trim('-');
-    }
-}

@@ -27,6 +27,8 @@ public sealed partial class AppRouter(
     NavigationHandler navigation,
     AdminAuthHandler adminAuth,
     AdminContentHandler adminContent,
+    AdminMediaHandler adminMedia,
+    AdminActionHandler adminAction,
     ArticleHandler articles,
     ResourceHandler resources,
     TechnologyHandler technologies,

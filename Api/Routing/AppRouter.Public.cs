@@ -22,6 +22,7 @@ public sealed partial class AppRouter
             ("GET", ["v1", "solutions", _]) => true,
             ("GET", ["v1", "pages", _]) => true,
             ("GET", ["v1", "sitemap"]) => true,
+            ("GET", ["v1", "redirects"]) => true,
             ("GET", ["v1", "navigation"]) => true,
             ("GET", ["v1", "technologies"]) => true,
             ("GET", ["v1", "articles"]) => true,
@@ -51,6 +52,7 @@ public sealed partial class AppRouter
 
             ("GET", ["v1", "pages", var slug]) => Nullable(pages.GetAsync(req, slug)),
             ("GET", ["v1", "sitemap"]) => Nullable(pages.SitemapAsync(req)),
+            ("GET", ["v1", "redirects"]) => Nullable(pages.RedirectsAsync(req)),
 
             ("GET", ["v1", "navigation"]) => Nullable(navigation.ListAsync(req)),
             ("GET", ["v1", "technologies"]) => Nullable(technologies.GetAsync(req)),
