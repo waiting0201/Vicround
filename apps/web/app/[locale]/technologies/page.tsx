@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import { BlockHeading, BlockSection, FeatureGridBlock, MediaSlot, cardStyle, sectionTitleStyle } from '@/components/blocks';
+import { BlockHeading, BlockSection, FeatureGridBlock, MediaSlot, cardStyle } from '@/components/blocks';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
-import { Container } from '@/components/sections';
 import type { ProcessStep } from '@/lib/content-api';
 import { block, getPage, getTechnologies, requirePage } from '@/lib/content-api';
 import { localizeHtml } from '@/lib/html';

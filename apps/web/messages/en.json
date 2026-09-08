@@ -156,7 +156,9 @@
     "breadcrumb": "Breadcrumb",
     "close": "Close",
     "new": "New",
-    "imagePlaceholder": "Imagery placeholder · 1200×900"
+    "imagePlaceholder": "Imagery placeholder · 1200×900",
+    "emptyDownloads": "Documents are being prepared. Contact us and we will send the current revision.",
+    "emptyList": "Nothing published here yet."
   },
   "account": {
     "dashboard": "Dashboard",
@@ -233,6 +235,7 @@
       "insight": "Insight",
       "technicalArticle": "Technical article"
     },
-    "readMore": "Read more →"
+    "readMore": "Read more →",
+    "nextExhibition": "Next exhibition"
   }
 }

@@ -156,7 +156,9 @@
     "breadcrumb": "麵包屑導覽",
     "close": "關閉",
     "new": "新",
-    "imagePlaceholder": "圖片版位 · 1200×900"
+    "imagePlaceholder": "圖片版位 · 1200×900",
+    "emptyDownloads": "文件整理中。歡迎與我們聯絡，我們會提供目前的版本。",
+    "emptyList": "這一區還沒有內容。"
   },
   "account": {
     "dashboard": "總覽",
@@ -233,6 +235,7 @@
       "insight": "產業洞察",
       "technicalArticle": "技術文章"
     },
-    "readMore": "閱讀更多 →"
+    "readMore": "閱讀更多 →",
+    "nextExhibition": "下一場展會"
   }
 }

@@ -4,10 +4,10 @@ import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { DownloadList, ResourceSection } from '@/components/ResourceSections';
-import { resources } from '@/content/resources';
-import { localize } from '@/lib/content';
+import { block, getDownloads, getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -17,11 +17,11 @@ import { pageMetadata } from '@/lib/seo';
  *
  * <p>
  * mockup 把下載放在 Resources 的 `#downloads` 區段；本站的資訊架構（docs/sitemap.md）
- * 另給它一個可索引的獨立網址，所以這一頁用同一份清單、同一組樣式。
+ * 另給它一個可索引的獨立網址，因此它有自己的 `Pages` 列與同一份 `Downloads` 清單。
  * </p>
  *
  * <p>
- * ⚠️ 公開端**不回傳** `MemberOnly` 檔案的真實 URL —— 卡片連到 `/member`，
+ * ⚠️ 公開端**不回傳** `MemberOnly` 檔案的真實 URL —— 那些卡片連到 `/member`，
  * 登入後才由 Account API 換 10 分鐘的 SAS（docs/cms-api.md）。
  * </p>
  */
@@ -30,14 +30,13 @@ type Params = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const t = translator(locale);
-  const c = localize(locale, resources);
+  const page = requirePage(await getPage(locale, 'downloads'), 'downloads');
 
   return pageMetadata({
     locale,
     path: ROUTES.downloads,
-    title: `${c.downloads.title} | ${t('nav.downloads')}`,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -45,7 +44,10 @@ export default async function DownloadsPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, resources);
+
+  const [pageData, downloads] = await Promise.all([getPage(locale, 'downloads'), getDownloads(locale)]);
+  const page = requirePage(pageData, 'downloads');
+  const section = block(page, 'downloads');
 
   const crumbs = [
     { name: t('nav.resources'), path: ROUTES.resources },
@@ -59,18 +61,28 @@ export default async function DownloadsPage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={t('nav.resources')}
-          title={c.downloads.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.resources')}
+          title={section?.title ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
-        <ResourceSection id="downloads" eyebrow={c.downloads.eyebrow} title={c.downloads.title}>
-          <DownloadList locale={locale} items={c.downloads.items} />
+        <ResourceSection
+          id="downloads"
+          eyebrow={section?.eyebrow ?? t('nav.downloads')}
+          title={section?.title ?? t('nav.downloads')}
+        >
+          <DownloadList locale={locale} items={downloads ?? []} emptyLabel={t('common.emptyDownloads')} />
         </ResourceSection>
 
-        <PageCTA locale={locale} eyebrow={c.cta.eyebrow} headline={c.cta.headline} subcopy={c.cta.subcopy} />
+        {page.ctaHeadline ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={page.ctaEyebrow ?? ''}
+            headline={page.ctaHeadline}
+            subcopy={page.ctaSubcopy ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );
