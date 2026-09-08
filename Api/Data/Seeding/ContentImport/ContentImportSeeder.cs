@@ -105,6 +105,7 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
         new("technologies", "technologies", "technologies",
         [
             new("core", BlockType.ProcessFlowRef, "core-processes", Settings: """{"kind":"coreProcess"}"""),
+            new("qc", BlockType.MediaTextSplit, "qc"),
             new("innovation", BlockType.FeatureGrid, "innovation"),
             new("compliance", BlockType.CertificationList, "compliance", Settings: """{"category":"product-compliance"}"""),
         ]),
@@ -219,6 +220,35 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
                 ["title"] = root["listTitle"]?.DeepClone(),
             };
         }
+
+        if (pageSlug == "technologies")
+        {
+            // 線上品管是「核心製程」底下的一小段，來源把它包在 core.qc。
+            root["qc"] ??= root["core"]?["qc"]?.DeepClone();
+
+            // 法規符合的導言在來源裡拆成三段字串（前段／連結文字／後段），
+            // 為的是中間夾一個站內連結。合成 HTML 存進版塊的 Body，
+            // 連結的語系前綴由前台渲染時補（lib/html.ts）。
+            if (root["compliance"] is JsonObject compliance && compliance["body"] is null)
+            {
+                compliance["body"] = new JsonObject
+                {
+                    [CultureCodes.English] = ComplianceLead(compliance, CultureCodes.English),
+                    [CultureCodes.TraditionalChinese] = ComplianceLead(compliance, CultureCodes.TraditionalChinese),
+                };
+            }
+        }
+    }
+
+    private static string ComplianceLead(JsonObject compliance, string culture)
+    {
+        var before = ((JsonNode?)compliance).LocAny("leadBefore")?.For(culture) ?? string.Empty;
+        var link = ((JsonNode?)compliance).LocAny("leadLink")?.For(culture) ?? string.Empty;
+        var after = ((JsonNode?)compliance).LocAny("leadAfter")?.For(culture) ?? string.Empty;
+
+        return $"<p>{System.Net.WebUtility.HtmlEncode(before)}" +
+               $"<a href=\"/sustainability\">{System.Net.WebUtility.HtmlEncode(link)}</a>" +
+               $"{System.Net.WebUtility.HtmlEncode(after)}</p>";
     }
 
     /// <summary>banner 與 CTA 填進 <c>PageTranslations</c> 既有欄位；只補空值，不覆寫。</summary>

@@ -184,7 +184,10 @@
     "download": "下載規格書",
     "sample": "索取樣品",
     "keySpecifications": "關鍵規格",
-    "commonSpecifications": "共通規格"
+    "commonSpecifications": "共通規格",
+    "standard": "標準",
+    "scope": "範圍",
+    "documentation": "文件"
   },
   "products": {
     "whereUsed": "應用領域",

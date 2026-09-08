@@ -71,6 +71,57 @@ public sealed partial class ContentImportSeeder
         await db.SaveChangesAsync(cancellationToken);
         db.ChangeTracker.Clear();
         Count("認證", added);
+
+        await ImportComplianceDocumentationAsync(source, cancellationToken);
+    }
+
+    /// <summary>
+    /// Technologies 的法規符合表多帶一欄「文件類型」（Declaration / Test report）。
+    /// 那一欄屬於認證本身（<c>DocumentationLabel</c>），不是頁面文字——存在認證上，
+    /// Technologies 與 Sustainability 兩頁才不會各講一套。
+    /// </summary>
+    private async Task ImportComplianceDocumentationAsync(ContentSource source, CancellationToken cancellationToken)
+    {
+        var rows = source.TryExport("technologies", "technologies").Prop("compliance").Arr("rows");
+        if (rows is null)
+        {
+            return;
+        }
+
+        var certifications = await db.Certifications
+            .AsTracking()
+            .Include(c => c.Translations)
+            .Where(c => c.Category == CertificationCategory.ProductCompliance)
+            .ToListAsync(cancellationToken);
+
+        var filled = 0;
+
+        foreach (var row in rows)
+        {
+            var standard = row.LocAny("standard")?.En;
+            var doc = row.LocAny("doc");
+
+            if (standard is null || doc is null)
+            {
+                continue;
+            }
+
+            var certification = certifications.FirstOrDefault(c => c.Translations
+                .Any(t => t.Culture == CultureCodes.English && t.Title == standard));
+
+            foreach (var translation in certification?.Translations ?? [])
+            {
+                if (string.IsNullOrEmpty(translation.DocumentationLabel))
+                {
+                    translation.DocumentationLabel = doc.Value.For(translation.Culture);
+                    filled++;
+                }
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        Count("認證文件類型", filled);
     }
 
     private static CertificationCategory MapCertificationCategory(string? label) => label switch

@@ -544,7 +544,8 @@ public sealed partial class ContentImportSeeder
             AddBilingual(flow.Translations, culture => new ProcessFlowTranslation
             {
                 Culture = culture,
-                Title = section.LocAny("title", "flowTitle")?.For(culture) ?? slug,
+                // flowTitle 才是流程自己的名稱（「共同開發流程」）；title 是那一段的段落標題。
+                Title = section.LocAny("flowTitle", "title")?.For(culture) ?? slug,
                 Subtitle = section.LocAny("lead")?.For(culture),
                 Intro = section.LocAny("body")?.For(culture),
             });

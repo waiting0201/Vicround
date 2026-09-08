@@ -1,63 +1,111 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { BlockHeading, BlockSection, FeatureGridBlock, MediaSlot, cardStyle, sectionTitleStyle } from '@/components/blocks';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
-import { Container, ImageSlot } from '@/components/sections';
-import { technologies } from '@/content/technologies';
-import { localize } from '@/lib/content';
+import { Container } from '@/components/sections';
+import type { ProcessStep } from '@/lib/content-api';
+import { block, getPage, getTechnologies, requirePage } from '@/lib/content-api';
+import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
-import { requireLocale } from '@/lib/locale';
-import { localeHref } from '@/lib/nav';
+import { requireLocale, type Locale } from '@/lib/locale';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
-/** Technologies —— 逐區塊對照 `mockup/Rounded Design/technologies.dc.html`。 */
+/**
+ * Technologies —— 版型逐區塊對照 `mockup/Rounded Design/technologies.dc.html`。
+ *
+ * <p>
+ * 製程步驟與法規符合都是強型別資料（`ProcessFlows` / `Certifications`），
+ * 頁面只提供標題與版面 —— Technologies 與 Sustainability 因此不會各自抄一份認證清單。
+ * </p>
+ */
 type Params = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, technologies);
+  const page = requirePage(await getPage(locale, 'technologies'), 'technologies');
 
   return pageMetadata({
     locale,
     path: ROUTES.technologies,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
+}
+
+function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[]; accent?: string }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.min(steps.length || 4, 4)}, 1fr)`,
+        gap: 20,
+        marginTop: 40,
+      }}
+    >
+      {steps.map((step, index) => (
+        <div key={step.title ?? index} style={cardStyle}>
+          <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: step.accentColorHex ?? accent }}>
+            {String(step.stepNumber || index + 1).padStart(2, '0')}
+          </span>
+          {step.iconName ? (
+            <span
+              style={{
+                borderRadius: 12,
+                width: 40,
+                height: 40,
+                background: 'rgba(100,54,239,0.1)',
+                color: '#6436ef',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name={step.iconName} size={18} />
+            </span>
+          ) : null}
+          <span
+            style={{ font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}
+          >
+            {step.title}
+          </span>
+          <p
+            style={{
+              margin: 0,
+              font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+              color: 'var(--page-muted)',
+            }}
+          >
+            {step.body}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default async function TechnologiesPage({ params }: Params) {
   const { locale: rawLocale } = await params;
-  const locale = requireLocale(rawLocale);
+  const locale: Locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, technologies);
 
-  const eyebrow: React.CSSProperties = {
-    margin: 0,
-    font: "600 13px/1.2 'Geologica', sans-serif",
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    color: '#6436ef',
-  };
-  const heading: React.CSSProperties = {
-    margin: '12px 0 0',
-    font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-    color: 'var(--page-fg)',
-  };
-  const card: React.CSSProperties = {
-    background: 'var(--page-bg)',
-    border: '1px solid var(--page-border)',
-    borderRadius: 22,
-    padding: '28px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-  };
+  const [pageData, technologies] = await Promise.all([getPage(locale, 'technologies'), getTechnologies(locale)]);
+  const page = requirePage(pageData, 'technologies');
+
+  const core = block(page, 'core-processes');
+  const qc = block(page, 'qc');
+  const innovation = block(page, 'innovation');
+  const compliance = block(page, 'compliance');
+
+  const coreFlow = core?.reference?.processFlows?.[0];
+  const coDevelopment = technologies?.processFlows.find((flow) => flow.kind === 'coDevelopment');
+  const certifications = compliance?.reference?.certifications ?? [];
 
   return (
     <>
@@ -66,81 +114,78 @@ export default async function TechnologiesPage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.technologies')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
         {/* ============ 核心製程 ============ */}
-        <section id="core-processes" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.core.eyebrow}</p>
-            <h2 style={heading}>{c.core.title}</h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-muted)',
-                textWrap: 'pretty',
-              }}
-            >
-              {c.core.lead}
-            </p>
+        {core ? (
+          <BlockSection id="core-processes">
+            <BlockHeading block={core} />
+            <StepCards steps={coreFlow?.steps ?? []} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.core.steps.map((step, index) => (
-                <div key={step.title} style={card}>
-                  <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span
+            {/* 線上品管 —— 核心製程底下的一小段 */}
+            {qc ? (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 'clamp(32px, 5vw, 72px)',
+                  alignItems: 'center',
+                  marginTop: 'clamp(36px, 4vw, 56px)',
+                }}
+              >
+                <MediaSlot label={t('common.imagePlaceholder')} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <h3
                     style={{
-                      borderRadius: 12,
-                      width: 40,
-                      height: 40,
-                      background: 'rgba(100,54,239,0.1)',
-                      color: '#6436ef',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name={step.icon} size={18} />
-                  </span>
-                  <span
-                    style={{
-                      font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
+                      margin: 0,
+                      font: "600 1.25rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
                       color: 'var(--page-fg)',
                     }}
                   >
-                    {step.title}
-                  </span>
+                    {qc.title}
+                  </h3>
                   <p
                     style={{
                       margin: 0,
-                      font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                      font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
                       color: 'var(--page-muted)',
                     }}
                   >
-                    {step.body}
+                    {qc.body}
                   </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {qc.items.map((item) => (
+                      <span
+                        key={item.title}
+                        style={{
+                          padding: '6px 12px',
+                          border: '1px solid var(--page-border)',
+                          borderRadius: 999,
+                          font: "400 12px/1.4 'IBM Plex Mono', monospace",
+                          color: 'var(--page-muted)',
+                        }}
+                      >
+                        {item.title}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : null}
+          </BlockSection>
+        ) : null}
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 'clamp(32px, 5vw, 72px)',
-                alignItems: 'center',
-                marginTop: 'clamp(36px, 4vw, 56px)',
-              }}
-            >
-              <ImageSlot alt={c.core.imageLabel} label={c.core.imageLabel} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* ============ 研發與材料創新 ============ */}
+        {innovation ? (
+          <BlockSection id="innovation" raised>
+            <FeatureGridBlock block={innovation} columns={3} />
+
+            {coDevelopment ? (
+              <div style={{ marginTop: 'clamp(36px, 4vw, 56px)' }}>
                 <h3
                   style={{
                     margin: 0,
@@ -148,169 +193,43 @@ export default async function TechnologiesPage({ params }: Params) {
                     color: 'var(--page-fg)',
                   }}
                 >
-                  {c.core.qc.title}
+                  {coDevelopment.title}
                 </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-muted)',
-                  }}
-                >
-                  {c.core.qc.body}
-                </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {c.core.qc.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      style={{
-                        padding: '6px 12px',
-                        border: '1px solid var(--page-border)',
-                        borderRadius: 999,
-                        font: "400 12px/1.4 'IBM Plex Mono', monospace",
-                        color: 'var(--page-muted)',
-                      }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                <StepCards steps={coDevelopment.steps} />
               </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 研發與材料創新 ============ */}
-        <section
-          id="innovation"
-          style={{
-            background: 'var(--page-raised)',
-            scrollMarginTop: 90,
-            borderTop: '1px solid var(--page-border)',
-            borderBottom: '1px solid var(--page-border)',
-          }}
-        >
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.innovation.eyebrow}</p>
-            <h2 style={heading}>{c.innovation.title}</h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.innovation.items.map((item) => (
-                <div key={item.title} style={{ ...card, padding: '32px 28px' }}>
-                  <span
-                    style={{
-                      font: "600 1.125rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-fg)',
-                    }}
-                  >
-                    {item.title}
-                  </span>
-                  <span
-                    style={{
-                      font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {item.body}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                marginTop: 'clamp(36px, 4vw, 56px)',
-                background: 'var(--page-bg)',
-                border: '1px solid var(--page-border)',
-                borderRadius: 22,
-                padding: 'clamp(28px, 3vw, 40px)',
-              }}
-            >
-              <p
-                style={{
-                  margin: '0 0 24px',
-                  font: "500 12px/1.4 'IBM Plex Mono', monospace",
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'var(--page-faint)',
-                }}
-              >
-                {c.innovation.flowTitle}
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-                {c.innovation.flow.map((step, index) => (
-                  <div key={step.title} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <span style={{ height: 4, borderRadius: 999, background: step.bar }} />
-                    <span style={{ font: "500 12px/1.4 'IBM Plex Mono', monospace", color: '#6436ef' }}>
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span
-                      style={{
-                        font: "600 0.9375rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
-                        color: 'var(--page-fg)',
-                      }}
-                    >
-                      {step.title}
-                    </span>
-                    <span
-                      style={{
-                        font: "400 0.8125rem/1.55 'Geologica', 'GenYoGothic TW', sans-serif",
-                        color: 'var(--page-muted)',
-                      }}
-                    >
-                      {step.note}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Container>
-        </section>
+            ) : null}
+          </BlockSection>
+        ) : null}
 
         {/* ============ 產品法規符合 ============ */}
-        <section id="compliance" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.compliance.eyebrow}</p>
-            <h2 style={heading}>{c.compliance.title}</h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-muted)',
-                textWrap: 'pretty',
-              }}
-            >
-              {c.compliance.leadBefore}
-              <Link href={localeHref(locale, ROUTES.sustainability)} style={{ color: '#6436ef', fontWeight: 600 }}>
-                {c.compliance.leadLink}
-              </Link>
-              {c.compliance.leadAfter}
-            </p>
+        {compliance ? (
+          <BlockSection id="compliance">
+            <BlockHeading block={compliance} />
+            {compliance.body ? (
+              <div
+                className="vr-prose"
+                style={{ marginTop: 16, maxWidth: 720 }}
+                dangerouslySetInnerHTML={{ __html: localizeHtml(locale, compliance.body)! }}
+              />
+            ) : null}
 
-            <div
-              style={{
-                marginTop: 40,
-                overflowX: 'auto',
-                border: '1px solid var(--page-border)',
-                borderRadius: 22,
-              }}
-            >
+            <div style={{ marginTop: 40, overflowX: 'auto', border: '1px solid var(--page-border)', borderRadius: 22 }}>
               <table
                 style={{
                   width: '100%',
                   minWidth: 640,
                   borderCollapse: 'collapse',
-                  font: "400 0.875rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
+                  font: "400 0.875rem/1.5 'IBM Plex Mono', monospace",
                 }}
               >
                 <thead>
                   <tr style={{ background: 'var(--page-raised)' }}>
-                    {c.compliance.columns.map((column) => (
+                    {[t('spec.standard'), t('spec.scope'), t('spec.documentation')].map((column) => (
                       <th
                         key={column}
                         style={{
                           textAlign: 'left',
-                          padding: '16px 20px',
+                          padding: '14px 18px',
                           font: "600 12px/1.4 'IBM Plex Mono', monospace",
                           letterSpacing: '0.06em',
                           textTransform: 'uppercase',
@@ -324,46 +243,54 @@ export default async function TechnologiesPage({ params }: Params) {
                   </tr>
                 </thead>
                 <tbody>
-                  {c.compliance.rows.map((row, index) => (
-                    <tr key={row.standard} style={{ background: index % 2 === 1 ? '#faf9fd' : 'var(--page-bg)' }}>
+                  {certifications.map((certification, index) => (
+                    <tr
+                      key={certification.slug}
+                      style={index % 2 === 1 ? { background: 'rgba(20,20,31,0.03)' } : undefined}
+                    >
                       <td
                         style={{
-                          padding: '16px 20px',
+                          padding: '14px 18px',
                           color: 'var(--page-fg)',
                           borderBottom: '1px solid rgba(20,20,31,0.08)',
-                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {row.standard}
+                        {certification.title}
                       </td>
                       <td
                         style={{
-                          padding: '16px 20px',
+                          padding: '14px 18px',
                           color: 'var(--page-muted)',
                           borderBottom: '1px solid rgba(20,20,31,0.08)',
                         }}
                       >
-                        {row.scope}
+                        {certification.shortNote ?? certification.scopeText}
                       </td>
                       <td
                         style={{
-                          padding: '16px 20px',
+                          padding: '14px 18px',
                           color: 'var(--page-muted)',
                           borderBottom: '1px solid rgba(20,20,31,0.08)',
-                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {row.doc}
+                        {certification.documentationLabel}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </Container>
-        </section>
+          </BlockSection>
+        ) : null}
 
-        <PageCTA locale={locale} eyebrow={c.cta.eyebrow} headline={c.cta.headline} subcopy={c.cta.subcopy} />
+        {page.ctaHeadline ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={page.ctaEyebrow ?? ''}
+            headline={page.ctaHeadline}
+            subcopy={page.ctaSubcopy ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );

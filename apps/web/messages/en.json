@@ -184,7 +184,10 @@
     "download": "Download spec sheet",
     "sample": "Request a sample",
     "keySpecifications": "Key specifications",
-    "commonSpecifications": "Common specifications"
+    "commonSpecifications": "Common specifications",
+    "standard": "Standard",
+    "scope": "Scope",
+    "documentation": "Documentation"
   },
   "products": {
     "whereUsed": "Where it is used",

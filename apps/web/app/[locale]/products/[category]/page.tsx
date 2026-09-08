@@ -10,6 +10,7 @@ import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { Container, ImageSlot, Section } from '@/components/sections';
 import { getCategory, getTechnologies } from '@/lib/content-api';
+import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
@@ -100,7 +101,7 @@ export default async function ProductLinePage({ params }: Params) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 <h2 style={{ ...sectionTitleStyle, maxWidth: 480 }}>{overview.title}</h2>
                 {category.intro ? (
-                  <div className="vr-prose" dangerouslySetInnerHTML={{ __html: category.intro }} />
+                  <div className="vr-prose" dangerouslySetInnerHTML={{ __html: localizeHtml(locale, category.intro)! }} />
                 ) : null}
 
                 <div

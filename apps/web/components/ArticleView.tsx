@@ -254,7 +254,7 @@ export function ArticleView({
               </nav>
             ) : null}
 
-            <ArticleBody html={article.body} />
+            <ArticleBody html={article.body} locale={locale} />
 
             {variant === 'event' && show ? (
               <aside

@@ -1,3 +1,6 @@
+import { localizeHtml } from '@/lib/html';
+import type { Locale } from '@/lib/locale';
+
 /**
  * 文章內文 —— 視覺逐項對照 `mockup/Rounded Design/article.dc.html`。
  *
@@ -12,10 +15,10 @@
  * 目錄就會失效。
  * </p>
  */
-export function ArticleBody({ html }: { html: string | null }) {
+export function ArticleBody({ html, locale }: { html: string | null; locale: Locale }) {
   if (!html) return null;
 
-  return <div className="vr-prose" dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div className="vr-prose" dangerouslySetInnerHTML={{ __html: localizeHtml(locale, html)! }} />;
 }
 
 /** 內文的 `h2[id]` → 側欄目錄。標題與錨點都在同一份 HTML 裡，兩邊不會對不上。 */

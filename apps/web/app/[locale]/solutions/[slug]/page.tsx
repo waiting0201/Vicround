@@ -20,6 +20,7 @@ import { PageShell } from '@/components/PageShell';
 import { Container } from '@/components/sections';
 import type { ContentBlock } from '@/lib/content-api';
 import { getProducts, getSolution, getSolutions } from '@/lib/content-api';
+import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
@@ -172,7 +173,7 @@ export default async function SolutionPage({ params }: Params) {
                 <p style={eyebrowStyle}>{t('solutions.challenge')}</p>
                 <h2 style={{ ...sectionTitleStyle, maxWidth: 480 }}>{solution.challengeTitle}</h2>
                 {solution.challengeBody ? (
-                  <div className="vr-prose" dangerouslySetInnerHTML={{ __html: solution.challengeBody }} />
+                  <div className="vr-prose" dangerouslySetInnerHTML={{ __html: localizeHtml(locale, solution.challengeBody)! }} />
                 ) : null}
               </div>
               <MediaSlot label={t('common.imagePlaceholder')} />
