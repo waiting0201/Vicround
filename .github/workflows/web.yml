@@ -57,10 +57,14 @@ jobs:
         run: node scripts/check-content-language.mjs
 
       # build 期間會呼叫 Content API 預先產生頁面，因此指向正式後端。
+      #
+      # `NEXT_PUBLIC_SITE_URL` 在 build 時就被內嵌，而它同時決定 robots.txt 要不要開放索引
+      # （`lib/site.ts` 的 IS_PRODUCTION_SITE）。目前指向 SWA 的預設網域 → 整站 Disallow，
+      # 綁上 www.vicround.com 之後把 repo 變數 SITE_URL 改掉即可，不必動程式。
       - name: Build
         env:
           API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
-          SITE_URL: https://www.vicround.com
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
         run: pnpm build
 
       # `output: 'standalone'` 只搬會用到的相依，但 static 與 public 要自己複製
