@@ -1,5 +1,29 @@
 # Azure Deployment
 
+## 已建立的資源（2026-09-08）
+
+一個資源群組 **`VicRoundUS`**（West US 2），命名比照姊妹專案 `NTIUS`：
+
+| 資源 | 名稱 | 方案 | 位址 |
+| --- | --- | --- | --- |
+| Function App | `func-vicround-prod` | Flex Consumption FC1、Linux、.NET 10 isolated | `https://func-vicround-prod.azurewebsites.net/api` |
+| Static Web Apps | `stapp-vicround-prod` | **Free** | `https://green-desert-0eeb2ce1e.3.azurestaticapps.net` |
+| SQL Database | `vicround-sql-prod` / `VicRound` | Basic（5 DTU / 2GB） | 防火牆只開「允許 Azure 服務」 |
+| Storage | `stvicroundprod` | StorageV2 LRS | 容器 `public-media`（公開讀）、`member-documents`（私有） |
+| Application Insights | `ai-vicround-prod` | 隨用隨付 | Functions 遙測 |
+
+**尚未建立**（刻意）：Key Vault（密鑰放 Function App 應用程式設定）、staging 環境與部署插槽
+（Flex Consumption 沒有插槽）、Front Door / WAF、自訂網域。
+
+**部署身分**：Entra 應用程式 `github-vicround-deploy` + GitHub OIDC 同盟認證，
+對 `VicRoundUS` 有 Contributor。GitHub 端只存 `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` /
+`AZURE_SUBSCRIPTION_ID` 三個非機密值，**沒有任何長期憑證**；SWA 的部署 token 與
+DB 連線字串都在流程中現拿現用。
+
+⚠️ GitHub 現在送的 OIDC subject 是「不可變識別碼」格式
+（`repo:<owner>@<ownerId>/<repo>@<repoId>:...`），與傳統的 `owner/repo` 不同——
+兩種都要建同盟認證，否則會得到 `AADSTS700213`。
+
 ## Resources
 
 | Component | Azure service | Notes |

@@ -30,9 +30,12 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 `Api/Data/Seeding/ContentImport/confirmed-copy.json` 進版控，新環境仍能用 `import-content`
 灌入同一份文案。
 
-**Content API 的公開端點已全數上線**（19 支，見第六節），中英雙語、分頁、快取標頭與
-錯誤碼都實跑驗過；只剩 `/search` 待定 Phase。**Account API 與 Admin API 尚未實作。**
-CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未建立**。
+**Content API 的公開端點已全數上線**（20 支，見第六節）；**Admin API 也已上線**
+（登入 + 27 個單元的 CRUD）。**Account API 尚未實作。**
+
+**正式環境已經跑起來**（2026-09-08）：前台 `https://green-desert-0eeb2ce1e.3.azurestaticapps.net`、
+API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
+推上 `master` 即自動部署。robots.txt 目前整站 Disallow —— 網域還沒換成 www.vicround.com。
 
 ---
 
@@ -62,7 +65,7 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 212 張舊站圖已進 `public-media`（本機 Azurite）；正式 Azure Storage 未建 |
 | CI | ✅ | `.github/workflows/api.yml`：建置、72 項測試、產物防呆、migration 同步檢查 |
-| 部署 / Azure 資源 | ⬜ | 尚未建立任何 Azure 資源 |
+| 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
 ---
 
@@ -244,8 +247,8 @@ apps/web/
 | Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
 | **Admin API** `/api/admin/**` | ✅ | 登入（access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機 |
 | CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、72 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
-| 部署 | ⬜ | **無部署步驟**——Azure 資源尚未建立（[docs/azure-deployment.md](docs/azure-deployment.md)） |
-| Azure 資源 | ⬜ | 未建立任何資源；Blob 目前指向本機 Azurite |
+| 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→SWA 以 Oryx 建前台→實打 `/en` |
+| Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
 
 ### 已上線的公開端點
 
@@ -318,7 +321,10 @@ apps/web/
 4. ~~Admin API~~ ✅ 2026-09-08（後台開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端）
 4b. 後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除），並補上
    `legacy-import/run` 與媒體庫的「找未被引用的檔案」
-5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
+5. ~~CI/CD 與 Azure 佈署~~ ✅ 2026-09-08
+5b. 上線前的收尾：綁 `www.vicround.com`（DNS + SWA 自訂網域）、把 repo 變數 `SITE_URL`
+   改成正式網域（robots 才會開放索引）、把舊站 301（`import-legacy` 的 241 條）與
+   版位照片灌進正式環境
 6. Account API 與會員專區（需先補設計稿）
 
 ---
