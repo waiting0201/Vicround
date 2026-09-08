@@ -23,7 +23,12 @@ public sealed partial class AppRouter(
     HealthHandler health,
     CatalogHandler catalog,
     SolutionHandler solutions,
-    PageHandler pages)
+    PageHandler pages,
+    NavigationHandler navigation,
+    ArticleHandler articles,
+    ResourceHandler resources,
+    TechnologyHandler technologies,
+    ContactHandler contact)
 {
     /// <summary>
     /// <see cref="GetRequiredPermission"/> 的預設回傳值：<b>未列在權限表的 <c>/admin/*</c> 一律拒絕</b>。

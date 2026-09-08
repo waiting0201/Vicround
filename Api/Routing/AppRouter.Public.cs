@@ -22,6 +22,16 @@ public sealed partial class AppRouter
             ("GET", ["v1", "solutions", _]) => true,
             ("GET", ["v1", "pages", _]) => true,
             ("GET", ["v1", "sitemap"]) => true,
+            ("GET", ["v1", "navigation"]) => true,
+            ("GET", ["v1", "technologies"]) => true,
+            ("GET", ["v1", "articles"]) => true,
+            ("GET", ["v1", "articles", _]) => true,
+            ("GET", ["v1", "news"]) => true,
+            ("GET", ["v1", "exhibitions"]) => true,
+            ("GET", ["v1", "faq"]) => true,
+            ("GET", ["v1", "certifications"]) => true,
+            ("GET", ["v1", "downloads"]) => true,
+            ("POST", ["v1", "contact"]) => true,
             _ => false,
         };
 
@@ -41,6 +51,22 @@ public sealed partial class AppRouter
 
             ("GET", ["v1", "pages", var slug]) => Nullable(pages.GetAsync(req, slug)),
             ("GET", ["v1", "sitemap"]) => Nullable(pages.SitemapAsync(req)),
+
+            ("GET", ["v1", "navigation"]) => Nullable(navigation.ListAsync(req)),
+            ("GET", ["v1", "technologies"]) => Nullable(technologies.GetAsync(req)),
+
+            ("GET", ["v1", "articles"]) => Nullable(articles.ListAsync(req)),
+            ("GET", ["v1", "articles", var slug]) => Nullable(articles.GetAsync(req, slug)),
+
+            // /news 是 /articles?type=news 的別名——前台的新聞頁只要新聞家族那四種 Type。
+            ("GET", ["v1", "news"]) => Nullable(articles.ListAsync(req, "news")),
+
+            ("GET", ["v1", "exhibitions"]) => Nullable(resources.ListExhibitionsAsync(req)),
+            ("GET", ["v1", "faq"]) => Nullable(resources.ListFaqAsync(req)),
+            ("GET", ["v1", "certifications"]) => Nullable(resources.ListCertificationsAsync(req)),
+            ("GET", ["v1", "downloads"]) => Nullable(resources.ListDownloadsAsync(req)),
+
+            ("POST", ["v1", "contact"]) => Nullable(contact.SubmitAsync(req)),
 
             _ => Task.FromResult<IActionResult?>(null),
         };

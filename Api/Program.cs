@@ -78,6 +78,11 @@ services.AddScoped<IDbConnection>(_ => new SqlConnection(connectionString));
 // ── Singleton：只讀設定、無 per-request 狀態
 services.AddSingleton<IJwtService, JwtService>();
 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+
+// 限流的計數是 per-instance 的記憶體狀態，所以必須 Singleton（Api/Services/IRateLimiter.cs）。
+services.AddSingleton<IRateLimiter, InMemoryRateLimiter>();
+services.AddHttpClient();
+services.AddScoped<IAntiBotVerifier, TurnstileAntiBotVerifier>();
 services.AddSingleton(new BlobServiceClient(
     configuration.GetConnectionString("BlobStorage")
     ?? configuration["VICROUND_BLOB_CONNECTION"]
@@ -91,10 +96,23 @@ services.AddScoped<LegacyImportSeeder>();
 services.AddScoped<ICatalogReadService, CatalogReadService>();
 services.AddScoped<ISolutionReadService, SolutionReadService>();
 services.AddScoped<IPageReadService, PageReadService>();
+services.AddScoped<INavigationReadService, NavigationReadService>();
+services.AddScoped<IArticleReadService, ArticleReadService>();
+services.AddScoped<IExhibitionReadService, ExhibitionReadService>();
+services.AddScoped<IFaqReadService, FaqReadService>();
+services.AddScoped<ICertificationReadService, CertificationReadService>();
+services.AddScoped<IDownloadReadService, DownloadReadService>();
+services.AddScoped<ITechnologyReadService, TechnologyReadService>();
+services.AddScoped<IContactInquiryService, ContactInquiryService>();
 services.AddScoped<HealthHandler>();
 services.AddScoped<CatalogHandler>();
 services.AddScoped<SolutionHandler>();
 services.AddScoped<PageHandler>();
+services.AddScoped<NavigationHandler>();
+services.AddScoped<ArticleHandler>();
+services.AddScoped<ResourceHandler>();
+services.AddScoped<TechnologyHandler>();
+services.AddScoped<ContactHandler>();
 services.AddScoped<AppRouter>();
 services.AddHttpContextAccessor();
 

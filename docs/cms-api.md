@@ -66,9 +66,9 @@ Pass `?culture=zh-Hant` (or `en`) — Next.js derives it from the `[locale]` URL
 > 新增端點時**必須同時補 `AppRouter.Public.cs` 的白名單與分派**，否則會直接 404。
 
 ```
-GET  /api/v1/navigation          # ?location=header|footer|legal|social|search-chip
+GET  /api/v1/navigation          ✅ ?location=header|footer|legal|social|search-chip
 GET  /api/v1/categories          ✅          # ?type=optical-film|textile-foam|acoustic
-GET  /api/v1/categories/{slug}   # 含 specs、blocks、關聯 solutions
+GET  /api/v1/categories/{slug}   ✅ 含 specs、blocks、關聯 solutions
 
 GET  /api/v1/products            ✅ ?category=&solution=&featured=true&page=1&pageSize=24
 GET  /api/v1/products/{slug}     ✅ detail incl. specs（gallery／certifications／downloads 待補）
@@ -76,20 +76,20 @@ GET  /api/v1/products/{slug}     ✅ detail incl. specs（gallery／certificatio
 GET  /api/v1/solutions           ✅ 產業解決方案索引（取代舊的 /applications）
 GET  /api/v1/solutions/{slug}    ✅
 
-GET  /api/v1/technologies        # process flows + product compliance 一次帶出
+GET  /api/v1/technologies        ✅ process flows + product compliance 一次帶出（?kind= 可篩製程類型）
 
-GET  /api/v1/articles            # ?type=&tag=&category=&solution=&page=1&pageSize=12
-GET  /api/v1/articles/{slug}
-GET  /api/v1/news                # 別名 → /articles?type=news（相容既有規劃）
+GET  /api/v1/articles            ✅ ?type=&tag=&category=&solution=&page=1&pageSize=12
+GET  /api/v1/articles/{slug}     ✅ 含 chips、展會側欄與同前綴內的上下篇
+GET  /api/v1/news                ✅ 別名 → /articles?type=news（相容既有規劃）
 
-GET  /api/v1/exhibitions         # ?upcoming=true|false
-GET  /api/v1/faq                 # ?category=
-GET  /api/v1/certifications      # ?category=company-factory|sustainability|product-compliance
-GET  /api/v1/downloads           # ?kind=&product=&category=&solution=
+GET  /api/v1/exhibitions         ✅ ?upcoming=true|false
+GET  /api/v1/faq                 ✅ ?category=（回「分類 + 其下題目」的巢狀結構）
+GET  /api/v1/certifications      ✅ ?category=company-factory|sustainability|product-compliance
+GET  /api/v1/downloads           ✅ ?kind=&product=&category=&solution=
 
 GET  /api/v1/pages/{slug}        ✅ blocks（reference block 的解析待補）
 
-POST /api/v1/contact             # inquiry form (rate-limited, anti-bot)
+POST /api/v1/contact             ✅ inquiry form (rate-limited, anti-bot)
 
 GET  /api/v1/sitemap             ✅ 已發佈網址 + lastmod + 真的有翻譯的語系（XML 由 Next.js 產）
 GET  /api/v1/search              # ?q=  ← Phase 待定，見 database.md §19.5
@@ -129,10 +129,24 @@ for hreflang).
 `MemberOnly` 的實際檔案存於 private container，只能透過
 `POST /api/v1/account/downloads/{slug}/link` 換取 **10 分鐘有效的 Blob SAS URL**。
 
-**Contact** request: `{ type?, name, email, company, phone?, categorySlug?, productSlug?,
-downloadSlug?, application?, targetSpec?, message, sourceUrl, culture, consent }`. Validate
-server-side, rate-limit by IP（**不落 DB**）, verify anti-bot token, then persist + queue email.
-Respond `202 Accepted` with `{ "referenceNumber": "INQ-2026-000431" }` and no other echo.
+**Contact** request: `{ type?, name, email, company, phone?, categorySlug?, productLineOther?,
+productSlug?, downloadSlug?, application?, targetSpec?, message?, sourceUrl, culture, consent,
+antiBotToken?, website? }`. Respond `202 Accepted` with
+`{ "referenceNumber": "INQ-2026-000431" }` and no other echo。實作要點：
+
+- **必填只有 `name` / `company` / `email` / `sourceUrl` / `consent`。** `message` 是選填 ——
+  客戶確認稿的表單上根本沒有這個欄位（只有應用與目標規格），要求必填會讓實際的表單送不出去。
+- `type` 未給時由內容推斷：帶了 `downloadSlug` 就是 `documentRequest`，否則 `general`。
+  `categorySlug` / `productSlug` / `downloadSlug` 有給就必須查得到，查不到回 `400`
+  （不靜默存 `null`）。
+- 依 `type` 自動指派 `ContactChannels` 的收件窗口；沒有對應窗口就留空由後台分派。
+- 三道防線依序是：**蜜罐 `website`**（真人看不到，有值即 `BOT_CHECK_FAILED`，不花 siteverify 的
+  往返）→ **以 IP 為鍵的限流**（記憶體內滑動窗，10 分鐘 10 次，**不落 DB**；每個 Functions
+  執行個體各算各的）→ **anti-bot token**（Cloudflare Turnstile；未設定
+  `AntiBot:TurnstileSecret` 時放行並記警告，驗證服務掛掉時也放行）。
+- `ConsentPolicyVersion` 取自 `SiteSettings` 的 `privacy.policyVersion`。
+- ⚠️ **通知信尚未實作**——單據已落庫、後台收件匣看得到，寄信待 Communication Services /
+  SMTP 設定就緒後補上（`ContactInquiryService` 內已標 TODO）。
 
 ## Account API (member-authenticated)
 
