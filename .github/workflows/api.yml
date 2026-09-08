@@ -87,6 +87,9 @@ jobs:
           name: api
           path: ${{ env.OUTPUT_PATH }}
           retention-days: 3
+          # isolated worker 的產物含 `.azurefunctions/`，而 upload-artifact 預設會把
+          # 點開頭的檔案丟掉——少了它，部署會以「找不到 .azurefunctions」失敗。
+          include-hidden-files: true
 
   deploy:
     needs: build_and_test
