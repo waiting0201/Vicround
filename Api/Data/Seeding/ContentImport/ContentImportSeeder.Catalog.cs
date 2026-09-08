@@ -342,12 +342,54 @@ public sealed partial class ContentImportSeeder
                     new("cta", BlockType.Cta, "cta"),
                 ]);
 
+            await ImportCardGroupsAsync(node.Arr("cards"), solution.Id, cancellationToken);
             await ImportSpecificationRowsAsync(node.Prop("specs"), cancellationToken, row => row.OwnerSolutionId = solution.Id);
             await ImportGradeTableAsync(node.Prop("grades"), cancellationToken);
 
             await db.SaveChangesAsync(cancellationToken);
             db.ChangeTracker.Clear();
         }
+    }
+
+    /// <summary>
+    /// Acoustic 產業頁的兩組卡片（「如何驗證」「目前應用」）。
+    /// 來源是一個群組陣列而不是單一 section，因此一組一個版塊，錨點取自群組標題。
+    /// </summary>
+    private async Task ImportCardGroupsAsync(JsonArray? groups, int solutionId, CancellationToken cancellationToken)
+    {
+        if (groups is null)
+        {
+            return;
+        }
+
+        var existing = await db.ContentBlocks
+            .Where(b => b.OwnerSolutionId == solutionId)
+            .Select(b => b.Anchor)
+            .ToListAsync(cancellationToken);
+
+        // 卡片群組排在等級表（20）之後、why（30）之前。
+        var order = 25;
+
+        foreach (var group in groups)
+        {
+            var title = group.LocAny("title")?.En;
+            var anchor = title is null ? null : SlugRules.Normalize(title);
+
+            if (anchor is null || existing.Contains(anchor) || group is null)
+            {
+                continue;
+            }
+
+            var block = BuildBlock(group, BlockType.FeatureGrid, anchor, BlockTone.Light, order++);
+            block.OwnerSolutionId = solutionId;
+            db.ContentBlocks.Add(block);
+            existing.Add(anchor);
+            Count("版塊");
+            Count("版塊子項", block.Items.Count);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
     }
 
     /// <summary>
@@ -435,16 +477,16 @@ public sealed partial class ContentImportSeeder
         List<string?> existing,
         BlockSpec[] specs)
     {
-        var order = existing.Count;
-
-        foreach (var spec in specs)
+        // SortOrder 以 10 為間距：版塊在頁面上的順序要跟著確認稿，而不是「被匯入的先後」。
+        // 中間留的空檔讓後來才補的版塊（例如 Acoustic 的兩組卡片）插得進正確位置。
+        foreach (var (spec, index) in specs.Select((s, i) => (s, i)))
         {
             if (existing.Contains(spec.Anchor) || node[spec.Section] is not { } section)
             {
                 continue;
             }
 
-            var block = BuildBlock(section, spec.Type, spec.Anchor, spec.Tone, order++, spec.WithItems);
+            var block = BuildBlock(section, spec.Type, spec.Anchor, spec.Tone, index * 10, spec.WithItems);
             setOwner(block);
             db.ContentBlocks.Add(block);
             Count("版塊");

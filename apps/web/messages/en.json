@@ -155,7 +155,8 @@
     "menu": "Menu",
     "breadcrumb": "Breadcrumb",
     "close": "Close",
-    "new": "New"
+    "new": "New",
+    "imagePlaceholder": "Imagery placeholder · 1200×900"
   },
   "account": {
     "dashboard": "Dashboard",
@@ -181,14 +182,17 @@
     "value": "Typical value",
     "note": "Method / note",
     "download": "Download spec sheet",
-    "sample": "Request a sample"
+    "sample": "Request a sample",
+    "keySpecifications": "Key specifications"
   },
   "products": {
-    "whereUsed": "Where it is used"
+    "whereUsed": "Where it is used",
+    "grade": "Grade"
   },
   "solutions": {
     "other": "Other applications",
-    "explore": "Explore this application →"
+    "explore": "Explore this application →",
+    "challenge": "The challenge"
   },
   "faq": {
     "all": "All questions",

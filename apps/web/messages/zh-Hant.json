@@ -155,7 +155,8 @@
     "menu": "選單",
     "breadcrumb": "麵包屑導覽",
     "close": "關閉",
-    "new": "新"
+    "new": "新",
+    "imagePlaceholder": "圖片版位 · 1200×900"
   },
   "account": {
     "dashboard": "總覽",
@@ -181,14 +182,17 @@
     "value": "典型值",
     "note": "方法／備註",
     "download": "下載規格書",
-    "sample": "索取樣品"
+    "sample": "索取樣品",
+    "keySpecifications": "關鍵規格"
   },
   "products": {
-    "whereUsed": "應用領域"
+    "whereUsed": "應用領域",
+    "grade": "等級"
   },
   "solutions": {
     "other": "其他應用",
-    "explore": "了解這個應用 →"
+    "explore": "了解這個應用 →",
+    "challenge": "課題"
   },
   "faq": {
     "all": "全部問題",

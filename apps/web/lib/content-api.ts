@@ -30,7 +30,8 @@ export type Paged<T> = {
 type Translated = { hasRequestedCulture: boolean };
 
 export type SpecificationRow = {
-  label: string;
+  /** 可為 null —— 有些 chip 只有值沒有欄名（database.md §02）。 */
+  label: string | null;
   value: string;
   note: string | null;
   isHighlighted: boolean;
@@ -78,6 +79,8 @@ export type ProductListItem = Translated & {
   isNew: boolean;
   name: string | null;
   summary: string | null;
+  /** 系列卡的 chip（`isHighlighted`）與比較表的欄位都在這裡。 */
+  specifications: SpecificationRow[];
 };
 
 export type ProductDetail = {
