@@ -45,12 +45,25 @@ updated 2026-01):**
 - ⚠️ **Hybrid Next.js support is in _Preview_** — no GA SLA, behavior may change. This is the
   main risk to weigh for a production site; if unacceptable, go **SWA Standard** or host Next.js
   on **App Service / Container Apps** (non-preview).
-- **250 MB app-size cap.** ⚠️ 2026-09-08 實測：**自建 standalone 產物上傳（`skip_app_build`）
-  會在部署最後停在 `Web app warm up timed out`**，且沒有其他診斷訊息——修好 pnpm 符號連結、
-  攤平 monorepo 的巢狀結構、補上 `/.swa/health.html` 都無效。因此 build 交給 SWA 的 Oryx
-  （`app_location: apps/web`），`next.config.ts` **不設** `output: 'standalone'`，
-  而 `apps/web/package.json` 的相依必須自給自足（Oryx 只看得到那一層）。
-  代價是產物大小要自己盯著。
+- **250 MB app-size cap.** 因此 `next.config.ts` 設 `output: 'standalone'`，CI 自建產物後以
+  `skip_app_build: true` 上傳（`app_location: apps/web`）。產物由
+  `apps/web/scripts/pack-standalone.mjs` 收尾，`check-size.mjs` 在 build 當下擋 250MB。
+
+  ⚠️ **2026-09-08 踩坑（結論已修正）。** 自建 standalone 一開始三次都停在
+  `Web app warm up timed out`，當時誤判成「SWA 只吃 Oryx 建的產物」而改走 Oryx。
+  對照姊妹專案 NTI／EuniceMed 後，真正的原因是產物形狀，共三件事：
+
+  1. pnpm workspace 下 Next 會把入口放在 `.next/standalone/apps/web/server.js`，
+     而 SWA 找的是根目錄的 `server.js` —— 找不到入口就是 warm up timeout，沒有其他訊息。
+  2. `.next/static` 與 `public/` Next **不會**自己放進 standalone。少了它們，
+     部署會顯示成功而 CSS、字型與整個 `/admin` 全部 404。
+  3. 壓平巢狀時只能搬 app 自己的檔案；`node_modules` 已經在 standalone 根，一起搬會變成
+     `Cannot find module 'styled-jsx/package.json'`（第一次修時就是這樣壞的）。
+
+  另外 CI 必須以 `NPM_CONFIG_NODE_LINKER=hoisted` 安裝 —— SWA 的打包器不跟隨符號連結。
+  **不要**改用 `outputFileTracingRoot` 來避開巢狀：那會讓相依變成指向 standalone 之外的
+  符號連結，體積下降看起來像優化，SWA 打包時卻以 `Could not find file .../node_modules/react`
+  失敗（見 `apps/web/next.config.ts` 的註解）。
 - **Linked backends (SWA-integrated Azure Functions/App Service) need Standard + ≥S1** — we do
   **not** use that feature. The Next.js SSR server calls the Functions API directly over HTTPS,
   so Free is sufficient.

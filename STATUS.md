@@ -247,7 +247,7 @@ apps/web/
 | Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
 | **Admin API** `/api/admin/**` | ✅ | 登入（access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機 |
 | CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、72 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
-| 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→SWA 以 Oryx 建前台→實打 `/en` |
+| 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
 | Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
 
 ### 已上線的公開端點
