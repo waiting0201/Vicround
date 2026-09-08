@@ -75,7 +75,12 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
     /// 只放 slug、enum 名稱與數字（database.md §09）。Content block 一律為 <c>null</c>。
     /// </param>
     private sealed record BlockSpec(
-        string Section, BlockType Type, string Anchor, BlockTone Tone = BlockTone.Light, string? Settings = null);
+        string Section,
+        BlockType Type,
+        string Anchor,
+        BlockTone Tone = BlockTone.Light,
+        string? Settings = null,
+        bool WithItems = true);
 
     private sealed record PageSpec(string File, string Export, string PageSlug, BlockSpec[] Blocks);
 

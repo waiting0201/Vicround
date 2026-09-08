@@ -55,6 +55,13 @@ public sealed record ProductListItemDto
     public bool IsNew { get; init; }
     public string? Name { get; init; }
     public string? Summary { get; init; }
+
+    /// <summary>
+    /// 系列卡的 chip（<c>IsHighlighted</c>）與等級比較表的欄位，都在這裡。
+    /// 列表也帶規格是刻意的——確認稿的卡片上就有它們，讓前台再打一次 API 只會多跑往返。
+    /// </summary>
+    public IReadOnlyList<SpecificationRowDto> Specifications { get; init; } = [];
+
     public bool HasRequestedCulture { get; init; }
 }
 
@@ -103,7 +110,11 @@ public sealed record SolutionDetailDto
     public IReadOnlyList<CategoryListItemDto> Categories { get; init; } = [];
 }
 
-public sealed record SpecificationRowDto(string Label, string Value, string? Note, bool IsHighlighted);
+/// <summary>
+/// 規格列。<c>Label</c> 可為 <c>null</c>——系列卡的 chip 有些只有值，
+/// 前台顯示時把兩者串起來即可（database.md §02）。
+/// </summary>
+public sealed record SpecificationRowDto(string? Label, string Value, string? Note, bool IsHighlighted);
 
 public sealed record ContentBlockDto
 {

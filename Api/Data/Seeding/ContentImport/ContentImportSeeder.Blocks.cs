@@ -42,7 +42,7 @@ public sealed partial class ContentImportSeeder
                 continue;
             }
 
-            var block = BuildBlock(section, blockSpec.Type, blockSpec.Anchor, blockSpec.Tone, sortOrder++);
+            var block = BuildBlock(section, blockSpec.Type, blockSpec.Anchor, blockSpec.Tone, sortOrder++, blockSpec.WithItems);
             block.SettingsJson = blockSpec.Settings;
             page.Blocks.Add(block);
             Count("版塊");
@@ -54,11 +54,16 @@ public sealed partial class ContentImportSeeder
     /// 把一個 section 變成版塊。section 可能是物件（有 eyebrow/title/items）或直接是陣列
     /// （products.lines、solutions-hub.cards 這種），兩種都吃。
     /// </summary>
-    private static ContentBlock BuildBlock(JsonNode section, BlockType type, string anchor, BlockTone tone, int sortOrder)
+    /// <param name="withItems">
+    /// <c>false</c> 表示這個版塊只要標題與說明，子項另有出處——例如 Acoustic 的等級比較表，
+    /// 表格內容是那四個等級<b>產品</b>的規格列，不該在版塊裡再抄一份。
+    /// </param>
+    private static ContentBlock BuildBlock(
+        JsonNode section, BlockType type, string anchor, BlockTone tone, int sortOrder, bool withItems = true)
     {
         var isBareArray = section is JsonArray;
         var body = isBareArray ? null : section;
-        var items = isBareArray ? (JsonArray)section : section.ArrAny(ItemFields);
+        var items = !withItems ? null : isBareArray ? (JsonArray)section : section.ArrAny(ItemFields);
 
         var block = new ContentBlock
         {

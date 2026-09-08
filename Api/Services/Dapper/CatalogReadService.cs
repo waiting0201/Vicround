@@ -77,6 +77,9 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
              ORDER BY e.SortOrder
              """, args);
 
+        var categoryProducts = products.ToList();
+        var categoryProductSpecs = await ProductSpecsAsync(db, culture, categoryProducts.Select(p => p.Id).ToArray());
+
         var solutions = await db.QueryAsync<CategoryRow>(
             """
             SELECT s.Slug, s.IconName, s.IsNew,
@@ -105,7 +108,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
             Specifications = await ContentReaders.SpecificationsAsync(db, "OwnerCategoryId", row.Id, culture),
             Blocks = await ContentReaders.BlocksAsync(db, "OwnerCategoryId", row.Id, culture),
-            Products = products.Select(p => ToProductListItem(p, row.Slug)).ToList(),
+            Products = categoryProducts.Select(p => ToProductListItem(p, row.Slug, categoryProductSpecs)).ToList(),
             Solutions = solutions.Select(s => new SolutionListItemDto
             {
                 Slug = s.Slug,
@@ -119,7 +122,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     }
 
     private const string ProductSelect = """
-        SELECT e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew,
+        SELECT e.Id, e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew,
                COALESCE(t.Name, f.Name) AS Name,
                COALESCE(t.Summary, f.Summary) AS Summary,
                CAST(CASE WHEN t.Culture IS NULL THEN 0 ELSE 1 END AS bit) AS HasRequestedCulture
@@ -164,7 +167,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
 
         var rows = await db.QueryAsync<ProductRow>(
             $"""
-             SELECT e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew, c.Slug AS CategorySlug,
+             SELECT e.Id, e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew, c.Slug AS CategorySlug,
                     COALESCE(t.Name, f.Name) AS Name,
                     COALESCE(t.Summary, f.Summary) AS Summary,
                     CAST(CASE WHEN t.Culture IS NULL THEN 0 ELSE 1 END AS bit) AS HasRequestedCulture
@@ -177,7 +180,9 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
              OFFSET @Skip ROWS FETCH NEXT @Take ROWS ONLY
              """, args);
 
-        var items = rows.Select(r => ToProductListItem(r, r.CategorySlug ?? string.Empty)).ToList();
+        var productRows = rows.ToList();
+        var specs = await ProductSpecsAsync(db, culture, productRows.Select(r => r.Id).ToArray());
+        var items = productRows.Select(r => ToProductListItem(r, r.CategorySlug ?? string.Empty, specs)).ToList();
 
         return new PagedResult<ProductListItemDto>(
             items, total, page, pageSize, (int)Math.Ceiling(total / (double)pageSize));
@@ -218,7 +223,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     {
         var rows = await db.QueryAsync<ProductRow>(
             $"""
-             SELECT TOP (@Take) e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew, c.Slug AS CategorySlug,
+             SELECT TOP (@Take) e.Id, e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew, c.Slug AS CategorySlug,
                     COALESCE(t.Name, f.Name) AS Name,
                     COALESCE(t.Summary, f.Summary) AS Summary,
                     CAST(CASE WHEN t.Culture IS NULL THEN 0 ELSE 1 END AS bit) AS HasRequestedCulture
@@ -242,7 +247,10 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
                 Take = limit,
             });
 
-        return rows.Select(r => ToProductListItem(r, r.CategorySlug ?? string.Empty)).ToList();
+        var productRows = rows.ToList();
+        var specs = await ProductSpecsAsync(db, culture, productRows.Select(r => r.Id).ToArray());
+
+        return productRows.Select(r => ToProductListItem(r, r.CategorySlug ?? string.Empty, specs)).ToList();
     }
 
     private static byte? ParseCategoryType(string? type) => type switch
@@ -268,7 +276,8 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         HasRequestedCulture = r.HasRequestedCulture,
     };
 
-    private static ProductListItemDto ToProductListItem(ProductRow r, string categorySlug) => new()
+    private static ProductListItemDto ToProductListItem(
+        ProductRow r, string categorySlug, ILookup<int, SpecificationRowDto>? specs = null) => new()
     {
         Slug = r.Slug,
         CategorySlug = r.CategorySlug ?? categorySlug,
@@ -278,8 +287,41 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         IsNew = r.IsNew,
         Name = r.Name,
         Summary = r.Summary,
+        Specifications = specs?[r.Id].ToList() ?? [],
         HasRequestedCulture = r.HasRequestedCulture,
     };
+
+    /// <summary>
+    /// 列表也要帶規格列：系列卡的 chip 是 <c>IsHighlighted</c> 的那幾列，
+    /// Acoustic 產業頁的等級比較表則是同一批產品的具名規格（database.md §02）。
+    /// 一次撈完整頁再分組，不讓每張卡各打一次 DB。
+    /// </summary>
+    private static async Task<ILookup<int, SpecificationRowDto>> ProductSpecsAsync(
+        IDbConnection db, string culture, int[] productIds)
+    {
+        if (productIds.Length == 0)
+        {
+            return Array.Empty<(int, SpecificationRowDto)>().ToLookup(x => x.Item1, x => x.Item2);
+        }
+
+        var rows = await db.QueryAsync<ProductSpecRow>(
+            $"""
+             SELECT e.OwnerProductId, e.IsHighlighted,
+                    {Sql.Coalesce("Label")}, {Sql.Coalesce("Value")}, {Sql.Coalesce("Note")}
+             FROM SpecificationRows e
+             {Sql.TranslationJoin("SpecificationRowTranslations", "SpecificationRowId")}
+             WHERE e.OwnerProductId IN @Ids AND e.Status = @Published
+             ORDER BY e.OwnerProductId, e.IsHighlighted DESC, e.SortOrder
+             """,
+            new { Ids = productIds, culture, DefaultCulture = CultureCodes.Default, Sql.Published });
+
+        return rows.ToLookup(
+            r => r.OwnerProductId,
+            r => new SpecificationRowDto(r.Label, r.Value, r.Note, r.IsHighlighted));
+    }
+
+    private sealed record ProductSpecRow(
+        int OwnerProductId, bool IsHighlighted, string? Label, string Value, string? Note);
 
     // 這兩個型別被多個查詢共用，各自的 SELECT 欄位不完全相同，因此用可設定的屬性而非
     // 位置式 record：位置式要求欄位與建構子逐一對齊，少一欄 Dapper 就擲例外；
@@ -305,6 +347,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
 
     private sealed class ProductRow
     {
+        public int Id { get; set; }
         public string Slug { get; set; } = string.Empty;
         public string? Code { get; set; }
         public string? Brand { get; set; }

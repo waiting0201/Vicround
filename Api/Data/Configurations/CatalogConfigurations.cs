@@ -173,7 +173,9 @@ public class SpecificationRowTranslationConfiguration : TranslationConfiguration
 
     protected override void ConfigureTranslation(EntityTypeBuilder<SpecificationRowTranslation> builder)
     {
-        builder.Property(t => t.Label).HasMaxLength(200).IsRequired();
+        // Label 可為空：確認稿的系列卡 chip 有些只有值沒有名稱（「5,000 wipe cycles」），
+        // 它們與規格表是同一種資料，硬拆成 Label + Value 只會編出一個不存在的欄名。
+        builder.Property(t => t.Label).HasMaxLength(200);
         builder.Property(t => t.Value).HasMaxLength(200).IsRequired();
         builder.Property(t => t.Note).HasMaxLength(400);
 

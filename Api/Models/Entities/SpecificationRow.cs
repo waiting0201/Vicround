@@ -29,8 +29,11 @@ public class SpecificationRowTranslation : Translation
     public int SpecificationRowId { get; set; }
     public SpecificationRow? SpecificationRow { get; set; }
 
-    /// <summary>Property。</summary>
-    public string Label { get; set; } = string.Empty;
+    /// <summary>
+    /// 規格名稱（Property）。<b>可為 null</b>——系列卡上的 chip 有些只有值（「5,000 wipe cycles」），
+    /// 前台顯示時是 <c>Label Value</c> 串起來。
+    /// </summary>
+    public string? Label { get; set; }
 
     /// <summary>Typical value。</summary>
     public string Value { get; set; } = string.Empty;

@@ -104,7 +104,7 @@ internal static class ContentReaders
     /// <summary>enum 對外一律 camelCase 字串（database.md §16）。</summary>
     public static string Camel(string name) => char.ToLowerInvariant(name[0]) + name[1..];
 
-    private sealed record SpecRow(string Label, string Value, string? Note, bool IsHighlighted);
+    private sealed record SpecRow(string? Label, string Value, string? Note, bool IsHighlighted);
 
     private sealed record BlockRow(
         int Id, byte BlockType, string? Anchor, byte Tone, string? SettingsJson,

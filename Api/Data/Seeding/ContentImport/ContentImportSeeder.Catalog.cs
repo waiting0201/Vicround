@@ -131,18 +131,11 @@ public sealed partial class ContentImportSeeder
                 PublishedAt = DateTime.UtcNow,
             };
 
-            // 卡片上的 chip（AG / AF / Privacy）沒有「值」，塞不進 SpecificationRows
-            // （Label + Value 都是必填），因此併進 ApplicationNote 保留原文。
-            var tags = item.Arr("tags");
-
             AddBilingual(product.Translations, culture => new ProductTranslation
             {
                 Culture = culture,
                 Name = name.Value.For(culture),
                 Summary = item.LocAny("body")?.For(culture),
-                ApplicationNote = tags is null
-                    ? null
-                    : string.Join(" · ", tags.Select(t => t.Loc()?.For(culture)).Where(t => t is not null)),
             });
 
             db.Products.Add(product);
@@ -154,6 +147,91 @@ public sealed partial class ContentImportSeeder
         await db.SaveChangesAsync(cancellationToken);
         db.ChangeTracker.Clear();
         Count("產品系列", added);
+
+        await ImportFamilyChipsAsync(families, categoryId, cancellationToken);
+    }
+
+    /// <summary>
+    /// 系列卡上的 chip（「Haze 3 – 25 %」「5,000 wipe cycles」）。
+    /// <para>
+    /// 它們與規格表是同一種資料，因此存成該產品的 <c>SpecificationRows</c>（<c>IsHighlighted</c>），
+    /// 而不是版塊文字——這樣產品線頁的卡片與產品詳情頁讀的是同一份，不會各自漂移。
+    /// 有些 chip 只有值沒有名稱，<c>Label</c> 因此可為 null（§02）。
+    /// </para>
+    /// </summary>
+    private async Task ImportFamilyChipsAsync(JsonNode? families, int categoryId, CancellationToken cancellationToken)
+    {
+        var products = await db.Products
+            .AsTracking()
+            .Include(p => p.Translations)
+            .Where(p => p.CategoryId == categoryId)
+            .ToListAsync(cancellationToken);
+
+        var byName = products
+            .Select(p => (Product: p, Name: p.Translations.FirstOrDefault(t => t.Culture == CultureCodes.English)?.Name))
+            .Where(x => x.Name is not null)
+            .ToDictionary(x => x.Name!, x => x.Product, StringComparer.OrdinalIgnoreCase);
+
+        var withChips = await db.SpecificationRows
+            .Where(r => r.OwnerProductId != null && r.IsHighlighted)
+            .Select(r => r.OwnerProductId!.Value)
+            .ToListAsync(cancellationToken);
+
+        var added = 0;
+
+        foreach (var item in families.Arr("items") ?? [])
+        {
+            var name = item.LocAny("name")?.En;
+            var tags = item.Arr("tags");
+
+            if (name is null || tags is null || !byName.TryGetValue(name, out var product) || withChips.Contains(product.Id))
+            {
+                continue;
+            }
+
+            var order = 0;
+            foreach (var tagNode in tags)
+            {
+                var tag = tagNode.Loc();
+                if (tag is null)
+                {
+                    continue;
+                }
+
+                var row = new SpecificationRow
+                {
+                    OwnerProductId = product.Id,
+                    IsHighlighted = true,
+                    Status = ContentStatus.Published,
+                    SortOrder = order++,
+                    PublishedAt = DateTime.UtcNow,
+                };
+
+                AddBilingual(row.Translations, culture => new SpecificationRowTranslation
+                {
+                    Culture = culture,
+                    Value = tag.Value.For(culture),
+                });
+
+                db.SpecificationRows.Add(row);
+                added++;
+            }
+
+            // 舊版把 chip 併進 ApplicationNote 保留原文；現在有正式的存放處了，把那份副本清掉，
+            // 免得同一段文字在兩個欄位各存一份。
+            foreach (var translation in product.Translations)
+            {
+                var joined = string.Join(" · ", tags.Select(t => t.Loc()?.For(translation.Culture)).Where(t => t is not null));
+                if (translation.ApplicationNote == joined)
+                {
+                    translation.ApplicationNote = null;
+                }
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        Count("系列 chip", added);
     }
 
     private async Task ImportSpecificationRowsAsync(
@@ -195,7 +273,7 @@ public sealed partial class ContentImportSeeder
             AddBilingual(row.Translations, culture => new SpecificationRowTranslation
             {
                 Culture = culture,
-                Label = item.LocAny("property", "label")?.For(culture) ?? string.Empty,
+                Label = item.LocAny("property", "label")?.For(culture),
                 Value = item.LocAny("value")?.For(culture) ?? string.Empty,
                 Note = item.LocAny("note")?.For(culture),
             });
@@ -258,15 +336,96 @@ public sealed partial class ContentImportSeeder
                 [
                     new("banner", BlockType.Hero, "banner"),
                     new("materials", BlockType.FeatureGrid, "materials"),
+                    // 等級比較表只取標題與註腳：表格內容是那四個等級產品的規格列。
+                    new("grades", BlockType.SpecTable, "grades", WithItems: false),
                     new("why", BlockType.StatBand, "why"),
                     new("cta", BlockType.Cta, "cta"),
                 ]);
 
             await ImportSpecificationRowsAsync(node.Prop("specs"), cancellationToken, row => row.OwnerSolutionId = solution.Id);
+            await ImportGradeTableAsync(node.Prop("grades"), cancellationToken);
 
             await db.SaveChangesAsync(cancellationToken);
             db.ChangeTracker.Clear();
         }
+    }
+
+    /// <summary>
+    /// Acoustic 產業頁的等級比較表。
+    /// <para>
+    /// 表格的每一列就是一個等級<b>產品</b>（VR-AC 110…），每一欄是一項規格，
+    /// 因此存成該產品的 <c>SpecificationRows</c>——產品線頁與產業頁讀的是同一份，
+    /// 不會出現「兩頁的 IP 等級不一樣」。
+    /// </para>
+    /// </summary>
+    private async Task ImportGradeTableAsync(JsonNode? grades, CancellationToken cancellationToken)
+    {
+        var columns = grades.Arr("columns");
+        var rows = grades.Arr("rows");
+
+        if (columns is null || rows is null)
+        {
+            return;
+        }
+
+        var products = await db.Products
+            .Include(p => p.Translations)
+            .ToListAsync(cancellationToken);
+
+        var byName = products
+            .Select(p => (Product: p, Name: p.Translations.FirstOrDefault(t => t.Culture == CultureCodes.English)?.Name))
+            .Where(x => x.Name is not null)
+            .ToDictionary(x => x.Name!, x => x.Product, StringComparer.OrdinalIgnoreCase);
+
+        var labelled = await db.SpecificationRows
+            .Where(r => r.OwnerProductId != null && !r.IsHighlighted)
+            .Select(r => r.OwnerProductId!.Value)
+            .ToListAsync(cancellationToken);
+
+        var added = 0;
+
+        foreach (var row in rows.OfType<JsonArray>())
+        {
+            var name = row.Count > 0 ? row[0].Loc()?.En : null;
+
+            if (name is null || !byName.TryGetValue(name, out var product) || labelled.Contains(product.Id))
+            {
+                continue;
+            }
+
+            for (var column = 1; column < Math.Min(columns.Count, row.Count); column++)
+            {
+                var label = columns[column].Loc();
+                var value = row[column].Loc();
+
+                if (value is null)
+                {
+                    continue;
+                }
+
+                var spec = new SpecificationRow
+                {
+                    OwnerProductId = product.Id,
+                    Status = ContentStatus.Published,
+                    SortOrder = column,
+                    PublishedAt = DateTime.UtcNow,
+                };
+
+                AddBilingual(spec.Translations, culture => new SpecificationRowTranslation
+                {
+                    Culture = culture,
+                    Label = label?.For(culture),
+                    Value = value.Value.For(culture),
+                });
+
+                db.SpecificationRows.Add(spec);
+                added++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        Count("等級規格列", added);
     }
 
     private async Task AddOwnedBlocksAsync(
@@ -285,7 +444,7 @@ public sealed partial class ContentImportSeeder
                 continue;
             }
 
-            var block = BuildBlock(section, spec.Type, spec.Anchor, spec.Tone, order++);
+            var block = BuildBlock(section, spec.Type, spec.Anchor, spec.Tone, order++, spec.WithItems);
             setOwner(block);
             db.ContentBlocks.Add(block);
             Count("版塊");
