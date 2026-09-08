@@ -91,6 +91,22 @@ internal static class SeedCommand
                 .ImportAsync(await File.ReadAllTextAsync(path));
         }
 
+        if (args.Contains("check-redirects", StringComparer.OrdinalIgnoreCase))
+        {
+            var root = configuration["root"] ?? "reference/sbk/data";
+            var options = (Directory.Exists(root) ? LegacyImportOptions.FromRoot(root) : new LegacyImportOptions()) with
+            {
+                CrawlJson = configuration["crawl"] ?? "artifacts/legacy-urls.json",
+            };
+
+            var coverage = await scope.ServiceProvider
+                .GetRequiredService<LegacyImportSeeder>()
+                .CheckRedirectsAsync(options);
+
+            // 有舊網址還沒轉址就以非零結束，方便之後接進 CI。
+            return coverage.MissingPaths.Count == 0 ? 0 : 2;
+        }
+
         if (args.Contains("import-legacy", StringComparer.OrdinalIgnoreCase))
         {
             var root = configuration["root"] ?? "reference/sbk/data";

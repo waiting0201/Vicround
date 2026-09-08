@@ -11,7 +11,7 @@
 
 ## 一句話現況
 
-**前後台的版型都已完成；後端的資料層已完成，API 尚未開工。**
+**前後台的版型都已完成；後端的資料層與 Content API 的第一批端點已上線，前台尚未切換過去。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
@@ -20,17 +20,18 @@
 `apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 8 種畫面型別），
 開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
 
-**後端**已建立 `src/` 的 .NET 10 方案（Domain / Application / Infrastructure / Functions），
+**後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
 [docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
 migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
-17 CHECK / 162 FK 建置無誤，B 層 seeder 建了 78 列且重跑為 0 列，Functions host 的
-`GET /api/v1/health` 實測回 `{"status":"healthy","database":"up"}`。24 項慣例守門測試通過。
+17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**38 項測試通過**。
 
 **內容已進資料庫**：`apps/web/content/*.ts` 的 1355 組雙語字串與舊站 `www.vicround.com`
 的可用資料都已匯入並實跑驗證（見第六節）。前台**仍在讀 `content/`** —— 要等 Content API
 上線才切換，屆時整個目錄刪除。
 
-**尚未開始**：三個 API surface 的端點、CI/CD 與 Azure 佈署。
+**Content API 已上線 8 支端點**（categories／products／solutions／pages／sitemap＋health），
+中英雙語與快取標頭都實跑驗過；其餘公開端點、Account API 與 Admin API 尚未實作。
+CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未建立**。
 
 ---
 
@@ -53,13 +54,14 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 | 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
-| Content API（`fn-public`） | ⬜ | 未開工；Functions host 與 DI 已就緒 |
+| Content API（`fn-public`） | 🟡 | **8 支端點已上線並實跑驗證**；articles／faq／certifications／downloads／navigation／contact 尚未做 |
 | Account API（會員） | ⬜ | 未開工 |
 | Admin API（`fn-admin`） | ⬜ | 未開工 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 212 張舊站圖已進 `public-media`（本機 Azurite）；正式 Azure Storage 未建 |
-| CI/CD 與 Azure | ⬜ | 無 workflow、未建任何 Azure 資源 |
+| CI | ✅ | `.github/workflows/api.yml`：建置、38 項測試、產物防呆、migration 同步檢查 |
+| 部署 / Azure 資源 | ⬜ | 尚未建立任何 Azure 資源 |
 
 ---
 
@@ -215,17 +217,54 @@ apps/web/
 
 ## 六、後端與部署
 
+`Api/` 是單一 Azure Functions 專案，形狀對齊 NTI 的施工標準（見 [docs/architecture.md](docs/architecture.md)）。
+
 | 項目 | 狀態 | 說明 |
 | --- | --- | --- |
-| `src/` .NET solution | ⬜ | 尚未建立，無 `.slnx` |
-| Content API `/api/v1/**` | ⬜ | 契約見 [docs/cms-api.md](docs/cms-api.md) |
-| Account API `/api/v1/account/**` | ⬜ | 同上 |
-| Admin API `/api/admin/**` | ⬜ | 同上 |
-| EF Core / 遷移 / 種子 | ⬜ | schema 規劃見 [docs/database.md](docs/database.md)（14 個功能單元） |
-| CI/CD | ⬜ | 無 `.github/workflows` |
-| Azure 資源 | ⬜ | 未建立任何資源 |
+| `Api/` 專案 | ✅ | `VicRound.slnx`：`Api/VicRound.Api.csproj` + `tests/Api.Tests`；namespace `VicRound.Api` |
+| Router 與授權 | ✅ | `RouterFunction` catch-all + `AppRouter` 三張表：公開白名單（未登記 404）、會員 JWT（強制 no-store）、後台 81 個權限碼（**預設拒絕**，未登記 403） |
+| 回應信封 / 例外 | ✅ | `ApiResponse<T>` + `ErrorCodes` + `AppException`；`ExceptionMiddleware` 把 SQL 約束違反轉成 409 而非 500 |
+| JWT | 🟡 | `JwtService`（HS256、雙 issuer/audience/金鑰）可驗證；**登入端點尚未實作** |
+| EF Core 模型 | ✅ | 14 個功能單元 → **77 張表**，schema 權威為 `Api/Data/Migrations/` |
+| 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
+| 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
+| **Content API** `/api/v1/**` | 🟡 | **8 支已上線並實跑驗證**：`categories`(2)、`products`(2)、`solutions`(2)、`pages/{slug}`、`sitemap`，外加 `health`。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗 |
+| Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
+| Admin API `/api/admin/**` | ⬜ | Router 與權限表已就緒；Handler 未實作 |
+| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、38 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
+| 部署 | ⬜ | **無部署步驟**——Azure 資源尚未建立（[docs/azure-deployment.md](docs/azure-deployment.md)） |
+| Azure 資源 | ⬜ | 未建立任何資源；Blob 目前指向本機 Azurite |
 
----
+### 已上線的公開端點
+
+| 端點 | 回傳 |
+| --- | --- |
+| `GET /api/v1/health` | 存活檢查，刻意不碰 DB |
+| `GET /api/v1/categories?type=` | 3 條產品線 |
+| `GET /api/v1/categories/{slug}` | 產品線詳情：規格 6、版塊 4、產品 8、關聯產業 6 |
+| `GET /api/v1/products?category=&solution=&featured=&page=` | 分頁產品（18 筆，只取 family 層） |
+| `GET /api/v1/products/{slug}` | 產品詳情 + 規格 |
+| `GET /api/v1/solutions` | 7 個產業 |
+| `GET /api/v1/solutions/{slug}` | 產業詳情：規格 5、版塊 4、產品線 chip 3 |
+| `GET /api/v1/pages/{slug}` | 頁面 + 版塊（privacy 走長文 Body） |
+| `GET /api/v1/sitemap` | 51 個已發佈網址 + lastmod + **真的有翻譯的語系** |
+
+### 資料層細節
+
+| 項目 | 內容 |
+| --- | --- |
+| 實體 | `Api/Models/Entities/`（24 檔）；Routable / Addressable / Embedded 三種基底類別 |
+| 組態 | `Api/Data/Configurations/`；`SluggedEntityConfiguration` 與 `TranslationConfiguration` 兩個基底吸收掉 70 幾張表的樣板 |
+| 已落實的慣例 | slug 用 `Latin1_General_100_CS_AS` + CHECK + 排除 Archived 的 filtered unique；翻譯表 PK `(擁有者Id, Culture)` 且 FK → `Cultures`；enum 存 `tinyint`；時間 `datetime2(3)` 預設 `SYSUTCDATETIME()`；owner triple 的「恰一非 NULL」CHECK；`Members.EmailDomain` 為 PERSISTED 計算欄位 |
+| 時間戳 | `AuditingSaveChangesInterceptor`（不用 trigger —— 會與 EF 的 `OUTPUT` 衝突） |
+| 密碼 | `Pbkdf2PasswordHasher`：PHC 單欄位字串，支援逐使用者漸進升級（**刻意不跟 NTI 用 BCrypt**，理由見 database.md §14.2） |
+| 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
+| 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
+| 內容匯入 | `scripts/export-content.mjs` → `import-content`：認證 9、FAQ 5/13、產品系列 18、規格列 48、製程 7/27、文章 12、展會 3、版塊 72/138。**全庫翻譯列 844** |
+| 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
+| 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
+| 測試 | `tests/Api.Tests` **38 項**：慣例守門（EF 模型）、密碼雜湊、語系解析與分頁 |
+| DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
 
@@ -249,8 +288,10 @@ apps/web/
 2. ~~在能跑的 SQL Server 上套用 migration 與 seeder~~ ✅ 2026-09-08（本機 container）
 2b. ~~把確認稿文案與舊站資料匯入資料庫與 Blob~~ ✅ 2026-09-08
 2c. ~~後端形狀對齊 NTI 的施工標準（Router / ApiResponse / EF+Dapper 雙軌）~~ ✅ 2026-09-08
-3. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支
-   （每支＝一個 Handler + 一個 Dapper ReadService + 補公開白名單），讓前台可以拔掉 `content/`
+3. ~~Content API 的 `categories` / `products` / `solutions` / `pages` / `sitemap`~~ ✅ 2026-09-08
+3b. 補完其餘公開端點：`articles`、`exhibitions`、`faq`、`certifications`、`downloads`、
+   `navigation`、`technologies`、`POST /contact`
+3c. 前台改吃 API，刪掉 `apps/web/content/`（本專案「拔掉暫代文案」的終點）
 4. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
 5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
 6. Account API 與會員專區（需先補設計稿）

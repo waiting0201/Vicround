@@ -18,9 +18,10 @@ using VicRound.Api.Handlers;
 using VicRound.Api.Middleware;
 using VicRound.Api.Routing;
 using VicRound.Api.Services;
+using VicRound.Api.Services.Dapper;
 
 // seed / import-content / import-legacy —— 初始化環境與內容匯入用，不進 Functions host。
-if (args.Any(a => a is "seed" or "import-content" or "import-legacy"))
+if (args.Any(a => a is "seed" or "import-content" or "import-legacy" or "check-redirects"))
 {
     return await SeedCommand.RunAsync(args);
 }
@@ -87,7 +88,13 @@ services.AddSingleton<IMediaStorage, BlobMediaStorage>();
 services.AddScoped<BootstrapSeeder>();
 services.AddScoped<ContentImportSeeder>();
 services.AddScoped<LegacyImportSeeder>();
+services.AddScoped<ICatalogReadService, CatalogReadService>();
+services.AddScoped<ISolutionReadService, SolutionReadService>();
+services.AddScoped<IPageReadService, PageReadService>();
 services.AddScoped<HealthHandler>();
+services.AddScoped<CatalogHandler>();
+services.AddScoped<SolutionHandler>();
+services.AddScoped<PageHandler>();
 services.AddScoped<AppRouter>();
 services.AddHttpContextAccessor();
 

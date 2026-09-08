@@ -20,7 +20,10 @@ namespace VicRound.Api.Routing;
 public sealed partial class AppRouter(
     ILogger<AppRouter> logger,
     IJwtService jwt,
-    HealthHandler health)
+    HealthHandler health,
+    CatalogHandler catalog,
+    SolutionHandler solutions,
+    PageHandler pages)
 {
     /// <summary>
     /// <see cref="GetRequiredPermission"/> 的預設回傳值：<b>未列在權限表的 <c>/admin/*</c> 一律拒絕</b>。

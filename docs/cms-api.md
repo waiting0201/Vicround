@@ -62,16 +62,19 @@ All responses contain only the requested culture's text, the entity's slug, and 
 Pass `?culture=zh-Hant` (or `en`) — Next.js derives it from the `[locale]` URL segment.
 `Accept-Language` is only a fallback when the param is absent (default `en`).
 
+> **實作進度（2026-09-08）**：標 ✅ 的已上線並實跑驗證，其餘尚未實作。
+> 新增端點時**必須同時補 `AppRouter.Public.cs` 的白名單與分派**，否則會直接 404。
+
 ```
 GET  /api/v1/navigation          # ?location=header|footer|legal|social|search-chip
-GET  /api/v1/categories          # ?type=optical-film|textile-foam|acoustic
+GET  /api/v1/categories          ✅          # ?type=optical-film|textile-foam|acoustic
 GET  /api/v1/categories/{slug}   # 含 specs、blocks、關聯 solutions
 
-GET  /api/v1/products            # ?category=&solution=&featured=true&page=1&pageSize=24
-GET  /api/v1/products/{slug}     # detail incl. specs + gallery + certifications + downloads
+GET  /api/v1/products            ✅ ?category=&solution=&featured=true&page=1&pageSize=24
+GET  /api/v1/products/{slug}     ✅ detail incl. specs（gallery／certifications／downloads 待補）
 
-GET  /api/v1/solutions           # 產業解決方案索引（取代舊的 /applications）
-GET  /api/v1/solutions/{slug}
+GET  /api/v1/solutions           ✅ 產業解決方案索引（取代舊的 /applications）
+GET  /api/v1/solutions/{slug}    ✅
 
 GET  /api/v1/technologies        # process flows + product compliance 一次帶出
 
@@ -84,11 +87,11 @@ GET  /api/v1/faq                 # ?category=
 GET  /api/v1/certifications      # ?category=company-factory|sustainability|product-compliance
 GET  /api/v1/downloads           # ?kind=&product=&category=&solution=
 
-GET  /api/v1/pages/{slug}        # blocks（reference block 已解析）
+GET  /api/v1/pages/{slug}        ✅ blocks（reference block 的解析待補）
 
 POST /api/v1/contact             # inquiry form (rate-limited, anti-bot)
 
-GET  /api/v1/sitemap             # flat list of published URLs + lastmod (data only)
+GET  /api/v1/sitemap             ✅ 已發佈網址 + lastmod + 真的有翻譯的語系（XML 由 Next.js 產）
 GET  /api/v1/search              # ?q=  ← Phase 待定，見 database.md §19.5
 ```
 

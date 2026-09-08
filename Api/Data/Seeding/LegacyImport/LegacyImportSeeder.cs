@@ -40,6 +40,57 @@ public sealed class LegacyImportSeeder(
             media, posts, redirects);
     }
 
+    /// <summary>
+    /// 301 覆蓋率檢查（不寫入）。把「已知的舊網址」與 <c>Redirects</c> 的實際內容比對，
+    /// 回報還有哪些舊網址進站會撞 404。
+    /// <para>
+    /// 已知來源有三：線上站爬取（<c>tools/crawl-legacy-site.mjs</c>）、匯出檔標題推導的孤兒頁、
+    /// 以及 blog 的 <c>.html</c> slug。內容遷移或新增專屬落點之後回來重跑，數字會跟著動。
+    /// </para>
+    /// </summary>
+    public async Task<RedirectCoverage> CheckRedirectsAsync(
+        LegacyImportOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        var known = new SortedSet<string>(StringComparer.Ordinal);
+        CollectCrawledPaths(options.CrawlJson, known);
+        CollectDerivedPaths(options.SiteDataCsvs, known);
+        CollectBlogPaths(options.BlogPostCsv, known);
+        CollectListedRedirects(options.UrlRedirectsCsv, known);
+        known.Remove("/");
+
+        var rows = await db.Redirects
+            .Select(r => new { r.FromPath, r.ToPath, r.IsEnabled })
+            .ToListAsync(cancellationToken);
+
+        var covered = rows.Where(r => r.IsEnabled).Select(r => r.FromPath).ToHashSet(StringComparer.Ordinal);
+        var missing = known.Where(p => !covered.Contains(p)).ToList();
+
+        // 指向首頁的是「還沒給專屬落點」的那些（專案決策：先全部導首頁）。
+        var toHome = rows.Count(r => r.ToPath is "/en" or "/zh-Hant");
+
+        var coverage = new RedirectCoverage(known.Count, known.Count - missing.Count, missing, rows.Count, toHome);
+
+        logger.LogInformation(
+            "301 覆蓋率：已知舊網址 {Known} 條，已有轉址 {Covered} 條（{Percent:P0}）；" +
+            "Redirects 共 {Rows} 列，其中 {ToHome} 列導向首頁（尚未給專屬落點）。",
+            coverage.KnownPaths, coverage.CoveredPaths,
+            coverage.KnownPaths == 0 ? 1d : (double)coverage.CoveredPaths / coverage.KnownPaths,
+            coverage.RedirectRows, coverage.PointingAtHome);
+
+        foreach (var path in missing.Take(20))
+        {
+            logger.LogWarning("  未涵蓋：{Path}", path);
+        }
+
+        if (missing.Count > 20)
+        {
+            logger.LogWarning("  …另有 {Count} 條未列出。", missing.Count - 20);
+        }
+
+        return coverage;
+    }
+
     // ── 圖片 → Blob + MediaAssets ───────────────────────────────────────────
 
     private async Task<int> ImportMediaAsync(string? directory, CancellationToken cancellationToken)
@@ -332,6 +383,14 @@ public sealed class LegacyImportSeeder(
     private static string WebUtilityDecode(string value) => System.Net.WebUtility.HtmlDecode(value);
 }
 
+/// <param name="PointingAtHome">導向首頁而非專屬落點的列數——這些是 SEO 上還有改善空間的。</param>
+public sealed record RedirectCoverage(
+    int KnownPaths,
+    int CoveredPaths,
+    IReadOnlyList<string> MissingPaths,
+    int RedirectRows,
+    int PointingAtHome);
+
 public sealed record LegacyImportOptions
 {
     public string? ImageDirectory { get; init; }
@@ -405,8 +464,10 @@ internal static class LegacyPath
             value = "/";
         }
 
-        // 爬蟲會撿到 /css2 這種不是頁面的路徑。
-        if (value is "/css2" || value.Contains("://", StringComparison.Ordinal))
+        // 爬蟲會撿到不是頁面的路徑：Google Fonts 的 /css2、Cloudflare 的信箱保護端點等。
+        if (value is "/css2"
+            || value.StartsWith("/cdn-cgi/", StringComparison.Ordinal)
+            || value.Contains("://", StringComparison.Ordinal))
         {
             return false;
         }

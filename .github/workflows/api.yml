@@ -1,0 +1,73 @@
+# 後端 API 的建置與測試閘。
+#
+# ⚠ **目前沒有部署步驟**：VicRound 還沒建立任何 Azure 資源（見 docs/azure-deployment.md）。
+#   等 Function App 開好之後，比照 NTI 的 .github/workflows/api.yml 補上 azure/login（OIDC，
+#   不用 publish profile）+ Azure/functions-action + health 端點 smoke test。
+name: api
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'Api/**'
+      - 'tests/**'
+      - 'global.json'
+      - 'Directory.Build.props'
+      - '.github/workflows/api.yml'
+  pull_request:
+    paths:
+      - 'Api/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+concurrency:
+  group: api-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  OUTPUT_PATH: ${{ github.workspace }}/output
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Directory.Build.props 設了 TreatWarningsAsErrors，所以這一步同時是品質閘。
+      - name: Build
+        run: dotnet build VicRound.slnx -c Release --nologo
+
+      # tests/Api.Tests 把 docs/database.md 的全域慣例寫成守門測試：
+      # 新增實體時漏掉 slug 索引、翻譯表 PK、enum 型別等，會在這裡被擋下。
+      - name: Test
+        run: dotnet test VicRound.slnx -c Release --no-build --nologo
+
+      - name: Publish
+        run: dotnet publish Api/VicRound.Api.csproj -c Release -o ${{ env.OUTPUT_PATH }} --nologo
+
+      # local.settings.json 設了 CopyToPublishDirectory=Never，這裡再確認一次：
+      # 它含連線字串與 JWT 簽章金鑰，跟著產物上去等於把密鑰放進伺服器的檔案系統。
+      - name: Assert no local settings in output
+        run: |
+          if [ -f "${{ env.OUTPUT_PATH }}/local.settings.json" ]; then
+            echo "::error::local.settings.json 出現在部署產物中，請檢查 csproj 的 CopyToPublishDirectory。"
+            exit 1
+          fi
+
+      # migration 與 EF 模型不同步是最容易漏掉的一種——程式碼改了實體卻忘了 add migration，
+      # build 與測試都會過，但部署後 schema 對不上。
+      - name: Assert migrations are up to date
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.3
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          output=$(dotnet ef migrations has-pending-model-changes -p Api -s Api 2>&1) || true
+          echo "$output"
+          if echo "$output" | grep -q "Changes have been made"; then
+            echo "::error::EF 模型與 migration 不同步，請執行 dotnet ef migrations add <Name> -p Api -s Api。"
+            exit 1
+          fi
