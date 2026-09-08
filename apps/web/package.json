@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "start:standalone": "node .next/standalone/apps/web/server.js"
+    "lint": "eslint"
   },
   "dependencies": {
     "next": "15.5.23",

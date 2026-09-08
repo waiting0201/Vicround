@@ -64,31 +64,14 @@ jobs:
       # `NEXT_PUBLIC_SITE_URL` 在 build 時就被內嵌，而它同時決定 robots.txt 要不要開放索引
       # （`lib/site.ts` 的 IS_PRODUCTION_SITE）。目前指向 SWA 的預設網域 → 整站 Disallow，
       # 綁上 www.vicround.com 之後把 repo 變數 SITE_URL 改掉即可，不必動程式。
-      - name: Build
-        env:
-          API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
-          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
-        run: pnpm build
+      # 只在 CI 建後台 SPA（產物進 apps/web/public/admin，隨前台一起上傳）。
+      # 前台本身交給 SWA 的 Oryx 建——那是它唯一支援的形狀。
+      - name: Build admin SPA
+        run: pnpm --filter admin build
 
-      # 組出要上傳的資料夾。三件事：
-      # 1. `output: 'standalone'` 不會複製 static 與 public，得自己搬（Next.js 的已知行為）
-      # 2. monorepo 的 standalone 會把應用巢狀在 apps/web/ 底下，而 SWA 期待應用就在根，
-      #    因此攤平
-      # 3. 攤平後大小約 80MB，遠低於 SWA Free 的 250MB 上限
-      - name: Assemble deployment folder
-        run: |
-          rm -rf deploy && mkdir -p deploy
-          cp -R apps/web/.next/standalone/. deploy/
-          mv deploy/apps/web/.next deploy/.next
-          mv deploy/apps/web/server.js deploy/server.js
-          mv deploy/apps/web/package.json deploy/package.json
-          [ -d deploy/apps/web/messages ] && mv deploy/apps/web/messages deploy/messages || true
-          [ -d deploy/apps/web/node_modules ] && cp -R deploy/apps/web/node_modules/. deploy/node_modules/ || true
-          rm -rf deploy/apps
-          cp -R apps/web/.next/static deploy/.next/static
-          cp -R apps/web/public deploy/public
-          test -f deploy/public/.swa/health.html || { echo "::error::缺少 .swa/health.html，SWA 的 warm-up 會逾時。"; exit 1; }
-          du -sh deploy
+      # Oryx 會在 apps/web 裡自己安裝相依，本機裝的 pnpm 符號連結搬過去只會壞掉。
+      - name: Clean workspace links before upload
+        run: rm -rf apps/web/node_modules apps/web/.next
 
       - name: Azure login (OIDC)
         if: github.event_name != 'pull_request'
@@ -112,10 +95,14 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
           action: upload
-          app_location: deploy
+          app_location: apps/web
           output_location: ''
-          skip_app_build: true
           skip_api_build: true
+        env:
+          # Oryx 的建置環境變數：預先產生頁面時要打得到 Content API，
+          # 而 NEXT_PUBLIC_SITE_URL 同時決定 robots.txt 開不開放索引。
+          API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
 
       - name: Smoke test
         if: github.event_name != 'pull_request'

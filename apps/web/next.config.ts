@@ -5,12 +5,17 @@ import type { NextConfig } from 'next';
  * 這裡多數設定對應該平台的硬限制，改動前先讀 docs/azure-deployment.md。
  */
 const nextConfig: NextConfig = {
-  // SWA Free 單一環境上限 250MB。standalone 是必須，不是最佳化選項。
-  output: 'standalone',
-
-  // monorepo：tracing 根保留在 repo 根，否則 pnpm 的相依會落在追蹤範圍外，
-  // 產物只留下指向 standalone 之外的符號連結（看起來變小，其實是空的）。
-  outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
+  /**
+   * ⚠️ **刻意不設 `output: 'standalone'`。**
+   *
+   * SWA 的 hybrid Next.js 只支援「平台自己 build」的產物形狀；上傳自建的 standalone
+   * 會在部署最後停在 `Web app warm up timed out`，而且沒有其他診斷訊息
+   * （2026-09-08 實測三次：修好 pnpm 符號連結、攤平 monorepo 巢狀、補上
+   * /.swa/health.html 都無效）。因此 build 交給 SWA 的 Oryx，`apps/web` 就是它的
+   * 應用根目錄——這也是 `apps/web/package.json` 的相依必須自給自足的原因。
+   *
+   * 代價是產物大小要自己盯著（SWA Free 單一環境 250MB）。
+   */
 
   images: {
     /**
