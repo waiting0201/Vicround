@@ -136,9 +136,10 @@ jobs:
           export PATH="$PATH:$HOME/.dotnet/tools"
 
           # deploy job 只 checkout 原始碼（產物是 build job 傳過來的），
-          # 而 `dotnet ef` 需要能載入 DbContext，因此得先還原相依。
-          dotnet restore VicRound.slnx
-          dotnet ef database update -p Api -s Api
+          # 而 `dotnet ef` 需要能載入 DbContext，因此得先自己建一次。
+          # 明確 build 而不是讓 ef 隱含建：build 失敗時錯誤才看得見。
+          dotnet build Api/VicRound.Api.csproj -c Release --nologo
+          dotnet ef database update -p Api -s Api --configuration Release --no-build
 
       - name: Deploy to Function App
         uses: Azure/functions-action@v1
