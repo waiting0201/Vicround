@@ -22,11 +22,15 @@ public interface IDownloadReadService
 /// </summary>
 public sealed class DownloadReadService(IDbConnection db) : IDownloadReadService
 {
-    public async Task<IReadOnlyList<DownloadDto>> ListAsync(
-        string culture, string? kind, string? productSlug, string? categorySlug, string? solutionSlug)
-    {
-        var kindValue = ParseKind(kind);
+    public Task<IReadOnlyList<DownloadDto>> ListAsync(
+        string culture, string? kind, string? productSlug, string? categorySlug, string? solutionSlug) =>
+        ListAsync(db, culture, ParseKind(kind), productSlug, categorySlug, solutionSlug);
 
+    /// <summary>頁面的 <c>DownloadList</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
+    internal static async Task<IReadOnlyList<DownloadDto>> ListAsync(
+        IDbConnection db, string culture, byte? kindValue,
+        string? productSlug, string? categorySlug, string? solutionSlug)
+    {
         var filters = new List<string> { DownloadReaders.Visible };
 
         if (kindValue is not null)
@@ -82,7 +86,7 @@ public sealed class DownloadReadService(IDbConnection db) : IDownloadReadService
         return rows.Select(DownloadReaders.ToDto).ToList();
     }
 
-    private static byte? ParseKind(string? kind) => kind switch
+    internal static byte? ParseKind(string? kind) => kind switch
     {
         null or "" => null,
         _ when Enum.TryParse<DownloadKind>(kind.Replace("-", string.Empty), ignoreCase: true, out var parsed)

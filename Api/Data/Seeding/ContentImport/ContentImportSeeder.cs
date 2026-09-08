@@ -70,7 +70,12 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
     /// <c>{eyebrow, title, lead, items[]}</c>，因此用宣告表 + 通用轉換，
     /// 而不是每一段各寫一支 mapper。
     /// </summary>
-    private sealed record BlockSpec(string Section, BlockType Type, string Anchor, BlockTone Tone = BlockTone.Light);
+    /// <param name="Settings">
+    /// Reference block 的查詢參數（<c>SettingsJson</c>）。必須 culture-neutral，
+    /// 只放 slug、enum 名稱與數字（database.md §09）。Content block 一律為 <c>null</c>。
+    /// </param>
+    private sealed record BlockSpec(
+        string Section, BlockType Type, string Anchor, BlockTone Tone = BlockTone.Light, string? Settings = null);
 
     private sealed record PageSpec(string File, string Export, string PageSlug, BlockSpec[] Blocks);
 
@@ -80,7 +85,7 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
         [
             new("hero", BlockType.Hero, "hero", BlockTone.Dark),
             new("materials", BlockType.CategoryGrid, "materials", BlockTone.Dark),
-            new("industries", BlockType.SolutionGrid, "industries", BlockTone.Dark),
+            new("industries", BlockType.SolutionGrid, "industries", BlockTone.Dark, """{"limit":4}"""),
             new("trust", BlockType.LogoWall, "trust", BlockTone.Dark),
             new("sustainability", BlockType.Cta, "sustainability", BlockTone.Dark),
         ]),
@@ -94,9 +99,9 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
         ]),
         new("technologies", "technologies", "technologies",
         [
-            new("core", BlockType.ProcessFlowRef, "core-processes"),
+            new("core", BlockType.ProcessFlowRef, "core-processes", Settings: """{"kind":"coreProcess"}"""),
             new("innovation", BlockType.FeatureGrid, "innovation"),
-            new("compliance", BlockType.CertificationList, "compliance"),
+            new("compliance", BlockType.CertificationList, "compliance", Settings: """{"category":"product-compliance"}"""),
         ]),
         new("about", "about", "about",
         [
@@ -113,27 +118,27 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
             new("esg", BlockType.FeatureGrid, "esg"),
             new("carbon", BlockType.MediaTextSplit, "carbon"),
             new("eudr", BlockType.MediaTextSplit, "eudr"),
-            new("certifications", BlockType.CertificationList, "certifications"),
+            new("certifications", BlockType.CertificationList, "certifications", Settings: """{"category":"sustainability"}"""),
         ]),
         new("partnership", "partnership", "partnership",
         [
-            new("oem", BlockType.ProcessFlowRef, "oem-odm"),
+            new("oem", BlockType.ProcessFlowRef, "oem-odm", Settings: """{"kind":"oemOdm"}"""),
             new("distribution", BlockType.MediaTextSplit, "distribution"),
             new("testimonials", BlockType.TestimonialList, "testimonials"),
         ]),
         new("resources", "resources", "resources",
         [
-            new("news", BlockType.ExhibitionList, "news"),
-            new("faq", BlockType.FaqList, "faq"),
-            new("insights", BlockType.ArticleList, "insights"),
-            new("articles", BlockType.ArticleList, "articles"),
+            new("news", BlockType.ExhibitionList, "news", Settings: """{"upcoming":true,"limit":3}"""),
+            new("faq", BlockType.FaqList, "faq", Settings: """{"limit":4}"""),
+            new("insights", BlockType.ArticleList, "insights", Settings: """{"type":"insight","limit":2}"""),
+            new("articles", BlockType.ArticleList, "articles", Settings: """{"type":"technicalArticle","limit":3}"""),
             new("downloads", BlockType.DownloadList, "downloads"),
         ]),
         new("contact", "contact", "contact",
         [
             new("direct", BlockType.ContactChannelList, "channels"),
             new("locations", BlockType.LocationList, "locations"),
-            new("process", BlockType.ProcessFlowRef, "what-happens-next"),
+            new("process", BlockType.ProcessFlowRef, "what-happens-next", Settings: """{"kind":"inquiryFlow"}"""),
         ]),
         new("member", "member", "member",
         [

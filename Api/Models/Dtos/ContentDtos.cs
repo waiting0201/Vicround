@@ -117,6 +117,35 @@ public sealed record ContentBlockDto
     public string? Settings { get; init; }
 
     public IReadOnlyList<ContentBlockItemDto> Items { get; init; } = [];
+
+    /// <summary>
+    /// Reference block（<c>BlockType</c> ≥ 100）解析出來的強型別資料；Content block 為 <c>null</c>。
+    /// 只有對應那一種清單會有值——版塊型別已經決定要讀哪一個（database.md §09）。
+    /// </summary>
+    public BlockReferenceDto? Reference { get; init; }
+}
+
+/// <summary>
+/// Reference block 的資料。<b>編輯者存的是查詢參數，不是內容本身</b>——
+/// 認證、據點、製程這些都活在自己的強型別表裡，這裡只是把查詢結果帶出來，
+/// 因此頁面永遠跟著實體一起更新，不會出現「版塊裡抄了一份舊的 ISO 14001」。
+/// </summary>
+public sealed record BlockReferenceDto
+{
+    public IReadOnlyList<CategoryListItemDto>? Categories { get; init; }
+    public IReadOnlyList<SolutionListItemDto>? Solutions { get; init; }
+    public IReadOnlyList<ProductListItemDto>? Products { get; init; }
+    public IReadOnlyList<ArticleListItemDto>? Articles { get; init; }
+    public IReadOnlyList<ExhibitionDto>? Exhibitions { get; init; }
+    public IReadOnlyList<FaqCategoryDto>? FaqCategories { get; init; }
+    public IReadOnlyList<DownloadDto>? Downloads { get; init; }
+    public IReadOnlyList<CertificationDto>? Certifications { get; init; }
+    public IReadOnlyList<ProcessFlowDto>? ProcessFlows { get; init; }
+    public IReadOnlyList<MilestoneDto>? Milestones { get; init; }
+    public IReadOnlyList<LocationDto>? Locations { get; init; }
+    public IReadOnlyList<TestimonialDto>? Testimonials { get; init; }
+    public IReadOnlyList<PartnerBrandDto>? PartnerBrands { get; init; }
+    public IReadOnlyList<ContactChannelDto>? ContactChannels { get; init; }
 }
 
 public sealed record ContentBlockItemDto

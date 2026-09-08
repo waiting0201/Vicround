@@ -15,7 +15,13 @@ public interface ISolutionReadService
 /// <summary>產業解決方案（database.md §03）。</summary>
 public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
 {
-    public async Task<IReadOnlyList<SolutionListItemDto>> ListAsync(string culture)
+    public Task<IReadOnlyList<SolutionListItemDto>> ListAsync(string culture) => ListAsync(db, culture);
+
+    /// <summary>
+    /// 頁面的 <c>SolutionGrid</c> reference block 也要這一份。做成 static 是為了避開
+    /// DI 循環——版塊解析器若注入本服務，而本服務又會讀版塊，容器就組不起來。
+    /// </summary>
+    internal static async Task<IReadOnlyList<SolutionListItemDto>> ListAsync(IDbConnection db, string culture)
     {
         var rows = await db.QueryAsync<SolutionRow>(
             """

@@ -54,7 +54,7 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 | 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
-| Content API（`fn-public`） | ✅ | **19 支端點已上線並實跑驗證**（含 contact 寫入）；只剩 `/search` 待定 Phase，`pages` 的 reference block 解析待補 |
+| Content API（`fn-public`） | ✅ | **19 支端點已上線並實跑驗證**（含 contact 寫入與 reference block 解析）；只剩 `/search` 待定 Phase |
 | Account API（會員） | ⬜ | 未開工 |
 | Admin API（`fn-admin`） | ⬜ | 未開工 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
@@ -228,7 +228,7 @@ apps/web/
 | EF Core 模型 | ✅ | 14 個功能單元 → **77 張表**，schema 權威為 `Api/Data/Migrations/` |
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
-| **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；`/search` 待定 Phase |
+| **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
 | Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
 | Admin API `/api/admin/**` | ⬜ | Router 與權限表已就緒；Handler 未實作 |
 | CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、53 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
@@ -246,7 +246,7 @@ apps/web/
 | `GET /api/v1/products/{slug}` | 產品詳情 + 規格 |
 | `GET /api/v1/solutions` | 7 個產業 |
 | `GET /api/v1/solutions/{slug}` | 產業詳情：規格 5、版塊 4、產品線 chip 3 |
-| `GET /api/v1/pages/{slug}` | 頁面 + 版塊（privacy 走長文 Body） |
+| `GET /api/v1/pages/{slug}` | 頁面 + 版塊（privacy 走長文 Body）；reference block 另帶 `reference` 強型別資料 |
 | `GET /api/v1/sitemap` | 51 個已發佈網址 + lastmod + **真的有翻譯的語系** |
 | `GET /api/v1/navigation?location=` | 導覽樹（header 3 層 36 項）；`Ref*Id` 已解析成公開路徑 |
 | `GET /api/v1/technologies?kind=` | 7 條製程流程（共 27 步）+ 4 條產品法規符合 |

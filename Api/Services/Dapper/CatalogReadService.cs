@@ -30,10 +30,13 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         LEFT JOIN CategoryTranslations f ON f.CategoryId = e.Id AND f.Culture = @DefaultCulture
         """;
 
-    public async Task<IReadOnlyList<CategoryListItemDto>> ListCategoriesAsync(string culture, string? type)
-    {
-        var typeValue = ParseCategoryType(type);
+    public Task<IReadOnlyList<CategoryListItemDto>> ListCategoriesAsync(string culture, string? type) =>
+        ListCategoriesAsync(db, culture, ParseCategoryType(type));
 
+    /// <summary>頁面的 <c>CategoryGrid</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
+    internal static async Task<IReadOnlyList<CategoryListItemDto>> ListCategoriesAsync(
+        IDbConnection db, string culture, byte? typeValue)
+    {
         var rows = await db.QueryAsync<CategoryRow>(
             $"""
              {CategorySelect}
@@ -207,6 +210,39 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
             Specifications = await ContentReaders.SpecificationsAsync(db, "OwnerProductId", row.Id, culture),
         };
+    }
+
+    /// <summary>頁面與產品線頁的 <c>ProductGrid</c> reference block：只取前幾筆，不分頁。</summary>
+    internal static async Task<IReadOnlyList<ProductListItemDto>> TopProductsAsync(
+        IDbConnection db, string culture, string? categorySlug, bool? featured, int limit)
+    {
+        var rows = await db.QueryAsync<ProductRow>(
+            $"""
+             SELECT TOP (@Take) e.Slug, e.Code, e.Brand, e.IsFeatured, e.IsNew, c.Slug AS CategorySlug,
+                    COALESCE(t.Name, f.Name) AS Name,
+                    COALESCE(t.Summary, f.Summary) AS Summary,
+                    CAST(CASE WHEN t.Culture IS NULL THEN 0 ELSE 1 END AS bit) AS HasRequestedCulture
+             FROM Products e
+             INNER JOIN Categories c ON c.Id = e.CategoryId
+             LEFT JOIN ProductTranslations t ON t.ProductId = e.Id AND t.Culture = @Culture
+             LEFT JOIN ProductTranslations f ON f.ProductId = e.Id AND f.Culture = @DefaultCulture
+             WHERE e.Status = @Published
+               AND e.ParentProductId IS NULL
+               AND (@CategorySlug IS NULL OR c.Slug = @CategorySlug)
+               AND (@Featured IS NULL OR e.IsFeatured = @Featured)
+             ORDER BY e.SortOrder, e.Id
+             """,
+            new
+            {
+                culture,
+                DefaultCulture = CultureCodes.Default,
+                Sql.Published,
+                CategorySlug = categorySlug,
+                Featured = featured,
+                Take = limit,
+            });
+
+        return rows.Select(r => ToProductListItem(r, r.CategorySlug ?? string.Empty)).ToList();
     }
 
     private static byte? ParseCategoryType(string? type) => type switch

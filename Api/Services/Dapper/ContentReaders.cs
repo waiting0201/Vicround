@@ -63,9 +63,20 @@ internal static class ContentReaders
             new { BlockIds = blocks.Select(b => b.Id).ToArray(), culture, DefaultCulture = CultureCodes.Default }))
             .ToLookup(i => i.ContentBlockId);
 
+        // Reference block 的資料要另外查（database.md §09）。一頁的 reference block 只有幾個，
+        // 因此逐個解析；真正的省事在於前台不必為了一個版塊再打一趟 API。
+        var references = new Dictionary<int, BlockReferenceDto?>();
+
+        foreach (var block in blocks.Where(b => ReferenceBlockResolver.IsReference((BlockType)b.BlockType)))
+        {
+            references[block.Id] = await ReferenceBlockResolver.ResolveAsync(
+                db, culture, (BlockType)block.BlockType, block.SettingsJson);
+        }
+
         return blocks.Select(b => new ContentBlockDto
         {
             BlockType = Camel(((BlockType)b.BlockType).ToString()),
+            Reference = references.GetValueOrDefault(b.Id),
             Anchor = b.Anchor,
             Tone = Camel(((BlockTone)b.Tone).ToString()),
             Eyebrow = b.Eyebrow,

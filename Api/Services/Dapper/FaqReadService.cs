@@ -17,7 +17,12 @@ public interface IFaqReadService
 /// </summary>
 public sealed class FaqReadService(IDbConnection db) : IFaqReadService
 {
-    public async Task<IReadOnlyList<FaqCategoryDto>> ListAsync(string culture, string? categorySlug)
+    public Task<IReadOnlyList<FaqCategoryDto>> ListAsync(string culture, string? categorySlug) =>
+        ListAsync(db, culture, categorySlug);
+
+    /// <summary>頁面的 <c>FaqList</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
+    internal static async Task<IReadOnlyList<FaqCategoryDto>> ListAsync(
+        IDbConnection db, string culture, string? categorySlug)
     {
         var args = new
         {

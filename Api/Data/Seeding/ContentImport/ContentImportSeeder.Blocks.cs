@@ -14,17 +14,34 @@ public sealed partial class ContentImportSeeder
 
     private void AddPageBlocks(Page page, JsonObject root, PageSpec spec)
     {
-        var existing = page.Blocks.Select(b => b.Anchor).ToHashSet(StringComparer.Ordinal);
+        var existing = page.Blocks
+            .Where(b => b.Anchor is not null)
+            .ToDictionary(b => b.Anchor!, StringComparer.Ordinal);
+
         var sortOrder = page.Blocks.Count;
 
         foreach (var blockSpec in spec.Blocks)
         {
-            if (existing.Contains(blockSpec.Anchor) || root[blockSpec.Section] is not { } section)
+            if (existing.TryGetValue(blockSpec.Anchor, out var current))
+            {
+                // 版塊已經在了就不重建（冪等）。只補「還沒有查詢參數」的 reference block——
+                // 這是空值補齊，不是覆寫：編輯者在後台調過的設定不會被重跑蓋掉。
+                if (blockSpec.Settings is not null && string.IsNullOrEmpty(current.SettingsJson))
+                {
+                    current.SettingsJson = blockSpec.Settings;
+                    Count("版塊查詢參數");
+                }
+
+                continue;
+            }
+
+            if (root[blockSpec.Section] is not { } section)
             {
                 continue;
             }
 
             var block = BuildBlock(section, blockSpec.Type, blockSpec.Anchor, blockSpec.Tone, sortOrder++);
+            block.SettingsJson = blockSpec.Settings;
             page.Blocks.Add(block);
             Count("版塊");
             Count("版塊子項", block.Items.Count);

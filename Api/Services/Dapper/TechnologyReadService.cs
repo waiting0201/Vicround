@@ -17,11 +17,21 @@ public interface ITechnologyReadService
 /// </summary>
 public sealed class TechnologyReadService(IDbConnection db) : ITechnologyReadService
 {
-    public async Task<TechnologiesDto> GetAsync(string culture, string? kind)
+    public async Task<TechnologiesDto> GetAsync(string culture, string? kind) => new()
     {
-        var kindValue = ParseKind(kind);
+        ProcessFlows = await ProcessFlowsAsync(db, culture, ParseKind(kind), null),
+        Compliance = await CertificationReadService.ListAsync(
+            db, culture, (byte)CertificationCategory.ProductCompliance),
+    };
 
-        var args = new { culture, DefaultCulture = CultureCodes.Default, Sql.Published, Kind = kindValue };
+    /// <summary>
+    /// 頁面的 <c>ProcessFlowRef</c> reference block 也要這一份（static 的理由同 SolutionReadService）。
+    /// <paramref name="slug"/> 給定時只回那一條流程。
+    /// </summary>
+    internal static async Task<IReadOnlyList<ProcessFlowDto>> ProcessFlowsAsync(
+        IDbConnection db, string culture, byte? kindValue, string? slug)
+    {
+        var args = new { culture, DefaultCulture = CultureCodes.Default, Sql.Published, Kind = kindValue, Slug = slug };
 
         var flows = (await db.QueryAsync<FlowRow>(
             $"""
@@ -31,7 +41,9 @@ public sealed class TechnologyReadService(IDbConnection db) : ITechnologyReadSer
              FROM ProcessFlows e
              LEFT JOIN Categories c ON c.Id = e.OwnerCategoryId
              {Sql.TranslationJoin("ProcessFlowTranslations", "ProcessFlowId")}
-             WHERE e.Status = @Published AND (@Kind IS NULL OR e.Kind = @Kind)
+             WHERE e.Status = @Published
+               AND (@Kind IS NULL OR e.Kind = @Kind)
+               AND (@Slug IS NULL OR e.Slug = @Slug)
              ORDER BY e.Kind, e.SortOrder, e.Id
              """, args)).ToList();
 
@@ -56,33 +68,28 @@ public sealed class TechnologyReadService(IDbConnection db) : ITechnologyReadSer
                     FlowIds = flows.Select(f => f.Id).ToArray(),
                 })).ToLookup(s => s.ProcessFlowId);
 
-        return new TechnologiesDto
+        return flows.Select(f => new ProcessFlowDto
         {
-            ProcessFlows = flows.Select(f => new ProcessFlowDto
+            Slug = f.Slug,
+            Kind = ContentReaders.Camel(((ProcessFlowKind)f.Kind).ToString()),
+            CategorySlug = f.CategorySlug,
+            Title = f.Title,
+            Subtitle = f.Subtitle,
+            Intro = f.Intro,
+            HasRequestedCulture = f.HasRequestedCulture,
+            Steps = steps[f.Id].Select(s => new ProcessStepDto
             {
-                Slug = f.Slug,
-                Kind = ContentReaders.Camel(((ProcessFlowKind)f.Kind).ToString()),
-                CategorySlug = f.CategorySlug,
-                Title = f.Title,
-                Subtitle = f.Subtitle,
-                Intro = f.Intro,
-                HasRequestedCulture = f.HasRequestedCulture,
-                Steps = steps[f.Id].Select(s => new ProcessStepDto
-                {
-                    StepNumber = s.StepNumber,
-                    IconName = s.IconName,
-                    AccentColorHex = s.AccentColorHex,
-                    ImageUrl = s.ImageUrl,
-                    Title = s.Title,
-                    Body = s.Body,
-                }).ToList(),
+                StepNumber = s.StepNumber,
+                IconName = s.IconName,
+                AccentColorHex = s.AccentColorHex,
+                ImageUrl = s.ImageUrl,
+                Title = s.Title,
+                Body = s.Body,
             }).ToList(),
-            Compliance = await CertificationReadService.ListAsync(
-                db, culture, (byte)CertificationCategory.ProductCompliance),
-        };
+        }).ToList();
     }
 
-    private static byte? ParseKind(string? kind) => kind switch
+    internal static byte? ParseKind(string? kind) => kind switch
     {
         null or "" => null,
         _ when Enum.TryParse<ProcessFlowKind>(kind.Replace("-", string.Empty), ignoreCase: true, out var parsed)

@@ -36,9 +36,13 @@ public sealed partial class ContentImportSeeder
         }
 
         candidates.AddRange((news.Arr("items") ?? []).Select(i => ((JsonNode?)i, MapNewsType(i.Str("category")))));
-        candidates.AddRange((related ?? []).Select(i => ((JsonNode?)i, ArticleType.TechnicalArticle)));
+
+        // Resources hub 的分區就是 Type 的權威來源（它決定網址前綴），因此排在
+        // 延伸閱讀之前——`relatedArticles` 只是某篇文章底下的推薦卡，裡面也會出現洞察文章，
+        // 讓它先命中會把洞察文誤設成技術文章、網址跟著變成 /blog。
         candidates.AddRange((((JsonNode?)resources).Prop("insights").Arr("items") ?? []).Select(i => ((JsonNode?)i, ArticleType.Insight)));
         candidates.AddRange((((JsonNode?)resources).Prop("articles").Arr("items") ?? []).Select(i => ((JsonNode?)i, ArticleType.TechnicalArticle)));
+        candidates.AddRange((related ?? []).Select(i => ((JsonNode?)i, ArticleType.TechnicalArticle)));
 
         var existing = await db.Articles.Select(a => a.Slug).ToListAsync(cancellationToken);
         var added = 0;

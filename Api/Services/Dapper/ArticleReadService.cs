@@ -27,8 +27,18 @@ public sealed class ArticleReadService(IDbConnection db) : IArticleReadService
     /// <summary>已發佈且已到發佈時間。所有查詢共用，避免某一支忘了加就漏出排程稿。</summary>
     private const string Visible = "e.Status = @Published AND e.PublishedAt IS NOT NULL AND e.PublishedAt <= SYSUTCDATETIME()";
 
-    public async Task<PagedResult<ArticleListItemDto>> ListAsync(
-        string culture, string? type, string? tag, string? categorySlug, string? solutionSlug, int page, int pageSize)
+    public Task<PagedResult<ArticleListItemDto>> ListAsync(
+        string culture, string? type, string? tag, string? categorySlug, string? solutionSlug, int page, int pageSize) =>
+        ListAsync(db, culture, type, tag, categorySlug, solutionSlug, page, pageSize);
+
+    /// <summary>頁面的 <c>ArticleList</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
+    internal static async Task<IReadOnlyList<ArticleListItemDto>> TopAsync(
+        IDbConnection db, string culture, string? type, int limit) =>
+        (await ListAsync(db, culture, type, null, null, null, 1, limit)).Items.ToList();
+
+    internal static async Task<PagedResult<ArticleListItemDto>> ListAsync(
+        IDbConnection db, string culture, string? type, string? tag, string? categorySlug, string? solutionSlug,
+        int page, int pageSize)
     {
         var types = ParseTypes(type);
 
@@ -105,9 +115,9 @@ public sealed class ArticleReadService(IDbConnection db) : IArticleReadService
              """, args)).ToList();
 
         var ids = rows.Select(r => r.Id).ToArray();
-        var categories = await ChipsAsync(ids, culture, ChipSource.Category);
-        var solutions = await ChipsAsync(ids, culture, ChipSource.Solution);
-        var tags = await ChipsAsync(ids, culture, ChipSource.Tag);
+        var categories = await ChipsAsync(db, ids, culture, ChipSource.Category);
+        var solutions = await ChipsAsync(db, ids, culture, ChipSource.Solution);
+        var tags = await ChipsAsync(db, ids, culture, ChipSource.Tag);
 
         var items = rows.Select(r => new ArticleListItemDto
         {
@@ -182,9 +192,9 @@ public sealed class ArticleReadService(IDbConnection db) : IArticleReadService
             PullQuoteAttribution = row.PullQuoteAttribution,
             Author = ToAuthor(row),
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
-            Categories = (await ChipsAsync(ids, culture, ChipSource.Category))[row.Id].ToList(),
-            Solutions = (await ChipsAsync(ids, culture, ChipSource.Solution))[row.Id].ToList(),
-            Tags = (await ChipsAsync(ids, culture, ChipSource.Tag))[row.Id].ToList(),
+            Categories = (await ChipsAsync(db, ids, culture, ChipSource.Category))[row.Id].ToList(),
+            Solutions = (await ChipsAsync(db, ids, culture, ChipSource.Solution))[row.Id].ToList(),
+            Tags = (await ChipsAsync(db, ids, culture, ChipSource.Tag))[row.Id].ToList(),
             Exhibition = row.ExhibitionId is { } exhibitionId
                 ? await ExhibitionReadService.GetByIdAsync(db, exhibitionId, culture)
                 : null,
@@ -250,7 +260,8 @@ public sealed class ArticleReadService(IDbConnection db) : IArticleReadService
     /// 文章卡的 chip。三種來源形狀一致，因此共用一支——列表頁一次撈完整頁的 chip 再分組，
     /// 不讓每張卡各打一次 DB。
     /// </summary>
-    private async Task<ILookup<int, ChipDto>> ChipsAsync(int[] articleIds, string culture, ChipSource source)
+    private static async Task<ILookup<int, ChipDto>> ChipsAsync(
+        IDbConnection db, int[] articleIds, string culture, ChipSource source)
     {
         if (articleIds.Length == 0)
         {

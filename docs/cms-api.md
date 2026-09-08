@@ -87,7 +87,7 @@ GET  /api/v1/faq                 ✅ ?category=（回「分類 + 其下題目」
 GET  /api/v1/certifications      ✅ ?category=company-factory|sustainability|product-compliance
 GET  /api/v1/downloads           ✅ ?kind=&product=&category=&solution=
 
-GET  /api/v1/pages/{slug}        ✅ blocks（reference block 的解析待補）
+GET  /api/v1/pages/{slug}        ✅ blocks，reference block 已在後端解析成強型別資料
 
 POST /api/v1/contact             ✅ inquiry form (rate-limited, anti-bot)
 
@@ -98,6 +98,29 @@ GET  /api/v1/search              # ?q=  ← Phase 待定，見 database.md §19.
 `milestones` / `locations` / `testimonials` / `partner-brands` / `contact-channels`
 **不給獨立 public 端點** —— 它們一律由 `/api/v1/pages/{slug}` 的 reference block 解析後一併回傳，
 減少 SSR 往返。
+
+**Reference block 的解析**（`BlockType` ≥ 100，見 [database.md §09](database.md#09-頁面與版塊)）：
+版塊回傳裡除了 `items`（Content block 自帶的文字）之外，還有一個 `reference` 物件，
+裡面只會有該版塊型別對應的那一份清單：
+
+| BlockType | `reference` 的欄位 | `settings` 認得的參數 |
+| --- | --- | --- |
+| `categoryGrid` / `solutionGrid` | `categories` / `solutions` | `limit` |
+| `productGrid` | `products` | `category`、`featured`、`limit` |
+| `articleList` | `articles` | `type`、`limit` |
+| `exhibitionList` | `exhibitions` | `upcoming`、`limit` |
+| `faqList` | `faqCategories` | `category`、`featuredOnly`、`limit` |
+| `downloadList` | `downloads` | `kind`、`product`、`category`、`solution`、`limit` |
+| `certificationList` | `certifications` | `category`、`limit` |
+| `processFlowRef` | `processFlows` | `kind`、`slug` |
+| `milestoneTimeline` | `milestones` | `limit` |
+| `locationList` | `locations` | `kind`（`LocationType`） |
+| `testimonialList` | `testimonials` | `solution`、`limit` |
+| `partnerBrandWall` | `partnerBrands` | `limit` |
+| `contactChannelList` | `contactChannels` | —— |
+
+`settings`（DB 的 `SettingsJson`）**必須 culture-neutral**：只放 slug、enum 名稱與數字。
+壞掉的 JSON 一律當成「沒有參數」——一個版塊的設定寫壞不該讓整頁 500。
 
 `sitemap.xml` and `robots.txt` are emitted by **Next.js** (`app/sitemap.ts`, `app/robots.ts`)
 from this `/api/v1/sitemap` data — not hand-built XML in the API. See [sitemap.md](sitemap.md).

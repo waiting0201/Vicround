@@ -34,7 +34,12 @@ public sealed class ExhibitionReadService(IDbConnection db) : IExhibitionReadSer
         LEFT JOIN ExhibitionTranslations f ON f.ExhibitionId = e.Id AND f.Culture = @DefaultCulture
         """;
 
-    public async Task<IReadOnlyList<ExhibitionDto>> ListAsync(string culture, bool? upcoming)
+    public Task<IReadOnlyList<ExhibitionDto>> ListAsync(string culture, bool? upcoming) =>
+        ListAsync(db, culture, upcoming);
+
+    /// <summary>頁面的 <c>ExhibitionList</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
+    internal static async Task<IReadOnlyList<ExhibitionDto>> ListAsync(
+        IDbConnection db, string culture, bool? upcoming)
     {
         // 未來場次由近到遠（前台取第一筆當「Next exhibition」）；已結束的由新到舊。
         var rows = await db.QueryAsync<ExhibitionRow>(
