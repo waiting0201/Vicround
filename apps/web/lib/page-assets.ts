@@ -35,3 +35,20 @@ export function categoryImage(slug: string): string | undefined {
 }
 
 export const HERO_IMAGE = '/assets/hero-banner-01.jpg';
+
+/**
+ * 產品線的強調色。取自設計系統的 category token（`app/ds/tokens/colors.css`），
+ * 不從 CMS 的 `AccentColorHex` 讀 —— 顏色是設計系統的決定，不是編輯者的內容。
+ */
+export const CATEGORY_ACCENT: Record<string, string> = {
+  opticalFilm: 'var(--optical-500)',
+  textileFoam: 'var(--textile-500)',
+  acoustic: 'var(--acoustic-500)',
+};
+
+/** 產品線頁的深色情境底（mockup 的 challenge／overview 圖底）。 */
+export const CATEGORY_DEEP: Record<string, string> = {
+  opticalFilm: 'var(--optical-900)',
+  textileFoam: 'var(--textile-900)',
+  acoustic: 'var(--acoustic-900)',
+};

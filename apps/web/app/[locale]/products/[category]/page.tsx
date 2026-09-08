@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { BlockHeading, BlockSection, SpecTable, cardStyle, eyebrowStyle, sectionTitleStyle } from '@/components/blocks';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
@@ -8,81 +9,62 @@ import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { Container, ImageSlot, Section } from '@/components/sections';
-import { PRODUCT_LINES } from '@/content/product-lines';
-import { SOLUTION_NAMES } from '@/content/solutions';
-import { localize } from '@/lib/content';
+import { getCategory, getTechnologies } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
-import { requireLocale, type Locale } from '@/lib/locale';
+import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
+import { CATEGORY_ACCENT, bannerImage, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
 /**
- * 產品線頁 —— 逐區塊對照 `product-optical-film / -textile-foam / -acoustic.dc.html`
- * （三頁結構相同，只有內容不同，所以在這一支動態路由裡共用版型）。
+ * 產品線頁 —— 版型逐區塊對照 `mockup/Rounded Design/product-*.dc.html`。
  *
  * <p>
- * ⚠️ 內容暫時來自 `content/product-lines.ts`；接上 `GET /api/v1/categories/{slug}` 之後
- * 改由 API 提供，版型不動。
+ * 系列卡的 chip 是那個產品自己的 <b>highlighted 規格列</b>，不是版塊裡另抄的文字
+ * （database.md §02）—— 所以這一頁與產業頁的等級表講的是同一份數值。
  * </p>
  */
 type Params = { params: Promise<{ locale: string; category: string }> };
 
-export function generateStaticParams() {
-  return Object.keys(PRODUCT_LINES).map((category) => ({ category }));
-}
-
-function line(locale: Locale, category: string) {
-  const source = PRODUCT_LINES[category];
-  return source ? localize(locale, source) : null;
-}
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { locale: rawLocale, category } = await params;
+  const { locale: rawLocale, category: slug } = await params;
   const locale = requireLocale(rawLocale);
-  const c = line(locale, category);
-  if (!c) return {};
+  const category = await getCategory(locale, slug);
+  if (!category) return {};
+
+  const banner = category.blocks.find((block) => block.anchor === 'banner');
 
   return pageMetadata({
     locale,
-    path: `${ROUTES.products}/${category}`,
-    title: c.banner.title,
-    description: c.banner.description,
+    path: `${ROUTES.products}/${slug}`,
+    title: category.seo?.title ?? banner?.title ?? category.name ?? '',
+    description: category.seo?.description ?? banner?.subtitle ?? category.summary ?? undefined,
   });
 }
 
 export default async function ProductLinePage({ params }: Params) {
-  const { locale: rawLocale, category } = await params;
+  const { locale: rawLocale, category: slug } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = line(locale, category);
 
-  // 三條產品線之外的 slug 一律 404 —— 之後改成「API 查不到才 404」
-  if (!c) notFound();
+  const category = await getCategory(locale, slug);
+  if (!category) notFound();
 
-  const solutionNames = localize(locale, SOLUTION_NAMES);
+  const banner = category.blocks.find((block) => block.anchor === 'banner');
+  const overview = category.blocks.find((block) => block.blockType === 'statBand');
+  const families = category.blocks.find((block) => block.blockType === 'productGrid');
+  const cta = category.blocks.find((block) => block.blockType === 'cta');
+
+  // 這條產品線的「How it is made」——製程是強型別的 ProcessFlow，不是版塊文字。
+  const flow = (await getTechnologies(locale))?.processFlows.find((item) => item.categorySlug === slug);
+
+  const accent = CATEGORY_ACCENT[category.type] ?? '#6436ef';
   const crumbs = [
     { name: t('nav.products'), path: ROUTES.products },
-    { name: c.banner.eyebrow.split('·').pop()?.trim() ?? category, path: `${ROUTES.products}/${category}` },
+    { name: category.name ?? slug, path: `${ROUTES.products}/${slug}` },
   ];
-
-  const thStyle: React.CSSProperties = {
-    textAlign: 'left',
-    padding: '16px 20px',
-    font: "600 12px/1.4 'IBM Plex Mono', monospace",
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    color: 'var(--page-muted)',
-    borderBottom: '1px solid var(--page-border)',
-    whiteSpace: 'nowrap',
-  };
-  const tdStyle: React.CSSProperties = {
-    padding: '16px 20px',
-    color: 'var(--page-muted)',
-    borderBottom: '1px solid rgba(20,20,31,0.08)',
-    whiteSpace: 'nowrap',
-  };
 
   return (
     <>
@@ -91,11 +73,10 @@ export default async function ProductLinePage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={banner?.eyebrow ?? t('nav.products')}
+          title={banner?.title ?? category.name ?? ''}
+          description={banner?.subtitle ?? category.summary ?? undefined}
+          image={bannerImage(null, slug)}
         />
 
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px clamp(24px, 5vw, 80px) 0' }}>
@@ -103,129 +84,74 @@ export default async function ProductLinePage({ params }: Params) {
         </div>
 
         {/* ============ Overview ============ */}
-        <section id="overview" style={{ scrollMarginTop: 90 }}>
-          <Container
-            style={{
-              padding: 'clamp(40px, 5vw, 72px) clamp(24px, 5vw, 80px)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 'clamp(32px, 5vw, 72px)',
-              alignItems: 'center',
-            }}
-          >
-            <ImageSlot src={c.overview.image} alt={c.overview.alt} />
+        {overview ? (
+          <section id="overview" style={{ scrollMarginTop: 90 }}>
+            <Container
+              style={{
+                padding: 'clamp(40px, 5vw, 72px) clamp(24px, 5vw, 80px)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 'clamp(32px, 5vw, 72px)',
+                alignItems: 'center',
+              }}
+            >
+              <ImageSlot src={categoryImage(slug)} alt={category.name ?? ''} />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <h2
-                style={{
-                  margin: 0,
-                  font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-                  color: 'var(--page-fg)',
-                  maxWidth: 480,
-                  textWrap: 'balance',
-                }}
-              >
-                {c.overview.title}
-              </h2>
-              {c.overview.paragraphs.map((paragraph) => (
-                <p
-                  key={paragraph}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <h2 style={{ ...sectionTitleStyle, maxWidth: 480 }}>{overview.title}</h2>
+                {category.intro ? (
+                  <div className="vr-prose" dangerouslySetInnerHTML={{ __html: category.intro }} />
+                ) : null}
+
+                <div
                   style={{
-                    margin: 0,
-                    font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-muted)',
-                    textWrap: 'pretty',
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${Math.max(overview.items.length, 1)}, 1fr)`,
+                    gap: 20,
+                    marginTop: 12,
+                    paddingTop: 28,
+                    borderTop: '1px solid var(--page-border)',
                   }}
                 >
-                  {paragraph}
-                </p>
-              ))}
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 20,
-                  marginTop: 12,
-                  paddingTop: 28,
-                  borderTop: '1px solid var(--page-border)',
-                }}
-              >
-                {c.overview.stats.map((stat) => (
-                  <div key={stat.label}>
-                    <span
-                      style={{
-                        display: 'block',
-                        font: "500 clamp(1.75rem, 3vw, 2.25rem)/1 'Geologica', sans-serif",
-                        color: c.color,
-                      }}
-                    >
-                      {stat.value}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        marginTop: 8,
-                        font: "500 0.8125rem/1.4 'IBM Plex Mono', monospace",
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        color: 'var(--page-muted)',
-                      }}
-                    >
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
+                  {overview.items.map((stat) => (
+                    <div key={stat.title}>
+                      <span
+                        style={{
+                          display: 'block',
+                          font: "500 clamp(1.75rem, 3vw, 2.25rem)/1 'Geologica', sans-serif",
+                          color: accent,
+                        }}
+                      >
+                        {stat.value}
+                      </span>
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: 8,
+                          font: "500 0.8125rem/1.4 'IBM Plex Mono', monospace",
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          color: 'var(--page-muted)',
+                        }}
+                      >
+                        {stat.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </Container>
-        </section>
+            </Container>
+          </section>
+        ) : null}
 
         {/* ============ 產品系列 ============ */}
-        <section
-          id="families"
-          style={{
-            background: 'var(--page-raised)',
-            scrollMarginTop: 90,
-            borderTop: '1px solid var(--page-border)',
-            borderBottom: '1px solid var(--page-border)',
-          }}
-        >
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <h2
-              style={{
-                margin: 0,
-                font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-fg)',
-              }}
-            >
-              {c.families.title}
-            </h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-muted)',
-                textWrap: 'pretty',
-              }}
-            >
-              {c.families.lead}
-            </p>
+        <BlockSection id="families" raised>
+          {families ? <BlockHeading block={families} /> : null}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.families.items.map((item) => (
-                <div
-                  key={item.code}
-                  style={{
-                    background: 'var(--page-bg)',
-                    border: '1px solid var(--page-border)',
-                    borderRadius: 22,
-                    padding: '28px 26px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                  }}
-                >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
+            {category.products.map((product) => (
+              <div key={product.slug} style={{ ...cardStyle, padding: '28px 26px' }}>
+                {product.code ? (
                   <span
                     style={{
                       borderRadius: 12,
@@ -234,36 +160,39 @@ export default async function ProductLinePage({ params }: Params) {
                       padding: '0 12px',
                       height: 32,
                       background: 'rgba(100,54,239,0.1)',
-                      color: c.color,
+                      color: accent,
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       font: "500 13px/1 'IBM Plex Mono', monospace",
                     }}
                   >
-                    {item.code}
+                    {product.code}
                   </span>
-                  <span
-                    style={{
-                      font: "600 1.0625rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-fg)',
-                    }}
-                  >
-                    {item.name}
-                  </span>
-                  <p
-                    style={{
-                      margin: 0,
-                      font: "400 0.875rem/1.65 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {item.body}
-                  </p>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 'auto' }}>
-                    {item.tags.map((tag) => (
+                ) : null}
+                <span
+                  style={{
+                    font: "600 1.0625rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
+                    color: 'var(--page-fg)',
+                  }}
+                >
+                  {product.name}
+                </span>
+                <p
+                  style={{
+                    margin: 0,
+                    font: "400 0.875rem/1.65 'Geologica', 'GenYoGothic TW', sans-serif",
+                    color: 'var(--page-muted)',
+                  }}
+                >
+                  {product.summary}
+                </p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 'auto' }}>
+                  {product.specifications
+                    .filter((spec) => spec.isHighlighted)
+                    .map((spec) => (
                       <span
-                        key={tag}
+                        key={spec.value}
                         style={{
                           borderRadius: 999,
                           padding: '5px 10px',
@@ -272,140 +201,59 @@ export default async function ProductLinePage({ params }: Params) {
                           color: 'var(--page-muted)',
                         }}
                       >
-                        {tag}
+                        {[spec.label, spec.value].filter(Boolean).join(' ')}
                       </span>
                     ))}
-                  </div>
                 </div>
-              ))}
-            </div>
-          </Container>
-        </section>
+              </div>
+            ))}
+          </div>
+        </BlockSection>
 
         {/* ============ 共通規格 ============ */}
-        <section id="specs" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <h2
-              style={{
-                margin: 0,
-                font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-fg)',
-              }}
-            >
-              {c.specs.title}
-            </h2>
-
-            {/* 窄螢幕時表格自己橫向捲動，頁面不會跟著橫捲 */}
-            <div
-              style={{
-                marginTop: 40,
-                overflowX: 'auto',
-                border: '1px solid var(--page-border)',
-                borderRadius: 22,
-              }}
-            >
-              <table
-                style={{
-                  width: '100%',
-                  minWidth: 640,
-                  borderCollapse: 'collapse',
-                  font: "400 0.875rem/1.5 'IBM Plex Mono', monospace",
-                }}
-              >
-                <thead>
-                  <tr style={{ background: 'var(--page-raised)' }}>
-                    <th style={thStyle}>{t('spec.property')}</th>
-                    <th style={thStyle}>{t('spec.value')}</th>
-                    <th style={thStyle}>{t('spec.note')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {c.specs.rows.map((row, index) => (
-                    <tr key={row.property} style={index % 2 === 1 ? { background: 'rgba(20,20,31,0.03)' } : undefined}>
-                      <td style={{ ...tdStyle, color: 'var(--page-fg)' }}>{row.property}</td>
-                      <td style={tdStyle}>{row.value}</td>
-                      <td style={tdStyle}>{row.note}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 0.8125rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-faint)',
-              }}
-            >
-              {c.specs.note}
-            </p>
-
-            <div style={{ marginTop: 28, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <Link href={localeHref(locale, ROUTES.downloads)} className="vr-btn">
-                {t('spec.download')}
-                <span aria-hidden="true">→</span>
-              </Link>
-              <Link href={localeHref(locale, ROUTES.contact)} className="vr-btn" data-variant="ghost">
-                {t('spec.sample')}
-              </Link>
-            </div>
-          </Container>
-        </section>
+        {category.specifications.length > 0 ? (
+          <BlockSection id="specs">
+            <h2 style={sectionTitleStyle}>{t('spec.commonSpecifications')}</h2>
+            <SpecTable
+              rows={category.specifications}
+              labels={{ property: t('spec.property'), value: t('spec.value'), note: t('spec.note') }}
+            />
+          </BlockSection>
+        ) : null}
 
         {/* ============ 製程 ============ */}
-        <section
-          id="process"
-          style={{ background: 'var(--page-raised)', scrollMarginTop: 90, borderTop: '1px solid var(--page-border)' }}
-        >
-          <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>
-            <h2
-              style={{
-                margin: 0,
-                font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-fg)',
-              }}
-            >
-              {c.process.title}
-            </h2>
+        {flow ? (
+          <BlockSection id="process" raised>
+            <h2 style={sectionTitleStyle}>{flow.title}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.process.steps.map((step, index) => (
-                <div
-                  key={step.name}
-                  style={{
-                    background: 'var(--page-bg)',
-                    border: '1px solid var(--page-border)',
-                    borderRadius: 22,
-                    padding: '28px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                  }}
-                >
-                  <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: c.color }}>
-                    {String(index + 1).padStart(2, '0')}
+              {flow.steps.map((step, index) => (
+                <div key={step.title ?? index} style={cardStyle}>
+                  <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: accent }}>
+                    {String(step.stepNumber || index + 1).padStart(2, '0')}
                   </span>
-                  <span
-                    style={{
-                      borderRadius: 12,
-                      width: 40,
-                      height: 40,
-                      background: 'rgba(100,54,239,0.1)',
-                      color: '#6436ef',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name={step.icon} size={18} />
-                  </span>
+                  {step.iconName ? (
+                    <span
+                      style={{
+                        borderRadius: 12,
+                        width: 40,
+                        height: 40,
+                        background: 'rgba(100,54,239,0.1)',
+                        color: '#6436ef',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon name={step.iconName} size={18} />
+                    </span>
+                  ) : null}
                   <span
                     style={{
                       font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
                       color: 'var(--page-fg)',
                     }}
                   >
-                    {step.name}
+                    {step.title}
                   </span>
                   <p
                     style={{
@@ -419,41 +267,33 @@ export default async function ProductLinePage({ params }: Params) {
                 </div>
               ))}
             </div>
-          </Container>
-        </section>
+          </BlockSection>
+        ) : null}
 
         {/* ============ 應用於哪些產業 ============ */}
         <Section id="applications" containerStyle={{ padding: 'clamp(40px, 5vw, 64px) clamp(24px, 5vw, 80px)' }}>
-          <p
-            style={{
-              margin: '0 0 20px',
-              font: "600 13px/1.2 'Geologica', sans-serif",
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: '#6436ef',
-            }}
-          >
-            {t('products.whereUsed')}
-          </p>
+          <p style={{ ...eyebrowStyle, margin: '0 0 20px' }}>{t('products.whereUsed')}</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {c.solutions.map((slug) => (
+            {category.solutions.map((solution) => (
               <Link
-                key={slug}
-                href={localeHref(locale, `${ROUTES.solutions}/${slug}`)}
+                key={solution.slug}
+                href={localeHref(locale, `${ROUTES.solutions}/${solution.slug}`)}
                 className="vr-pill-link"
               >
-                {solutionNames[slug as keyof typeof solutionNames]}
+                {solution.name}
               </Link>
             ))}
           </div>
         </Section>
 
-        <PageCTA
-          locale={locale}
-          eyebrow={c.cta.eyebrow}
-          headline={c.cta.headline}
-          subcopy={c.cta.subcopy}
-        />
+        {cta ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={cta.eyebrow ?? ''}
+            headline={cta.title ?? ''}
+            subcopy={cta.subtitle ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );

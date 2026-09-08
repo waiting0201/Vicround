@@ -183,11 +183,14 @@
     "note": "方法／備註",
     "download": "下載規格書",
     "sample": "索取樣品",
-    "keySpecifications": "關鍵規格"
+    "keySpecifications": "關鍵規格",
+    "commonSpecifications": "共通規格"
   },
   "products": {
     "whereUsed": "應用領域",
-    "grade": "等級"
+    "grade": "等級",
+    "viewRange": "瀏覽完整 {name} 產品線 →",
+    "specSheet": "下載規格書 →"
   },
   "solutions": {
     "other": "其他應用",

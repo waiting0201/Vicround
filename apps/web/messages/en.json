@@ -183,11 +183,14 @@
     "note": "Method / note",
     "download": "Download spec sheet",
     "sample": "Request a sample",
-    "keySpecifications": "Key specifications"
+    "keySpecifications": "Key specifications",
+    "commonSpecifications": "Common specifications"
   },
   "products": {
     "whereUsed": "Where it is used",
-    "grade": "Grade"
+    "grade": "Grade",
+    "viewRange": "View the full {name} range →",
+    "specSheet": "Download spec sheet →"
   },
   "solutions": {
     "other": "Other applications",
