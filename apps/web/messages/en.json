@@ -158,7 +158,9 @@
     "new": "New",
     "imagePlaceholder": "Imagery placeholder · 1200×900",
     "emptyDownloads": "Documents are being prepared. Contact us and we will send the current revision.",
-    "emptyList": "Nothing published here yet."
+    "emptyList": "Nothing published here yet.",
+    "mapPlaceholder": "Map placeholder · 2400×750",
+    "openInMaps": "Open in Maps →"
   },
   "account": {
     "dashboard": "Dashboard",
@@ -275,5 +277,38 @@
     "footnoteBefore": "Not ready for an account? Public spec summaries and FAQs are open to everyone in ",
     "footnoteLink": "Resources",
     "footnoteAfter": "."
+  },
+  "contactForm": {
+    "title": "Send an inquiry",
+    "lead": "Fields marked * are required. The more you can tell us about the application and target spec, the faster we can quote.",
+    "sentTitle": "Thank you — we've received your inquiry.",
+    "sentBody": "A reference number has been emailed to you. Our team responds within two business days.",
+    "fields": {
+      "name": "Name *",
+      "company": "Company *",
+      "email": "Business Email *",
+      "productLine": "Product Line",
+      "application": "Application",
+      "targetSpec": "Target Spec"
+    },
+    "productLines": [
+      "Optical Film",
+      "Textile & Foam",
+      "Acoustic",
+      "Other"
+    ],
+    "consentBefore": "I agree to the ",
+    "consentLink": "Privacy Policy",
+    "consentAfter": " and to being contacted about this inquiry.",
+    "responseTime": "We reply within two business days.",
+    "submit": "Send inquiry",
+    "failed": "Sending failed. Please try again, or email us directly.",
+    "reference": "Your reference number"
+  },
+  "locations": {
+    "headquarters": "Headquarters",
+    "production": "Production",
+    "sales": "Sales",
+    "researchAndDevelopment": "R&D"
   }
 }

@@ -143,6 +143,7 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
         new("contact", "contact", "contact",
         [
             new("direct", BlockType.ContactChannelList, "channels"),
+            new("hurry", BlockType.RichText, "hurry"),
             new("locations", BlockType.LocationList, "locations"),
             new("process", BlockType.ProcessFlowRef, "what-happens-next", Settings: """{"kind":"inquiryFlow"}"""),
         ]),
@@ -218,6 +219,17 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
             {
                 ["eyebrow"] = root["listEyebrow"]?.DeepClone(),
                 ["title"] = root["listTitle"]?.DeepClone(),
+            };
+        }
+
+        if (pageSlug == "contact" && root["hurry"] is null && root["direct"] is JsonObject direct)
+        {
+            // 「趕時間？」小卡在來源裡是 direct 的三個扁平欄位，補成一個 section。
+            root["hurry"] = new JsonObject
+            {
+                ["eyebrow"] = direct["hurryTitle"]?.DeepClone(),
+                ["title"] = direct["hurryLabel"]?.DeepClone(),
+                ["body"] = direct["hurryBody"]?.DeepClone(),
             };
         }
 

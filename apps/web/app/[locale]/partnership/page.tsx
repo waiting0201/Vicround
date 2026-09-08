@@ -1,32 +1,44 @@
 import type { Metadata } from 'next';
-import { ContactTrigger } from '@/components/ContactTrigger';
-import { Icon } from '@/components/Icon';
+import { Fragment } from 'react';
+import {
+  BlockHeading,
+  BlockSection,
+  MediaTextSplitBlock,
+  StepCards,
+  TestimonialCards,
+} from '@/components/blocks';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
-import { Container, ImageSlot } from '@/components/sections';
-import { partnership } from '@/content/partnership';
-import { localize } from '@/lib/content';
+import { getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
-/** Partnership —— 逐區塊對照 `mockup/Rounded Design/partnership.dc.html`。 */
+/**
+ * Partnership —— 版型逐區塊對照 `mockup/Rounded Design/partnership.dc.html`。
+ *
+ * <p>
+ * OEM/ODM 的三步驟來自 `ProcessFlows`、客戶推薦來自 `Testimonials`，
+ * 兩者都是 reference block —— 頁面只決定版面與順序。
+ * </p>
+ */
 type Params = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, partnership);
+  const page = requirePage(await getPage(locale, 'partnership'), 'partnership');
 
   return pageMetadata({
     locale,
     path: ROUTES.partnership,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -34,20 +46,8 @@ export default async function PartnershipPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, partnership);
 
-  const eyebrow: React.CSSProperties = {
-    margin: 0,
-    font: "600 13px/1.2 'Geologica', sans-serif",
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    color: '#6436ef',
-  };
-  const heading: React.CSSProperties = {
-    margin: '12px 0 0',
-    font: "500 clamp(2rem, 3.5vw, 2.75rem)/1.1 'Geologica', 'GenYoGothic TW', sans-serif",
-    color: 'var(--page-fg)',
-  };
+  const page = requirePage(await getPage(locale, 'partnership'), 'partnership');
 
   const crumbs = [
     { name: t('nav.about'), path: ROUTES.about },
@@ -61,171 +61,45 @@ export default async function PartnershipPage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.partnership')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
-        {/* ============ OEM / ODM ============ */}
-        <section id="oem-odm" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.oem.eyebrow}</p>
-            <h2 style={heading}>{c.oem.title}</h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-muted)',
-                textWrap: 'pretty',
-              }}
-            >
-              {c.oem.lead}
-            </p>
+        {page.blocks.map((block, index) => (
+          <Fragment key={block.anchor ?? index}>
+            <BlockSection id={block.anchor ?? undefined} raised={index % 2 === 1}>
+              {block.blockType === 'mediaTextSplit' ? (
+                <MediaTextSplitBlock
+                  block={block}
+                  locale={locale}
+                  imageLabel={t('common.imagePlaceholder')}
+                  imageRight={index % 2 === 1}
+                />
+              ) : block.blockType === 'testimonialList' ? (
+                <>
+                  <BlockHeading block={block} />
+                  <TestimonialCards testimonials={block.reference?.testimonials ?? []} />
+                </>
+              ) : (
+                <>
+                  <BlockHeading block={block} />
+                  <StepCards steps={block.reference?.processFlows?.[0]?.steps ?? []} />
+                </>
+              )}
+            </BlockSection>
+          </Fragment>
+        ))}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.oem.steps.map((step, index) => (
-                <div
-                  key={step.title}
-                  style={{
-                    background: 'var(--page-bg)',
-                    border: '1px solid var(--page-border)',
-                    borderRadius: 22,
-                    padding: '32px 28px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 14,
-                  }}
-                >
-                  <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span
-                    style={{
-                      borderRadius: 12,
-                      width: 44,
-                      height: 44,
-                      background: 'rgba(100,54,239,0.1)',
-                      color: '#6436ef',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name={step.icon} size={20} />
-                  </span>
-                  <span
-                    style={{
-                      font: "600 1.125rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-fg)',
-                    }}
-                  >
-                    {step.title}
-                  </span>
-                  <p
-                    style={{
-                      margin: 0,
-                      font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {step.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 經銷／採購合作 ============ */}
-        <section
-          id="distribution"
-          style={{ background: 'var(--page-raised)', scrollMarginTop: 90, borderTop: '1px solid var(--page-border)' }}
-        >
-          <Container
-            style={{
-              padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 'clamp(32px, 5vw, 72px)',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'flex-start' }}>
-              <p style={eyebrow}>{c.distribution.eyebrow}</p>
-              <h2 style={{ ...heading, margin: 0 }}>{c.distribution.title}</h2>
-              <p
-                style={{
-                  margin: 0,
-                  font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
-                  color: 'var(--page-muted)',
-                  textWrap: 'pretty',
-                }}
-              >
-                {c.distribution.body}
-              </p>
-              <ContactTrigger className="vr-btn">
-                {c.distribution.cta}
-                <span aria-hidden="true">→</span>
-              </ContactTrigger>
-            </div>
-            <ImageSlot alt={c.distribution.imageLabel} label={c.distribution.imageLabel} />
-          </Container>
-        </section>
-
-        {/* ============ 客戶推薦 ============ */}
-        <section id="testimonials" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.testimonials.eyebrow}</p>
-            <h2 style={heading}>{c.testimonials.title}</h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.testimonials.items.map((item, index) => (
-                <figure
-                  key={index}
-                  style={{
-                    margin: 0,
-                    background: 'var(--page-bg)',
-                    border: '1px dashed var(--page-border)',
-                    borderRadius: 22,
-                    padding: '32px 28px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 16,
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{ font: "500 2rem/1 'Geologica', sans-serif", color: '#a184f5' }}
-                  >
-                    &ldquo;
-                  </span>
-                  <blockquote
-                    style={{
-                      margin: 0,
-                      font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {item.quote}
-                  </blockquote>
-                  <figcaption
-                    style={{
-                      marginTop: 'auto',
-                      font: "500 0.8125rem/1.5 'IBM Plex Mono', monospace",
-                      color: 'var(--page-faint)',
-                    }}
-                  >
-                    {item.author}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        <PageCTA locale={locale} eyebrow={c.cta.eyebrow} headline={c.cta.headline} subcopy={c.cta.subcopy} />
+        {page.ctaHeadline ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={page.ctaEyebrow ?? ''}
+            headline={page.ctaHeadline}
+            subcopy={page.ctaSubcopy ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );

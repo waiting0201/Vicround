@@ -7,21 +7,24 @@ import Link from 'next/link';
  * 詢問表單 —— 逐項對照 `mockup/Rounded Design/contact.dc.html`。
  *
  * <p>
- * ⚠️ **送出尚未接上** `POST /api/v1/contact`。接的時候要一併帶 `sourceUrl`、`culture`
- * 與 anti-bot token，成功後顯示後端回的 `referenceNumber`（docs/cms-api.md）——
- * 目前只做前端狀態切換，好讓版面與確認稿一致。
+ * 送出走同源的 `/api/contact`（它再轉給 Content API），成功後顯示後端回的受理編號。
+ * 產品線下拉送的是 **slug**，不是顯示名稱 —— 後端據此連到 `Categories`，
+ * 查不到會回 400 而不是靜默存 null（docs/cms-api.md）。
  * </p>
  */
+export type ContactCategory = { slug: string; name: string };
+
 export type ContactFormLabels = {
   title: string;
   lead: string;
   sentTitle: string;
   sentBody: string;
+  reference: string;
+  failed: string;
   name: string;
   company: string;
   email: string;
   productLine: string;
-  productLines: string[];
   application: string;
   targetSpec: string;
   consentBefore: string;
@@ -53,19 +56,59 @@ const fieldStyle: React.CSSProperties = {
 export function ContactForm({
   labels,
   privacyHref,
+  categories,
+  culture,
 }: {
   labels: ContactFormLabels;
   privacyHref: string;
+  categories: ContactCategory[];
+  culture: string;
 }) {
-  const [sent, setSent] = useState(false);
+  const [reference, setReference] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO POST /api/v1/contact（帶 anti-bot token、sourceUrl、culture），成功後顯示 referenceNumber
-    setSent(true);
+    setFailed(false);
+    setSending(true);
+
+    const form = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.get('name'),
+          company: form.get('company'),
+          email: form.get('email'),
+          categorySlug: form.get('categorySlug') || undefined,
+          application: form.get('application') || undefined,
+          targetSpec: form.get('targetSpec') || undefined,
+          sourceUrl: window.location.href,
+          culture,
+          consent: form.get('consent') === 'on',
+          // 蜜罐：真人看不到這個欄位，有值就是機器人（後端會擋下）
+          website: form.get('website') || undefined,
+        }),
+      });
+
+      const body = (await response.json()) as { success: boolean; data?: { referenceNumber?: string } };
+
+      if (response.ok && body.success && body.data?.referenceNumber) {
+        setReference(body.data.referenceNumber);
+      } else {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    } finally {
+      setSending(false);
+    }
   }
 
-  if (sent) {
+  if (reference) {
     return (
       <div
         style={{
@@ -93,6 +136,15 @@ export function ContactForm({
           }}
         >
           {labels.sentBody}
+        </p>
+        <p
+          style={{
+            margin: '18px 0 0',
+            font: "500 0.875rem/1.5 'IBM Plex Mono', monospace",
+            color: '#6436ef',
+          }}
+        >
+          {labels.reference}：{reference}
         </p>
       </div>
     );
@@ -141,9 +193,12 @@ export function ContactForm({
         </label>
         <label style={labelStyle}>
           {labels.productLine}
-          <select name="productLine" style={fieldStyle}>
-            {labels.productLines.map((line) => (
-              <option key={line}>{line}</option>
+          <select name="categorySlug" style={fieldStyle} defaultValue="">
+            <option value="" />
+            {categories.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {category.name}
+              </option>
             ))}
           </select>
         </label>
@@ -157,6 +212,16 @@ export function ContactForm({
         </label>
       </div>
 
+      {/* 蜜罐：藏起來，真人不會填到 */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+      />
+
       <label
         style={{
           marginTop: 18,
@@ -169,6 +234,7 @@ export function ContactForm({
       >
         <input
           type="checkbox"
+          name="consent"
           required
           style={{ marginTop: 3, accentColor: '#6436ef', width: 16, height: 16 }}
         />
@@ -180,6 +246,19 @@ export function ContactForm({
           {labels.consentAfter}
         </span>
       </label>
+
+      {failed ? (
+        <p
+          style={{
+            margin: '16px 0 0',
+            font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+            color: '#d93a2f',
+          }}
+          role="alert"
+        >
+          {labels.failed}
+        </p>
+      ) : null}
 
       <div
         style={{
@@ -194,7 +273,7 @@ export function ContactForm({
         <span style={{ font: "400 12px/1.5 'IBM Plex Mono', monospace", color: 'var(--page-faint)' }}>
           {labels.responseTime}
         </span>
-        <button type="submit" className="vr-btn">
+        <button type="submit" className="vr-btn" disabled={sending}>
           {labels.submit}
           <span aria-hidden="true">→</span>
         </button>

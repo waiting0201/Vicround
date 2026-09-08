@@ -158,7 +158,9 @@
     "new": "新",
     "imagePlaceholder": "圖片版位 · 1200×900",
     "emptyDownloads": "文件整理中。歡迎與我們聯絡，我們會提供目前的版本。",
-    "emptyList": "這一區還沒有內容。"
+    "emptyList": "這一區還沒有內容。",
+    "mapPlaceholder": "地圖版位 · 2400×750",
+    "openInMaps": "在地圖中開啟 →"
   },
   "account": {
     "dashboard": "總覽",
@@ -275,5 +277,38 @@
     "footnoteBefore": "還不想開帳號？公開的規格摘要與常見問題都在",
     "footnoteLink": "資源中心",
     "footnoteAfter": "，開放給所有人。"
+  },
+  "contactForm": {
+    "title": "送出詢問",
+    "lead": "標示 * 為必填。應用與目標規格說明得越清楚，我們就能越快報價。",
+    "sentTitle": "感謝您 —— 我們已收到您的詢問。",
+    "sentBody": "受理編號已寄至您的信箱。團隊將於兩個工作天內回覆。",
+    "fields": {
+      "name": "姓名 *",
+      "company": "公司 *",
+      "email": "公司電子郵件 *",
+      "productLine": "產品線",
+      "application": "應用",
+      "targetSpec": "目標規格"
+    },
+    "productLines": [
+      "光學膜",
+      "紡織與泡棉",
+      "聲學材料",
+      "其他"
+    ],
+    "consentBefore": "我同意",
+    "consentLink": "隱私權政策",
+    "consentAfter": "，並同意就本次詢問與我聯絡。",
+    "responseTime": "我們會在兩個工作天內回覆。",
+    "submit": "送出詢問",
+    "failed": "送出失敗，請再試一次，或直接來信給我們。",
+    "reference": "您的受理編號"
+  },
+  "locations": {
+    "headquarters": "總部",
+    "production": "生產基地",
+    "sales": "業務據點",
+    "researchAndDevelopment": "研發中心"
   }
 }

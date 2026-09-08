@@ -1,33 +1,41 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BlockHeading, BlockSection, StepCards, cardStyle, eyebrowStyle, sectionTitleStyle } from '@/components/blocks';
 import { ContactForm } from '@/components/ContactForm';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageShell } from '@/components/PageShell';
 import { Container, ImageSlot } from '@/components/sections';
-import { contact } from '@/content/contact';
-import { localize } from '@/lib/content';
-import { translator } from '@/lib/i18n';
+import { block, getCategories, getPage, requirePage } from '@/lib/content-api';
+import { getMessages, translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
-/** Contact —— 逐區塊對照 `mockup/Rounded Design/contact.dc.html`。 */
+/**
+ * Contact —— 版型逐區塊對照 `mockup/Rounded Design/contact.dc.html`。
+ *
+ * <p>
+ * 表單送出走同源的 `/api/contact`；收件窗口、據點與「送出之後」三段都是
+ * reference block，資料分別來自 `ContactChannels` / `Locations` / `ProcessFlows`。
+ * </p>
+ */
 type Params = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, contact);
+  const page = requirePage(await getPage(locale, 'contact'), 'contact');
 
   return pageMetadata({
     locale,
     path: ROUTES.contact,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -35,7 +43,17 @@ export default async function ContactPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, contact);
+  const messages = getMessages(locale);
+
+  const [pageData, categoryList] = await Promise.all([getPage(locale, 'contact'), getCategories(locale)]);
+  const page = requirePage(pageData, 'contact');
+
+  const channelsBlock = block(page, 'channels');
+  const hurry = block(page, 'hurry');
+  const locations = block(page, 'locations');
+  const process = block(page, 'what-happens-next');
+
+  const channels = channelsBlock?.reference?.contactChannels ?? [];
 
   return (
     <>
@@ -44,11 +62,10 @@ export default async function ContactPage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.contact')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
         {/* ============ 表單 + 直接聯絡 ============ */}
@@ -64,19 +81,18 @@ export default async function ContactPage({ params }: Params) {
           >
             <ContactForm
               privacyHref={localeHref(locale, ROUTES.privacy)}
-              labels={{ ...c.form, ...c.form.fields }}
+              culture={locale}
+              categories={(categoryList ?? []).map((category) => ({
+                slug: category.slug,
+                name: category.name ?? category.slug,
+              }))}
+              labels={{ ...messages.contactForm, ...messages.contactForm.fields }}
             />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div>
-                <h2
-                  style={{
-                    margin: 0,
-                    font: "500 1.5rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-fg)',
-                  }}
-                >
-                  {c.direct.title}
+                <h2 style={{ ...sectionTitleStyle, font: "500 1.5rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif" }}>
+                  {channelsBlock?.title}
                 </h2>
                 <p
                   style={{
@@ -85,13 +101,13 @@ export default async function ContactPage({ params }: Params) {
                     color: 'var(--page-muted)',
                   }}
                 >
-                  {c.direct.lead}
+                  {channelsBlock?.subtitle}
                 </p>
               </div>
 
-              {c.direct.channels.map((channel) => (
+              {channels.map((channel) => (
                 <div
-                  key={channel.email}
+                  key={channel.slug}
                   style={{
                     display: 'flex',
                     gap: 14,
@@ -113,7 +129,7 @@ export default async function ContactPage({ params }: Params) {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon name={channel.icon} size={18} />
+                    <Icon name="mail" size={18} />
                   </span>
                   <div>
                     <span
@@ -123,18 +139,20 @@ export default async function ContactPage({ params }: Params) {
                         color: 'var(--page-fg)',
                       }}
                     >
-                      {channel.title}
+                      {channel.label}
                     </span>
-                    <span
+                    <a
+                      href={`mailto:${channel.email}`}
                       style={{
                         display: 'block',
                         marginTop: 4,
                         font: "500 0.875rem/1.5 'IBM Plex Mono', monospace",
                         color: '#6436ef',
+                        textDecoration: 'none',
                       }}
                     >
                       {channel.email}
-                    </span>
+                    </a>
                     <span
                       style={{
                         display: 'block',
@@ -143,114 +161,68 @@ export default async function ContactPage({ params }: Params) {
                         color: 'var(--page-muted)',
                       }}
                     >
-                      {channel.note}
+                      {channel.description}
                     </span>
                   </div>
                 </div>
               ))}
 
-              <div
-                style={{
-                  padding: '20px 22px',
-                  border: '1px dashed var(--page-border)',
-                  borderRadius: 16,
-                }}
-              >
-                <span
-                  style={{
-                    font: "500 12px/1.4 'IBM Plex Mono', monospace",
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    color: 'var(--page-faint)',
-                  }}
-                >
-                  {c.direct.hurryTitle}
-                </span>
-                <p
-                  style={{
-                    margin: '10px 0 0',
-                    font: "600 0.9375rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-fg)',
-                  }}
-                >
-                  {c.direct.hurryLabel}
-                </p>
-                <p
-                  style={{
-                    margin: '6px 0 0',
-                    font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-muted)',
-                  }}
-                >
-                  {c.direct.hurryBody}
-                </p>
-                <Link
-                  href={localeHref(locale, ROUTES.downloads)}
-                  className="vr-inline-link"
-                  data-accent="true"
-                  style={{ marginTop: 12 }}
-                >
-                  {t('nav.downloads')} →
-                </Link>
-              </div>
+              {hurry ? (
+                <div style={{ padding: '20px 22px', border: '1px dashed var(--page-border)', borderRadius: 16 }}>
+                  <span
+                    style={{
+                      font: "500 12px/1.4 'IBM Plex Mono', monospace",
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: 'var(--page-faint)',
+                    }}
+                  >
+                    {hurry.eyebrow}
+                  </span>
+                  <p
+                    style={{
+                      margin: '10px 0 0',
+                      font: "600 0.9375rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                      color: 'var(--page-fg)',
+                    }}
+                  >
+                    {hurry.title}
+                  </p>
+                  <p
+                    style={{
+                      margin: '6px 0 0',
+                      font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                      color: 'var(--page-muted)',
+                    }}
+                  >
+                    {hurry.body}
+                  </p>
+                  <Link
+                    href={localeHref(locale, ROUTES.downloads)}
+                    className="vr-inline-link"
+                    data-accent="true"
+                    style={{ marginTop: 12 }}
+                  >
+                    {t('nav.downloads')} →
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </Container>
         </section>
 
         {/* ============ 據點 ============ */}
-        <section
-          id="locations"
-          style={{ background: 'var(--page-raised)', borderTop: '1px solid var(--page-border)' }}
-        >
-          <Container style={{ padding: 'clamp(48px, 6vw, 80px) clamp(24px, 5vw, 80px)' }}>
-            <p
-              style={{
-                margin: 0,
-                font: "600 13px/1.2 'Geologica', sans-serif",
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: '#6436ef',
-              }}
-            >
-              {c.locations.eyebrow}
-            </p>
-            <h2
-              style={{
-                margin: '12px 0 0',
-                font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.1 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-fg)',
-              }}
-            >
-              {c.locations.title}
-            </h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-muted)',
-              }}
-            >
-              {c.locations.lead}
-            </p>
+        {locations ? (
+          <BlockSection id="locations" raised>
+            <BlockHeading block={locations} />
 
             <div style={{ marginTop: 32 }}>
-              <ImageSlot alt={c.locations.mapLabel} label={c.locations.mapLabel} ratio="16 / 5" />
+              <ImageSlot alt={t('common.mapPlaceholder')} label={t('common.mapPlaceholder')} ratio="16 / 5" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 24 }}>
-              {c.locations.items.map((item) => (
-                <div
-                  key={item.city}
-                  style={{
-                    background: 'var(--page-bg)',
-                    border: '1px solid var(--page-border)',
-                    borderRadius: 22,
-                    padding: '28px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
-                >
+              {(locations.reference?.locations ?? []).map((location) => (
+                <div key={`${location.city}-${location.type}`} style={{ ...cardStyle, gap: 10 }}>
                   <span
                     style={{
                       font: "500 12px/1.4 'IBM Plex Mono', monospace",
@@ -259,7 +231,7 @@ export default async function ContactPage({ params }: Params) {
                       color: '#6436ef',
                     }}
                   >
-                    {item.kind}
+                    {t(`locations.${location.type}`)}
                   </span>
                   <span
                     style={{
@@ -267,7 +239,7 @@ export default async function ContactPage({ params }: Params) {
                       color: 'var(--page-fg)',
                     }}
                   >
-                    {item.city}
+                    {location.name ?? location.city}
                   </span>
                   <span
                     style={{
@@ -275,77 +247,59 @@ export default async function ContactPage({ params }: Params) {
                       color: 'var(--page-muted)',
                     }}
                   >
-                    {item.address}
+                    {location.addressLine}
                   </span>
-                  <span style={{ font: "500 0.875rem/1.5 'IBM Plex Mono', monospace", color: 'var(--page-muted)' }}>
-                    {item.phone}
-                  </span>
-                  {/* TODO 地圖連結待客戶提供實際地址後補上 */}
-                  <span
-                    style={{
-                      marginTop: 'auto',
-                      font: "600 13px/1.4 'Geologica', sans-serif",
-                      color: 'var(--page-faint)',
-                    }}
-                  >
-                    {c.locations.openInMaps}
-                  </span>
+                  {location.phone ? (
+                    <a
+                      href={`tel:${location.phone.replace(/\s+/g, '')}`}
+                      style={{
+                        font: "500 0.875rem/1.5 'IBM Plex Mono', monospace",
+                        color: 'var(--page-muted)',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {location.phone}
+                    </a>
+                  ) : null}
+                  {/* 地圖連結要等客戶提供實際地址（Locations.MapUrl 尚未填） */}
+                  {location.mapUrl ? (
+                    <a
+                      href={location.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        marginTop: 'auto',
+                        font: "600 13px/1.4 'Geologica', sans-serif",
+                        color: '#6436ef',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {t('common.openInMaps')}
+                    </a>
+                  ) : (
+                    <span
+                      style={{
+                        marginTop: 'auto',
+                        font: "600 13px/1.4 'Geologica', sans-serif",
+                        color: 'var(--page-faint)',
+                      }}
+                    >
+                      {t('common.openInMaps')}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
-          </Container>
-        </section>
+          </BlockSection>
+        ) : null}
 
         {/* ============ 送出之後 ============ */}
-        <section>
-          <Container style={{ padding: 'clamp(48px, 6vw, 80px) clamp(24px, 5vw, 80px)' }}>
-            <h2
-              style={{
-                margin: 0,
-                font: "500 clamp(1.75rem, 3vw, 2.25rem)/1.1 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'var(--page-fg)',
-              }}
-            >
-              {c.process.title}
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 36 }}>
-              {c.process.steps.map((step, index) => (
-                <div
-                  key={step.title}
-                  style={{
-                    border: '1px solid var(--page-border)',
-                    borderRadius: 22,
-                    padding: '28px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                  }}
-                >
-                  <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span
-                    style={{
-                      font: "600 1.0625rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-fg)',
-                    }}
-                  >
-                    {step.title}
-                  </span>
-                  <p
-                    style={{
-                      margin: 0,
-                      font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {step.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
+        {process ? (
+          <BlockSection id="what-happens-next">
+            <h2 style={sectionTitleStyle}>{process.title}</h2>
+            <StepCards steps={process.reference?.processFlows?.[0]?.steps ?? []} />
+          </BlockSection>
+        ) : null}
       </PageShell>
     </>
   );
