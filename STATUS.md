@@ -11,7 +11,7 @@
 
 ## 一句話現況
 
-**前台已全面改吃 Content API；後台版型完成但尚未接上 Admin API（還沒開工）。**
+**前台與後台都已接上自己的 API；剩下的是會員專區與 Azure 部署。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
@@ -52,16 +52,16 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 | 子系統 | 狀態 | 說明 |
 | --- | --- | --- |
 | 前台 `apps/web` | ✅ | 確認稿 25 頁全數實作（19 條路由檔）**且全部改吃 Content API**；暫代文案目錄已刪 |
-| 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
+| 後台 `apps/admin` | 🟡 | 27 個畫面全數實作；**Admin API 已上線**，開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端（27 個單元實跑通過），尚未在瀏覽器逐畫面驗收 |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
 | Content API（`fn-public`） | ✅ | **19 支端點已上線並實跑驗證**（含 contact 寫入與 reference block 解析）；只剩 `/search` 待定 Phase |
-| Account API（會員） | ⬜ | 未開工 |
-| Admin API（`fn-admin`） | ⬜ | 未開工 |
+| Account API（會員） | ⬜ | 未開工（需先補會員專區設計稿） |
+| Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 212 張舊站圖已進 `public-media`（本機 Azurite）；正式 Azure Storage 未建 |
-| CI | ✅ | `.github/workflows/api.yml`：建置、53 項測試、產物防呆、migration 同步檢查 |
+| CI | ✅ | `.github/workflows/api.yml`：建置、72 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ⬜ | 尚未建立任何 Azure 資源 |
 
 ---
@@ -242,8 +242,8 @@ apps/web/
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
 | Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
-| Admin API `/api/admin/**` | ⬜ | Router 與權限表已就緒；Handler 未實作 |
-| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、53 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
+| **Admin API** `/api/admin/**` | ✅ | 登入（access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機 |
+| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、72 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ⬜ | **無部署步驟**——Azure 資源尚未建立（[docs/azure-deployment.md](docs/azure-deployment.md)） |
 | Azure 資源 | ⬜ | 未建立任何資源；Blob 目前指向本機 Azurite |
 
@@ -259,7 +259,8 @@ apps/web/
 | `GET /api/v1/solutions` | 7 個產業 |
 | `GET /api/v1/solutions/{slug}` | 產業詳情：規格 5、版塊 4、產品線 chip 3 |
 | `GET /api/v1/pages/{slug}` | 頁面 + 版塊（privacy 走長文 Body）；reference block 另帶 `reference` 強型別資料 |
-| `GET /api/v1/sitemap` | 51 個已發佈網址 + lastmod + **真的有翻譯的語系** |
+| `GET /api/v1/sitemap` | 53 個已發佈網址 + lastmod + **真的有翻譯的語系** |
+| `GET /api/v1/redirects` | 241 條啟用中的轉址規則（middleware 用；先前這支不存在，等於轉址全部沒生效） |
 | `GET /api/v1/navigation?location=` | 導覽樹（header 3 層 36 項）；`Ref*Id` 已解析成公開路徑 |
 | `GET /api/v1/technologies?kind=` | 7 條製程流程（共 27 步）+ 4 條產品法規符合 |
 | `GET /api/v1/articles?type=&tag=&category=&solution=&page=` | 分頁文章（12 篇）+ 產品線／產業／標籤 chip |
@@ -285,7 +286,7 @@ apps/web/
 | 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
-| 測試 | `tests/Api.Tests` **53 項**：慣例守門（EF 模型）、密碼雜湊、語系解析與分頁、公開網址組裝、詢問表單限流 |
+| 測試 | `tests/Api.Tests` **72 項**：慣例守門（EF 模型）、密碼雜湊、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
 | DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
@@ -314,7 +315,9 @@ apps/web/
 3b. ~~補完其餘公開端點：`articles`、`exhibitions`、`faq`、`certifications`、`downloads`、
    `navigation`、`technologies`、`POST /contact`~~ ✅ 2026-09-08
 3c. ~~前台改吃 API，刪掉 `apps/web/content/`~~ ✅ 2026-09-08
-4. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
+4. ~~Admin API~~ ✅ 2026-09-08（後台開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端）
+4b. 後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除），並補上
+   `legacy-import/run` 與媒體庫的「找未被引用的檔案」
 5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
 6. Account API 與會員專區（需先補設計稿）
 

@@ -92,6 +92,7 @@ GET  /api/v1/pages/{slug}        ✅ blocks，reference block 已在後端解析
 POST /api/v1/contact             ✅ inquiry form (rate-limited, anti-bot)
 
 GET  /api/v1/sitemap             ✅ 已發佈網址 + lastmod + 真的有翻譯的語系（XML 由 Next.js 產）
+GET  /api/v1/redirects           ✅ 啟用中的轉址規則（前台 middleware 每 5 分鐘取整份）
 GET  /api/v1/search              # ?q=  ← Phase 待定，見 database.md §19.5
 ```
 
@@ -202,15 +203,28 @@ Account 端點一律 `Cache-Control: no-store`，**不得**進 Next.js Data Cach
 Mirror the content types; operate on **all** translations and statuses. Editors create a base
 entity then add per-culture translations.
 
-**Auth (self-built JWT):**
+> **實作進度（2026-09-08）**：登入與 27 個單元的 CRUD 都已上線並實跑驗證。
+> 27 個單元共用同一組實作（`Api/Services/Admin/AdminResources.cs` 的登記表），
+> 因此新增單元是加一列，不是複製一支 handler。
+
+**Auth (self-built JWT):** ✅
 
 ```
-POST   /api/admin/auth/login             # {email,password} -> {accessToken (~15m), refreshToken}
-POST   /api/admin/auth/refresh           # rotate refresh -> new access token
-POST   /api/admin/auth/logout            # revoke refresh token
-POST   /api/admin/auth/change-password   # 改密碼；輪替 SecurityStamp、撤銷全部 refresh token
-GET    /api/admin/auth/me
+POST   /api/admin/auth/login             ✅ {email,password} -> {accessToken (~15m)} + refresh cookie
+POST   /api/admin/auth/refresh           ✅ rotate refresh -> new access token
+POST   /api/admin/auth/logout            ✅ revoke refresh token
+POST   /api/admin/auth/change-password   ✅ 改密碼；輪替 SecurityStamp、撤銷全部 refresh token
+GET    /api/admin/auth/me                ✅
 ```
+
+**Access token 只回在 body、refresh token 只走 httpOnly cookie**
+（`vr_admin_rt`，`Path=/api/admin/auth`，`SameSite=Strict`，本機 http 時 `Secure` 自動關閉）。
+已撤銷的 refresh token 再次出現視為重放，該使用者的 token 全部撤銷。
+連續登入失敗 5 次鎖 15 分鐘（狀態在 `Users`，不建 log 表）。
+
+**權限**：token 只帶角色，81 個權限碼在伺服器端展開（`Api/Common/AdminPermissions.cs`）——
+`Admin` 是超級使用者，`Editor` 除了 `users` / `site-settings` / `redirects` / `business-domains`
+之外都可讀寫。塞進 token 會讓它膨脹好幾 KB，而且改權限得等所有人重新登入。
 
 All other `/api/admin/**` calls require `Authorization: Bearer <accessToken>`; `fn-admin`
 validates signature/issuer/audience/expiry and the role claim. The admin SPA keeps the access
@@ -218,17 +232,29 @@ token **in memory only** and relies on an **httpOnly refresh cookie** issued by 
 nothing is written to `localStorage`. See [cms.md](cms.md).
 
 ```
-GET    /api/admin/{type}
-POST   /api/admin/{type}
-GET    /api/admin/{type}/{id}
-PUT    /api/admin/{type}/{id}
-DELETE /api/admin/{type}/{id}            # soft-delete / archive（必同時寫 301 或 410）
+GET    /api/admin/{type}                 ✅ ?search=&page=&pageSize=&missingCulture=&<欄位>=<值>
+POST   /api/admin/{type}                 ✅ 201 + 該筆資料
+GET    /api/admin/{type}/{id}            ✅ 含翻譯、關聯 id 陣列與子項
+PUT    /api/admin/{type}/{id}            ✅
+DELETE /api/admin/{type}/{id}            ✅ 封存（有 Status 的）或真刪；Routable 的同時寫 410
 
-PUT    /api/admin/{type}/{id}/translations/{culture}   # upsert one culture's content
-POST   /api/admin/{type}/{id}/publish                  # Draft -> Published (purges cache, bumps sitemap)
-POST   /api/admin/{type}/{id}/unpublish
-POST   /api/admin/{type}/reorder                       # 批次 SortOrder
+PUT    /api/admin/{type}/{id}/translations/{culture}   ✅ upsert one culture's content
+POST   /api/admin/{type}/{id}/publish                  ✅ Draft -> Published（並打 revalidate webhook）
+POST   /api/admin/{type}/{id}/unpublish                ✅
+POST   /api/admin/{type}/reorder                       ✅ 批次 SortOrder（以 10 為間距）
 ```
+
+**回傳形狀**：清單是 `{ items, page, pageSize, total }`，單筆是
+`{ id, ...基底欄位, translations: { en, zh-Hant }, <關聯欄位>: string[], <子項欄位>: [...] }`——
+與 `apps/admin/src/lib/api.ts` 的 `AdminRow` 對齊。`id` 一律是字串（實體的鍵有
+int / Guid / string 三種），enum 一律 camelCase 字串。
+
+**寫入的規矩**：
+- 關聯（`categoryIds`…）與子項（規格列、版塊、步驟）**整組換掉**，包在交易裡 ——
+  「先刪後寫」中途失敗會真的刪掉既有資料。
+- 改 slug／封存在同一個交易內寫 301／410，並把既有規則壓平（不留鏈、不留環）。
+- 密碼雜湊、`SecurityStamp`、refresh token 雜湊**永遠不會出現在回應裡**。
+- 請求裡不在 EF 模型中的欄位一律忽略；欄位型別轉不過去回 `400`，不會靜默寫錯值。
 
 **`{type}` 白名單**（對應 [database.md](database.md) 的功能單元）：
 
@@ -244,15 +270,22 @@ contact-inquiries | business-domains
 **非 CRUD 端點：**
 
 ```
-POST   /api/admin/media                            # multipart upload -> Blob, returns url/asset id
-GET    /api/admin/media                            # ?search=&type=&unused=true（找未被引用的媒體）
-POST   /api/admin/members/{id}/approve
-POST   /api/admin/members/{id}/reject              # {reviewNote}
-POST   /api/admin/members/{id}/suspend
-POST   /api/admin/members/{id}/reactivate
-PUT    /api/admin/sample-requests/{id}/status      # 含 carrier / trackingNumber / trackingUrl
-POST   /api/admin/legacy-import/run                # 觸發 LegacyImportSeeder（僅 Admin 角色）
+POST   /api/admin/media                            ✅ multipart upload -> Blob，回媒體列
+GET    /api/admin/media                            ✅ 一般清單（`unused=true` 尚未做）
+POST   /api/admin/members/{id}/approve             ✅
+POST   /api/admin/members/{id}/reject              ✅ {reviewNote}（必填）
+POST   /api/admin/members/{id}/suspend             ✅
+POST   /api/admin/members/{id}/reactivate          ✅
+PUT    /api/admin/sample-requests/{id}/status      ✅ 含 carrier / trackingNumber / trackingUrl
+POST   /api/admin/legacy-import/run                # 觸發 LegacyImportSeeder（僅 Admin 角色）—— 尚未做
 ```
+
+會員與樣品申請的動作走**狀態機**：不合法的轉移回 `409 CONFLICT_STATE`
+（例如已拒絕的會員不能直接停權、拒絕必須填理由）。前端的看板只列合法的下一步，
+但把關在後端 —— 否則改一下請求就能跳過流程。
+
+媒體上傳的容器由呼叫端指定（`public-media` / `member-documents`），**選錯等於把限會員
+文件放上公開 CDN**，因此不做猜測；型別白名單與 50 MB 上限先擋在 API。
 
 `media` 上傳需指定 container：`public-media`（預設）或 `member-documents`（`IsPrivate = 1`，
 只能經由 SAS 取得）。
