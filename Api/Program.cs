@@ -18,6 +18,7 @@ using VicRound.Api.Handlers;
 using VicRound.Api.Middleware;
 using VicRound.Api.Routing;
 using VicRound.Api.Services;
+using VicRound.Api.Services.Admin;
 using VicRound.Api.Services.Dapper;
 
 // seed / import-content / import-legacy —— 初始化環境與內容匯入用，不進 Functions host。
@@ -104,6 +105,8 @@ services.AddScoped<ICertificationReadService, CertificationReadService>();
 services.AddScoped<IDownloadReadService, DownloadReadService>();
 services.AddScoped<ITechnologyReadService, TechnologyReadService>();
 services.AddScoped<IContactInquiryService, ContactInquiryService>();
+services.AddScoped<IAdminAuthService, AdminAuthService>();
+services.AddScoped<IAdminCrudService, AdminCrudService>();
 services.AddScoped<HealthHandler>();
 services.AddScoped<CatalogHandler>();
 services.AddScoped<SolutionHandler>();
@@ -113,6 +116,8 @@ services.AddScoped<ArticleHandler>();
 services.AddScoped<ResourceHandler>();
 services.AddScoped<TechnologyHandler>();
 services.AddScoped<ContactHandler>();
+services.AddScoped<AdminAuthHandler>();
+services.AddScoped<AdminContentHandler>();
 services.AddScoped<AppRouter>();
 services.AddHttpContextAccessor();
 

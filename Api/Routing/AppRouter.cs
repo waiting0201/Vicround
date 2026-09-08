@@ -25,6 +25,8 @@ public sealed partial class AppRouter(
     SolutionHandler solutions,
     PageHandler pages,
     NavigationHandler navigation,
+    AdminAuthHandler adminAuth,
+    AdminContentHandler adminContent,
     ArticleHandler articles,
     ResourceHandler resources,
     TechnologyHandler technologies,
@@ -64,6 +66,10 @@ public sealed partial class AppRouter(
                 req.HttpContext.Response.Headers.CacheControl = "no-store";
                 break;
 
+            // 登入與換 token 本來就還沒有 access token；refresh 靠 httpOnly cookie。
+            case ["admin", "auth", "login"] or ["admin", "auth", "refresh"] or ["admin", "auth", "logout"]:
+                break;
+
             // 後台：只收 admin audience，會員 token 打 /admin/* 一律擋下。
             case ["admin", ..]:
                 var principal = jwt.ValidateRequest(req, TokenAudiences.Admin)
@@ -89,7 +95,11 @@ public sealed partial class AppRouter(
             ?? NotFound(method, route);
     }
 
-    /// <summary>檢查 <c>permissions</c> claim；<c>is_superadmin</c> 自動通過。</summary>
+    /// <summary>
+    /// 權限檢查。<c>is_superadmin</c> 直接通過；其餘先看 token 上逐條列出的
+    /// <c>permissions</c>（保留給日後的個別授權），再看角色展開出來的權限
+    /// （<see cref="AdminPermissions"/>）。
+    /// </summary>
     private static void RequirePermission(ClaimsPrincipal principal, string? permissionCode)
     {
         if (permissionCode is null)
@@ -107,7 +117,16 @@ public sealed partial class AppRouter(
             return;
         }
 
-        if (!principal.FindAll("permissions").Any(c => c.Value == permissionCode))
+        if (principal.FindAll("permissions").Any(c => c.Value == permissionCode))
+        {
+            return;
+        }
+
+        var roles = principal.FindAll(ClaimTypes.Role).Concat(principal.FindAll("role"))
+            .Select(c => c.Value)
+            .ToArray();
+
+        if (!AdminPermissions.Allows(roles, permissionCode))
         {
             throw AppException.Forbidden($"缺少所需權限：{permissionCode}");
         }

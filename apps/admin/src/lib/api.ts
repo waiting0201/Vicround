@@ -34,10 +34,24 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** 後端的錯誤碼（`VALIDATION_REQUIRED`…）。畫面要分支就看它，不要比對訊息字串。 */
+    readonly code?: string,
   ) {
     super(message);
   }
 }
+
+/**
+ * Admin API 的統一回應信封（docs/cms-api.md）。**所有端點都是這個形狀**，
+ * 因此拆信封放在這一層——每個畫面各自 `.data` 只會有人漏掉檢查 `success`。
+ */
+type Envelope<T> = {
+  success: boolean;
+  code: string | null;
+  data: T | null;
+  message: string;
+  errors: string[];
+};
 
 /**
  * 呼叫 Admin API。401 時**自動換一次 token 再重試**，還是失敗才丟出 ——
@@ -73,13 +87,17 @@ function send(path: string, init: RequestInit) {
 async function unwrap<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
 
-  if (!res.ok) {
-    // 錯誤格式是 RFC 7807 problem+json（docs/cms-api.md）
-    const problem = (await res.json().catch(() => null)) as { title?: string; detail?: string } | null;
-    throw new ApiError(res.status, problem?.detail ?? problem?.title ?? res.statusText);
+  const envelope = (await res.json().catch(() => null)) as Envelope<T> | null;
+
+  if (!res.ok || !envelope?.success) {
+    throw new ApiError(
+      res.status,
+      envelope?.message ?? res.statusText,
+      envelope?.code ?? undefined,
+    );
   }
 
-  return (await res.json()) as T;
+  return envelope.data as T;
 }
 
 export async function login(email: string, password: string): Promise<void> {
@@ -230,9 +248,5 @@ export async function uploadMedia(
     body: form,
   });
 
-  if (!res.ok) {
-    const problem = (await res.json().catch(() => null)) as { detail?: string; title?: string } | null;
-    throw new ApiError(res.status, problem?.detail ?? problem?.title ?? res.statusText);
-  }
-  return (await res.json()) as AdminRow;
+  return unwrap<AdminRow>(res);
 }

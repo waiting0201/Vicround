@@ -390,11 +390,22 @@ export async function mockFetch(path: string, init: RequestInit): Promise<Respon
   const method = (init.method ?? 'GET').toUpperCase();
   const body = init.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {};
 
+  // 回應包成與真後端相同的信封（docs/cms-api.md）——形狀不一致的假 API
+  // 只會讓「換成真後端」那一天才發現前端解錯層。
   const json = (data: unknown, status = 200) =>
-    new Response(status === 204 ? null : JSON.stringify(data), {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    new Response(
+      status === 204
+        ? null
+        : JSON.stringify({
+            success: status < 400,
+            code: status < 400 ? null : 'MOCK_ERROR',
+            data: status < 400 ? data : null,
+            message: status < 400 ? 'Success' : String((data as { detail?: string })?.detail ?? 'error'),
+            errors: [],
+            timestamp: new Date().toISOString(),
+          }),
+      { status, headers: { 'Content-Type': 'application/json' } },
+    );
 
   if (segments[0] === 'auth') {
     if (segments[1] === 'me') return json(ME);
