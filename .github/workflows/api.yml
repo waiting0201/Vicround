@@ -134,6 +134,10 @@ jobs:
 
           dotnet tool install --global dotnet-ef --version 10.0.3
           export PATH="$PATH:$HOME/.dotnet/tools"
+
+          # deploy job 只 checkout 原始碼（產物是 build job 傳過來的），
+          # 而 `dotnet ef` 需要能載入 DbContext，因此得先還原相依。
+          dotnet restore VicRound.slnx
           dotnet ef database update -p Api -s Api
 
       - name: Deploy to Function App
