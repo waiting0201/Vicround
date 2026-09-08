@@ -11,7 +11,7 @@
 
 ## 一句話現況
 
-**前後台的版型都已完成；後端的資料層與整組公開 Content API 都已上線，前台尚未切換過去。**
+**前台已全面改吃 Content API；後台版型完成但尚未接上 Admin API（還沒開工）。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
@@ -25,9 +25,10 @@
 migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
 17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**53 項測試通過**。
 
-**內容已進資料庫**：`apps/web/content/*.ts` 的 1355 組雙語字串與舊站 `www.vicround.com`
-的可用資料都已匯入並實跑驗證（見第六節）。前台**仍在讀 `content/`** —— 要等 Content API
-上線才切換，屆時整個目錄刪除。
+**內容已進資料庫且前台已切換過去**：確認稿的 1355 組雙語字串與舊站 `www.vicround.com`
+的可用資料都已匯入（見第六節），`apps/web/content/` 已刪除。確認稿本身以
+`Api/Data/Seeding/ContentImport/confirmed-copy.json` 進版控，新環境仍能用 `import-content`
+灌入同一份文案。
 
 **Content API 的公開端點已全數上線**（19 支，見第六節），中英雙語、分頁、快取標頭與
 錯誤碼都實跑驗過；只剩 `/search` 待定 Phase。**Account API 與 Admin API 尚未實作。**
@@ -50,7 +51,7 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 
 | 子系統 | 狀態 | 說明 |
 | --- | --- | --- |
-| 前台 `apps/web` | 🟡 | 確認稿 25 頁全數實作（19 條路由檔）；資料來自暫代文案，未接 API |
+| 前台 `apps/web` | ✅ | 確認稿 25 頁全數實作（19 條路由檔）**且全部改吃 Content API**；暫代文案目錄已刪 |
 | 後台 `apps/admin` | 🟡 | 27 個畫面全數實作 + 設計規格；資料來自開發用假 API，未接 Admin API |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
@@ -75,10 +76,15 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 `products/[category]` 一支服務 3 個產品線、`solutions/[slug]` 一支服務 7 個產業頁，
 而會員專區的 5 條路由在確認稿裡沒有對應頁。
 
-### ✅ 已依確認稿實作（確認稿 25 頁全部，對應 19 條路由檔）
+### ✅ 已依確認稿實作，且全部改吃 Content API（確認稿 25 頁全部，對應 19 條路由檔）
 
 下表 26 列 ＝ 確認稿的 25 頁 ＋ `/resources/downloads`（確認稿把下載放在
 `resources.dc.html#downloads`，本站的資訊架構另給它一個可索引網址，共用同一份清單）。
+
+**資料來源的分工**：頁面的 banner／CTA／版塊來自 `/v1/pages/{slug}`；版塊若是
+reference block（`BlockType` ≥ 100），資料由後端解析自強型別表（認證、據點、製程、
+FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是編輯者調的查詢參數。
+清單頁另打對應的實體端點。UI 標籤留在 `messages/{locale}.json`。
 
 | 路由 | 對應 mockup | 底色 | 主要區塊 |
 | --- | --- | --- | --- |
@@ -115,6 +121,9 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 
 ### 🟡 仍是鷹架（6 條路由檔）—— 確認稿沒有對應頁
 
+（這 6 條沒有接 API，因為還沒有設計稿；`/products/{category}/{slug}` 的資料端點
+`GET /v1/products/{slug}` 其實已經可用。）
+
 | 路由 | 現況 | 需要什麼才能做 |
 | --- | --- | --- |
 | `/products/{category}/{slug}` 產品詳情 | banner + 待接 API 提示框 | 設計稿（確認稿只做到產品線頁） |
@@ -134,6 +143,8 @@ CI 已有（建置＋測試＋兩道防呆），**部署與 Azure 資源尚未�
 | `robots.txt`（非正式站整站 Disallow） | [app/robots.ts](apps/web/app/robots.ts) | 已含 `/admin`、`/{locale}/account`、`/*/preview` |
 | 語系前綴與舊網址 301 | [middleware.ts](apps/web/middleware.ts) | `/` → 307 `/en`；410 直接回 410 |
 | 發布後失效（`revalidateTag`） | [app/api/revalidate/route.ts](apps/web/app/api/revalidate/route.ts) | 無密鑰回 401 |
+| 詢問表單送出（同源代理） | [app/api/contact/route.ts](apps/web/app/api/contact/route.ts) | 實跑回 202 + 受理編號；蜜罐回 `BOT_CHECK_FAILED` |
+| 內容取值（拆信封、帶 tag） | [lib/api.ts](apps/web/lib/api.ts)、[lib/content-api.ts](apps/web/lib/content-api.ts) | 失敗回 null；固定路由改丟例外（500）而不是 404 |
 
 ### ✅ GEO（AI 引擎）
 
@@ -163,13 +174,14 @@ apps/web/
 ├── app/ds/             客戶確認的設計 token（生成物，勿手改）
 ├── app/fonts.css       自架字型宣告（生成物，勿手改）
 ├── components/         21 支：Header/Footer/PageBanner/PageCTA/FaqAccordion/ArticleBody…
-├── content/            17 支暫代文案（接上 CMS 後整個目錄刪除）
-├── lib/                11 支：seo / schema / hreflang / api / locale / routes / nav…
+├── lib/                14 支：seo / schema / hreflang / api / content-api / format / html…
 ├── messages/           UI 字串（en / zh-Hant）
 └── public/fonts/       116 個 woff2
 ```
 
-**文案狀態**：`content/*.ts` 的英文逐字取自確認稿，**繁中是暫譯，待客戶校稿**。
+**文案來源**：全部來自 Content API。頁面取 `/v1/pages/{slug}` 的 banner／CTA／版塊，
+清單取各實體端點；UI 標籤（按鈕、表單欄位、篩選鈕）留在 `messages/{locale}.json`。
+繁中仍是暫譯，**待客戶校稿**——校稿改資料庫，不再改程式碼。
 `node scripts/check-content-language.mjs` 會擋掉輸入法誤植（西里爾／韓文）與英文欄位混入中文。
 
 ---
@@ -270,7 +282,7 @@ apps/web/
 | 密碼 | `Pbkdf2PasswordHasher`：PHC 單欄位字串，支援逐使用者漸進升級（**刻意不跟 NTI 用 BCrypt**，理由見 database.md §14.2） |
 | 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
 | 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
-| 內容匯入 | `scripts/export-content.mjs` → `import-content`：認證 9、FAQ 5/13、產品系列 18、規格列 48、製程 7/27、文章 12、展會 3、版塊 72/138。**全庫翻譯列 844** |
+| 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
 | 測試 | `tests/Api.Tests` **53 項**：慣例守門（EF 模型）、密碼雜湊、語系解析與分頁、公開網址組裝、詢問表單限流 |
@@ -280,13 +292,13 @@ apps/web/
 
 | 項目 | 擋在哪 | 影響 |
 | --- | --- | --- |
-| ⛔ 認證清單與證書明細 | 等客戶提供 | `content/certifications.ts` 多數欄位是 `[待客戶提供]`，About／Sustainability 的認證卡顯示待提供樣式 |
+| ⛔ 認證清單與證書明細 | 等客戶提供 | `Certifications` 多數欄位待補（`IsPlaceholder` 的那張顯示待提供樣式），About／Sustainability／Technologies 三頁共用同一批 |
 | ⛔ 版位照片與 partner logo | 等客戶提供 | 目前顯示 mockup 自己的虛線佔位框。舊站 212 張圖已在 Blob，但**內文引用的 2863 個檔名只有約 10% 在匯出裡**，其餘須另外取得 |
 | ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
 | ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
 | ⛔ 產品詳情頁設計 | 確認稿沒有這一頁 | `/products/{category}/{slug}` 維持鷹架 |
 | ⛔ 會員專區內頁設計 | 確認稿只到 `/member` | `/account/**` 五頁維持鷹架 |
-| ⛔ 繁中文案校稿 | 等客戶 | `content/*.ts` 的繁中為暫譯 |
+| ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
 | ⛔ 訓練型 AI 爬蟲政策 | 等客戶決策 | `app/robots.ts` 目前只放行檢索型，訓練型不列 |
 | ⛔ 後台 refresh token 的 cookie | 等後端 | 後台改為 SPA 之後，`fn-admin` 需以 `Set-Cookie` 回 httpOnly refresh token |
 
@@ -301,7 +313,7 @@ apps/web/
 3. ~~Content API 的 `categories` / `products` / `solutions` / `pages` / `sitemap`~~ ✅ 2026-09-08
 3b. ~~補完其餘公開端點：`articles`、`exhibitions`、`faq`、`certifications`、`downloads`、
    `navigation`、`technologies`、`POST /contact`~~ ✅ 2026-09-08
-3c. 前台改吃 API，刪掉 `apps/web/content/`（本專案「拔掉暫代文案」的終點）
+3c. ~~前台改吃 API，刪掉 `apps/web/content/`~~ ✅ 2026-09-08
 4. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
 5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
 6. Account API 與會員專區（需先補設計稿）

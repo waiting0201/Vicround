@@ -127,8 +127,8 @@ export VICROUND_SQL_CONNECTION='Server=localhost,1433;Database=VicRound;User Id=
 
 # 三層 seeder / 匯入（全部冪等，只補缺不覆寫）。VR=Api/bin/Debug/net10.0/VicRound.Api.dll
 dotnet $VR seed [--migrate]        # B 層：super admin、產品線、Solutions、Pages、導覽…
-node scripts/export-content.mjs    # 把 apps/web/content/*.ts 倒成 artifacts/content-export.json
 dotnet $VR import-content          # C 層：確認稿文案進翻譯表
+                                   #（來源：Api/Data/Seeding/ContentImport/confirmed-copy.json）
 dotnet $VR import-legacy           # C 層：舊站圖片→Blob、blog→Articles、舊網址→301
                                    #（需 Azurite；reference/ 不在版控，本機才跑得動）
 
@@ -147,7 +147,7 @@ pnpm sync:tokens                             # 從 mockup 同步設計 token 進
 node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位混入中文
 ```
 
-## 前台頁面現況（2026-09-06）
+## 前台頁面現況（2026-09-08）
 
 **客戶確認稿的 25 個頁面已全數實作**（版型、色彩、字級、間距逐項對照
 `mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。另有 6 條路由仍是鷹架，
@@ -158,6 +158,8 @@ node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位
 
 進度明細見 [STATUS.md](STATUS.md)。
 
-版面文案暫存在 `apps/web/content/*.ts`：**英文逐字取自確認稿、繁中是暫譯（待客戶校稿）**。
-接上 Content API 之後整個 `content/` 目錄刪除，版型元件不動。
+**文案全部來自 Content API**（2026-09-08 起）：頁面拿 `/v1/pages/{slug}` 的 banner、CTA 與版塊，
+清單頁拿各實體端點；`apps/web/content/` 已刪除。UI 標籤（按鈕、表單欄位、篩選鈕）留在
+`apps/web/messages/{locale}.json`，**內容**一律進翻譯表。
+繁中仍是暫譯，**待客戶校稿**——校稿改的是資料庫，不再改程式碼。
 `node scripts/check-content-language.mjs` 會擋掉輸入法誤植與英文欄位混入中文。
