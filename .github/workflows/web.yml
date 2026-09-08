@@ -87,6 +87,7 @@ jobs:
           rm -rf deploy/apps
           cp -R apps/web/.next/static deploy/.next/static
           cp -R apps/web/public deploy/public
+          test -f deploy/public/.swa/health.html || { echo "::error::缺少 .swa/health.html，SWA 的 warm-up 會逾時。"; exit 1; }
           du -sh deploy
 
       - name: Azure login (OIDC)
