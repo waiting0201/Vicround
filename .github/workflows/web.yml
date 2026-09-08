@@ -1,0 +1,112 @@
+# 前台（Next.js hybrid SSR）與後台 SPA 的建置與部署。
+#
+# 目標：Static Web Apps `stapp-vicround-prod`（Free 方案）。後台 SPA 先 build 進
+# `apps/web/public/admin`，再 build 前台 —— 兩者是同一個部署單位（docs/architecture.md）。
+name: web
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/web.yml'
+  pull_request:
+    paths:
+      - 'apps/**'
+  workflow_dispatch:
+
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  RESOURCE_GROUP: VicRoundUS
+  STATIC_WEB_APP: stapp-vicround-prod
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      # 內容語言檢查：擋輸入法誤植（西里爾／韓文）與英文欄位混入中文。
+      - name: Content language check
+        run: node scripts/check-content-language.mjs
+
+      # build 期間會呼叫 Content API 預先產生頁面，因此指向正式後端。
+      - name: Build
+        env:
+          API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
+          SITE_URL: https://www.vicround.com
+        run: pnpm build
+
+      # `output: 'standalone'` 只搬會用到的相依，但 static 與 public 要自己複製
+      # （Next.js 的已知行為，docs/azure-deployment.md 也記了這一條）。
+      - name: Assemble standalone output
+        run: |
+          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+          cp -r apps/web/public apps/web/.next/standalone/apps/web/public
+          du -sh apps/web/.next/standalone
+
+      - name: Azure login (OIDC)
+        if: github.event_name != 'pull_request'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # 部署 token 現拿現用：GitHub 這一側不留任何長期憑證。
+      - name: Get SWA deployment token
+        if: github.event_name != 'pull_request'
+        run: |
+          TOKEN=$(az staticwebapp secrets list -n "$STATIC_WEB_APP" -g "$RESOURCE_GROUP" --query "properties.apiKey" -o tsv)
+          echo "::add-mask::$TOKEN"
+          echo "SWA_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Deploy to Static Web Apps
+        if: github.event_name != 'pull_request'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
+          action: upload
+          app_location: apps/web
+          output_location: ''
+          skip_app_build: true
+          skip_api_build: true
+
+      - name: Smoke test
+        if: github.event_name != 'pull_request'
+        run: |
+          HOST=$(az staticwebapp show -n "$STATIC_WEB_APP" -g "$RESOURCE_GROUP" --query defaultHostname -o tsv)
+          for attempt in 1 2 3 4 5 6 7 8; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/en" || true)
+            echo "attempt $attempt -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::/en 在部署後沒有回 200。"
+          exit 1

@@ -1,8 +1,7 @@
-# 後端 API 的建置與測試閘。
+# 後端 API 的建置、測試與部署。
 #
-# ⚠ **目前沒有部署步驟**：VicRound 還沒建立任何 Azure 資源（見 docs/azure-deployment.md）。
-#   等 Function App 開好之後，比照 NTI 的 .github/workflows/api.yml 補上 azure/login（OIDC，
-#   不用 publish profile）+ Azure/functions-action + health 端點 smoke test。
+# 部署目標：Function App `func-vicround-prod`（Flex Consumption, .NET 10 isolated）。
+# 認證走 GitHub OIDC（Entra 應用程式 `github-vicround-deploy`），**GitHub 不存任何長期憑證**。
 name: api
 
 on:
@@ -24,9 +23,17 @@ concurrency:
   group: api-ci-${{ github.ref }}
   cancel-in-progress: true
 
+# OIDC 換 token 需要 id-token: write；其餘維持唯讀。
+permissions:
+  id-token: write
+  contents: read
+
 env:
   DOTNET_VERSION: '10.0.x'
   OUTPUT_PATH: ${{ github.workspace }}/output
+  FUNCTION_APP: func-vicround-prod
+  RESOURCE_GROUP: VicRoundUS
+  SQL_SERVER: vicround-sql-prod
 
 jobs:
   build_and_test:
@@ -71,3 +78,79 @@ jobs:
             echo "::error::EF 模型與 migration 不同步，請執行 dotnet ef migrations add <Name> -p Api -s Api。"
             exit 1
           fi
+
+      # 部署要用的產物。測試與防呆都過了才會走到這裡。
+      - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api
+          path: ${{ env.OUTPUT_PATH }}
+          retention-days: 3
+
+  deploy:
+    needs: build_and_test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: api
+          path: ${{ env.OUTPUT_PATH }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Migration 是**明確的、可看見的一步**（docs/azure-deployment.md）——
+      # 絕不在 Function 啟動時自動跑，否則多個執行個體會同時改 schema。
+      #
+      # SQL 防火牆只開「允許 Azure 服務」，因此臨時放行這台 runner 的 IP，跑完立刻收回。
+      # 連線字串不進 GitHub Secrets：用剛換到的 Azure 身分現場向 Function App 要，
+      # 它本來就是唯一的存放處（docs/azure-deployment.md 的「Configuration & secrets」）。
+      - name: Apply migrations
+        run: |
+          VICROUND_SQL_CONNECTION=$(az functionapp config appsettings list \
+            -n "$FUNCTION_APP" -g "$RESOURCE_GROUP" \
+            --query "[?name=='ConnectionStrings__SqlDatabase'].value" -o tsv)
+          echo "::add-mask::$VICROUND_SQL_CONNECTION"
+          export VICROUND_SQL_CONNECTION
+
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "::add-mask::$RUNNER_IP"
+          az sql server firewall-rule create -g "$RESOURCE_GROUP" -s "$SQL_SERVER" \
+            -n "gh-runner-${{ github.run_id }}" --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP" -o none
+          trap 'az sql server firewall-rule delete -g "$RESOURCE_GROUP" -s "$SQL_SERVER" -n "gh-runner-${{ github.run_id }}" -o none || true' EXIT
+
+          dotnet tool install --global dotnet-ef --version 10.0.3
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet ef database update -p Api -s Api
+
+      - name: Deploy to Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.FUNCTION_APP }}
+          package: ${{ env.OUTPUT_PATH }}
+          sku: flexconsumption
+
+      # 部署完就實際打一次 —— 「部署成功」不等於「跑得起來」。
+      - name: Smoke test
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            code=$(curl -s -o /tmp/health.json -w '%{http_code}' "https://${FUNCTION_APP}.azurewebsites.net/api/v1/health" || true)
+            echo "attempt $attempt -> $code"
+            if [ "$code" = "200" ]; then cat /tmp/health.json; exit 0; fi
+            sleep 15
+          done
+          echo "::error::health 端點在部署後沒有回 200。"
+          exit 1
