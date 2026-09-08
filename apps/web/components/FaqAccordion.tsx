@@ -17,8 +17,9 @@ export type FaqView = {
   category: string;
   question: string;
   answer: string;
-  href: string;
-  linkLabel: string;
+  /** 延伸連結；API 沒有給對應實體時為 null，那一題就只顯示答案。 */
+  href: string | null;
+  linkLabel: string | null;
 };
 
 export function FaqAccordion({
@@ -157,18 +158,20 @@ export function FaqAccordion({
                 >
                   {item.answer}
                 </p>
-                <Link
-                  href={item.href}
-                  style={{
-                    display: 'inline-flex',
-                    marginTop: 16,
-                    font: "600 13px/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: '#6436ef',
-                    textDecoration: 'none',
-                  }}
-                >
-                  {item.linkLabel} →
-                </Link>
+                {item.href && item.linkLabel ? (
+                  <Link
+                    href={item.href}
+                    style={{
+                      display: 'inline-flex',
+                      marginTop: 16,
+                      font: "600 13px/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                      color: '#6436ef',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {item.linkLabel} →
+                  </Link>
+                ) : null}
               </div>
             </div>
           ))}

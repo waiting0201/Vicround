@@ -589,3 +589,138 @@ body {
   border-color: #6436ef;
   color: #ffffff;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   文章內文（`.vr-prose`）
+
+   內文由 CMS 以 HTML 存放（`ArticleTranslations.Body`），因此樣式掛在標籤上而不是
+   逐個 React 元件 —— 數值逐項取自 `mockup/Rounded Design/article.dc.html`，
+   與改版前 ArticleBody 的 inline style 相同。
+   ────────────────────────────────────────────────────────────────────────── */
+.vr-prose {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.vr-prose > * {
+  margin: 0;
+}
+
+.vr-prose h2 {
+  font: 500 1.5rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-fg);
+  scroll-margin-top: 104px;
+}
+
+.vr-prose p {
+  font: 400 1.0625rem/1.8 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+}
+
+/* 重點提示：mockup 的左側紫色邊條 */
+.vr-prose aside.callout {
+  padding: 20px 24px;
+  border-left: 3px solid #6436ef;
+  background: rgba(100, 54, 239, 0.06);
+  border-radius: 0 14px 14px 0;
+}
+
+.vr-prose aside.callout p {
+  font: 500 1.0625rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-fg);
+}
+
+.vr-prose blockquote p {
+  font: 400 1.25rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-fg);
+}
+
+.vr-prose blockquote p::before { content: '\201C'; }
+.vr-prose blockquote p::after { content: '\201D'; }
+
+.vr-prose blockquote cite {
+  display: block;
+  margin-top: 12px;
+  font: 500 0.875rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif;
+  font-style: normal;
+  color: var(--page-faint);
+}
+
+.vr-prose ul {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vr-prose li {
+  font: 400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+}
+
+.vr-prose dl {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vr-prose dt {
+  font: 600 0.9375rem/1.6 'IBM Plex Mono', monospace;
+  color: var(--page-fg);
+}
+
+.vr-prose dd {
+  margin: 6px 0 0;
+  font: 400 0.9375rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-muted);
+}
+
+.vr-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--page-border);
+  border-radius: 22px;
+  overflow: hidden;
+  font: 400 0.875rem/1.5 'IBM Plex Mono', monospace;
+}
+
+.vr-prose th {
+  text-align: left;
+  padding: 14px 18px;
+  background: var(--page-raised);
+  font: 600 12px/1.4 'IBM Plex Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--page-muted);
+  border-bottom: 1px solid var(--page-border);
+}
+
+.vr-prose td {
+  padding: 14px 18px;
+  color: var(--page-muted);
+  border-bottom: 1px solid rgba(20, 20, 31, 0.08);
+}
+
+.vr-prose td:first-child { color: var(--page-fg); }
+.vr-prose tbody tr:nth-child(even) { background: rgba(20, 20, 31, 0.03); }
+
+.vr-prose figcaption {
+  font: 400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif;
+  color: var(--page-faint);
+}
+
+/* 還沒有圖的 figure：維持 mockup 的虛線版位框，而不是只剩一行圖說 */
+.vr-prose figure:not(:has(img))::before {
+  content: '';
+  display: block;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 12px;
+  border: 1px dashed var(--page-border);
+  border-radius: 22px;
+}
+
+.vr-prose img {
+  max-width: 100%;
+  border-radius: 22px;
+}

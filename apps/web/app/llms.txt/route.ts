@@ -54,28 +54,26 @@ export async function GET() {
   const sections: string[] = [PREAMBLE];
 
   const [categories, solutions] = await Promise.all([
-    apiGet<{ items?: Listed[] }>('/categories', { culture: L, tags: [tag.categories()] }),
-    apiGet<{ items?: Listed[] }>('/solutions', { culture: L, tags: [tag.solutions()] }),
+    apiGet<Listed[]>('/categories', { culture: L, tags: [tag.categories()] }),
+    apiGet<Listed[]>('/solutions', { culture: L, tags: [tag.solutions()] }),
   ]);
 
-  if (categories?.items?.length) {
+  if (categories?.length) {
     sections.push(
-      [
-        '## Product lines',
-        '',
-        ...categories.items.map((c) => bullet(c, `${ROUTES.products}/${c.slug}`)),
-      ].join('\n'),
+      ['## Product lines', '', ...categories.map((c) => bullet(c, `${ROUTES.products}/${c.slug}`))].join(
+        '\n',
+      ),
     );
   }
 
-  if (solutions?.items?.length) {
+  if (solutions?.length) {
     sections.push(
       [
         '## Solutions',
         '',
         '_Industry pages: what the material has to do in that application, and which products fit._',
         '',
-        ...solutions.items.map((s) => bullet(s, `${ROUTES.solutions}/${s.slug}`)),
+        ...solutions.map((s) => bullet(s, `${ROUTES.solutions}/${s.slug}`)),
       ].join('\n'),
     );
   }

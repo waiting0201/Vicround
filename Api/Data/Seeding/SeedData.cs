@@ -9,7 +9,8 @@ internal sealed record CategorySeed(string Slug, CategoryType Type, string Accen
 
 internal sealed record SolutionSeed(string Slug, bool IsNew, Text Name, Text MenuNote);
 
-internal sealed record PageSeed(string Slug, PageTemplate Template, string? ParentSlug, Text Title);
+internal sealed record PageSeed(
+    string Slug, PageTemplate Template, string? ParentSlug, Text Title, string? PathPrefix = null);
 
 internal sealed record LocationSeed(LocationType Type, string CountryCode, string City, string Phone, Text Name, Text AddressLine);
 
@@ -63,7 +64,7 @@ internal static class SeedData
         new("sports-eyewear", false, new Text("Sports Eye-Wear", "運動眼鏡"), new Text("Anti-fog, polarised and comfort foam", "防霧、偏光與舒適泡棉")),
     ];
 
-    /// <summary>11 個系統頁（<c>IsSystemPage = 1</c>，不可刪）。</summary>
+    /// <summary>14 個系統頁（<c>IsSystemPage = 1</c>，不可刪）。</summary>
     public static readonly PageSeed[] Pages =
     [
         new("home", PageTemplate.Home, null, new Text("Home", "首頁")),
@@ -77,6 +78,12 @@ internal static class SeedData
         new("contact", PageTemplate.Contact, null, new Text("Contact Us", "聯絡我們")),
         new("privacy", PageTemplate.Legal, null, new Text("Privacy & Legal", "隱私權與法律聲明")),
         new("member", PageTemplate.MemberGateway, null, new Text("Member Area", "會員專區")),
+
+        // Resources 底下的兩個可索引子頁。FAQ 的網址是 /resources/faq，因此帶 PathPrefix；
+        // News 掛在 Resources 之下（IA），網址卻是 /news —— 兩者的差別正是 PathPrefix 存在的理由。
+        new("faq", PageTemplate.Standard, "resources", new Text("FAQ", "常見問題"), "resources"),
+        new("downloads", PageTemplate.Standard, "resources", new Text("Downloads", "技術規格下載"), "resources"),
+        new("news", PageTemplate.Standard, "resources", new Text("News & Exhibitions", "新聞與展會")),
     ];
 
     /// <summary>地址與電話沿用確認稿的佔位值（含 <c>000</c>），待客戶提供後由編輯者於後台更正。</summary>

@@ -19,6 +19,18 @@ const API_BASE = process.env.API_BASE ?? 'http://localhost:7071/api/v1';
 
 export type ApiResult<T> = T | null;
 
+/**
+ * Content API 的統一信封（docs/cms-api.md）。**所有端點都回這個形狀，沒有裸 data。**
+ * 前端一律以 `code` 分支，不得比對 `message` 字串。
+ */
+type Envelope<T> = {
+  success: boolean;
+  code: string | null;
+  data: T | null;
+  message: string;
+  errors: string[];
+};
+
 type GetOptions = {
   /** 內容文化。列表與詳情一律要帶，否則後端會落回預設語系。 */
   culture?: Locale;
@@ -49,7 +61,11 @@ export async function apiGet<T>(path: string, options: GetOptions = {}): Promise
       next: { tags: options.tags ?? [] },
     });
     if (!res.ok) return null;
-    return (await res.json()) as T;
+
+    // 信封在這一層就拆掉：呼叫端拿到的是 data 本身，不必每一頁各寫一次 `.data`，
+    // 也就不會有人忘了檢查 `success`。
+    const envelope = (await res.json()) as Envelope<T>;
+    return envelope.success ? (envelope.data ?? null) : null;
   } catch {
     return null;
   }
@@ -95,19 +111,20 @@ export const tag = {
   sitemap: () => 'sitemap',
 };
 
-/** `GET /api/v1/sitemap` 的一列。sitemap.xml 與 hreflang 都以它為準。 */
+/**
+ * `GET /api/v1/sitemap` 的一列。sitemap.xml 與 hreflang 都以它為準。
+ *
+ * <p>
+ * `cultures` 是**這個路徑真的有翻譯的語系**（後端算好的），不是「支援的語系」——
+ * 兩者混為一談會讓 sitemap 宣告一批不存在的頁面。
+ * </p>
+ */
 export type SitemapEntry = {
   path: string;
-  locales: string[];
   lastModified: string;
-  changeFreq?: string;
-  priority?: number;
+  cultures: Locale[];
 };
 
 export async function getSitemapEntries(): Promise<SitemapEntry[]> {
-  const data = await apiGet<{ items?: SitemapEntry[] } | SitemapEntry[]>('/sitemap', {
-    tags: [tag.sitemap()],
-  });
-  if (!data) return [];
-  return Array.isArray(data) ? data : (data.items ?? []);
+  return (await apiGet<SitemapEntry[]>('/sitemap', { tags: [tag.sitemap()] })) ?? [];
 }

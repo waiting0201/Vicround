@@ -164,8 +164,17 @@ public sealed record ContentBlockItemDto
 public sealed record PageDetailDto
 {
     public required string Slug { get; init; }
+
+    /// <summary>已組好的公開路徑（不含語系前綴），例如 <c>/resources/faq</c>。</summary>
+    public required string Path { get; init; }
+
     public required string Template { get; init; }
+
+    /// <summary>資訊架構上的父頁；<b>不是網址的一部分</b>（見 <see cref="Path"/>）。</summary>
     public string? ParentSlug { get; init; }
+
+    /// <summary>頁首 banner 圖（<c>Pages.HeroMediaAssetId</c>）。尚未指定時前台自己退回佔位樣式。</summary>
+    public string? BannerImageUrl { get; init; }
     public string? Title { get; init; }
     public string? Eyebrow { get; init; }
     public string? Subtitle { get; init; }

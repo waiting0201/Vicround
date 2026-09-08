@@ -189,6 +189,7 @@
     "other": "Other applications"
   },
   "faq": {
+    "all": "All questions",
     "result": "{count} questions",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all"
@@ -197,9 +198,29 @@
     "contents": "Contents",
     "keepReading": "Keep reading",
     "share": "Share",
-    "copyLink": "Copy link"
+    "copyLink": "Copy link",
+    "readingTime": "{minutes} min read",
+    "heroPlaceholder": "Article hero · 2100×900",
+    "previous": "← Previous",
+    "next": "Next →",
+    "eventCta": "Book a meeting",
+    "eventDates": "Dates",
+    "eventVenue": "Venue",
+    "eventBooth": "Booth",
+    "eventOnBooth": "On the booth",
+    "eventTitle": "Event details"
   },
   "news": {
-    "more": "More news"
+    "more": "More news",
+    "filters": {
+      "all": "All",
+      "companyNews": "Company",
+      "productNews": "Product",
+      "exhibition": "Events",
+      "certificationNews": "Certification",
+      "insight": "Insight",
+      "technicalArticle": "Technical article"
+    },
+    "readMore": "Read more →"
   }
 }

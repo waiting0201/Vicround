@@ -49,7 +49,7 @@ async function getMap(): Promise<Map<string, Locale[]>> {
 async function load(): Promise<Map<string, Locale[]>> {
   const map = new Map<string, Locale[]>();
   for (const entry of await getSitemapEntries()) {
-    const locales = entry.locales.filter(isLocale);
+    const locales = entry.cultures.filter(isLocale);
     if (locales.length > 0) map.set(normalizePath(entry.path), locales);
   }
   return map;

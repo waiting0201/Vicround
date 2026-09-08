@@ -172,6 +172,7 @@ public sealed class BootstrapSeeder(
             {
                 Slug = seed.Slug,
                 Template = seed.Template,
+                PathPrefix = seed.PathPrefix,
                 IsSystemPage = true,
                 Status = ContentStatus.Published,
                 SortOrder = index,

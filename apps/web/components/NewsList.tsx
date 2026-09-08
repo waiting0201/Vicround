@@ -13,7 +13,10 @@ import Link from 'next/link';
  */
 export type NewsView = {
   slug: string;
+  /** 機器可讀（`<time dateTime>`）。 */
   date: string;
+  /** 依語系格式化後的日期，畫面上顯示的是這一個。 */
+  dateLabel: string;
   category: string;
   categoryLabel: string;
   title: string;
@@ -57,7 +60,7 @@ export function NewsList({
                 dateTime={item.date}
                 style={{ font: "400 0.8125rem/1.4 'IBM Plex Mono', monospace", color: 'var(--page-faint)' }}
               >
-                {item.date}
+                {item.dateLabel}
               </time>
               <span
                 style={{

@@ -20,16 +20,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await getSitemapEntries();
 
   return entries.flatMap((entry) =>
-    entry.locales.map((locale) => ({
+    entry.cultures.map((locale) => ({
       url: `${SITE_URL}/${locale}${entry.path}`,
       lastModified: new Date(entry.lastModified),
-      changeFrequency: entry.changeFreq as MetadataRoute.Sitemap[number]['changeFrequency'],
-      priority: entry.priority,
       alternates: {
         languages: {
-          ...Object.fromEntries(entry.locales.map((l) => [l, `${SITE_URL}/${l}${entry.path}`])),
+          ...Object.fromEntries(entry.cultures.map((l) => [l, `${SITE_URL}/${l}${entry.path}`])),
           // x-default 指向預設語系；該路徑沒有 en 版本時就不宣告，而不是硬指過去產生 404
-          ...(entry.locales.includes(DEFAULT_LOCALE)
+          ...(entry.cultures.includes(DEFAULT_LOCALE)
             ? { 'x-default': `${SITE_URL}/${DEFAULT_LOCALE}${entry.path}` }
             : {}),
         },

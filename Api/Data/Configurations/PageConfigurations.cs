@@ -10,6 +10,11 @@ public class PageConfiguration : SluggedEntityConfiguration<Page>
 
     protected override void ConfigureEntity(EntityTypeBuilder<Page> builder)
     {
+        // 網址的一段，因此跟 Slug 同一組規則：小寫英數與連字號、大小寫敏感定序。
+        builder.Property(p => p.PathPrefix)
+            .HasMaxLength(DbConventions.SlugMaxLength)
+            .UseCollation(DbConventions.SlugCollation);
+
         builder.Property(p => p.LegacySourceKey).HasMaxLength(DbConventions.LegacySourceKeyMaxLength);
 
         builder.HasOne(p => p.ParentPage)

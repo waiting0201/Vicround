@@ -83,6 +83,65 @@ public sealed partial class ContentImportSeeder
         Count("文章", added);
 
         await LinkArticleTaxonomyAsync(candidates.Select(c => c.Node), cancellationToken);
+        await LinkExhibitionsAsync(sampleNews, cancellationToken);
+    }
+
+    /// <summary>
+    /// 把展會型文章接到 <c>Exhibitions</c>，並補上確認稿裡已經拆好欄位的場館與攤位。
+    /// <para>
+    /// 展會清單那一段（<c>events.items</c>）把場地、攤位與展出內容寫在同一句敘述裡，
+    /// 但新聞內頁的 <c>event.facts</c> 是拆好的 —— 兩邊講的是同一場展會，
+    /// 所以在這裡合併：文章與展會以 slug 對應，欄位只補空的。
+    /// </para>
+    /// </summary>
+    private async Task LinkExhibitionsAsync(JsonObject? sampleNews, CancellationToken cancellationToken)
+    {
+        var exhibitions = await db.Exhibitions
+            .AsTracking()
+            .Include(e => e.Translations)
+            .ToListAsync(cancellationToken);
+
+        if (exhibitions.Count == 0)
+        {
+            return;
+        }
+
+        var bySlug = exhibitions.ToDictionary(e => e.Slug, StringComparer.Ordinal);
+        var linked = 0;
+
+        var articles = await db.Articles
+            .AsTracking()
+            .Where(a => a.Type == ArticleType.Exhibition && a.ExhibitionId == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var article in articles.Where(a => bySlug.ContainsKey(a.Slug)))
+        {
+            article.ExhibitionId = bySlug[article.Slug].Id;
+            linked++;
+        }
+
+        // 事實面板的欄位。用英文標籤比對是可以的：這是一次性匯入確認稿，
+        // 標籤本身就是稿件的一部分，不是使用者輸入。
+        if (sampleNews.Str("slug") is { } slug && bySlug.TryGetValue(slug, out var exhibition))
+        {
+            var facts = ((JsonNode?)sampleNews).Prop("event").Arr("facts") ?? [];
+            var byLabel = facts
+                .Where(f => f.LocAny("label")?.En is not null)
+                .ToDictionary(f => f.LocAny("label")!.Value.En, f => f.LocAny("value"), StringComparer.OrdinalIgnoreCase);
+
+            exhibition.BoothNumber ??= byLabel.GetValueOrDefault("Booth")?.En;
+
+            foreach (var translation in exhibition.Translations)
+            {
+                translation.VenueName ??= byLabel.GetValueOrDefault("Venue")?.For(translation.Culture);
+                translation.OnBoothNote ??= byLabel.GetValueOrDefault("On the booth")?.For(translation.Culture);
+                translation.CtaLabel ??= ((JsonNode?)sampleNews).Prop("event").LocAny("cta")?.For(translation.Culture);
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        Count("展會連結", linked);
     }
 
     private static ArticleType MapNewsType(string? category) => category switch

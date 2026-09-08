@@ -189,6 +189,7 @@
     "other": "其他應用"
   },
   "faq": {
+    "all": "全部問題",
     "result": "{count} 個問題",
     "expandAll": "全部展開",
     "collapseAll": "全部收合"
@@ -197,9 +198,29 @@
     "contents": "目錄",
     "keepReading": "延伸閱讀",
     "share": "分享",
-    "copyLink": "複製連結"
+    "copyLink": "複製連結",
+    "readingTime": "閱讀約 {minutes} 分鐘",
+    "heroPlaceholder": "文章主圖 · 2100×900",
+    "previous": "← 上一則",
+    "next": "下一則 →",
+    "eventCta": "預約會面",
+    "eventDates": "日期",
+    "eventVenue": "場館",
+    "eventBooth": "攤位",
+    "eventOnBooth": "駐點人員",
+    "eventTitle": "展會資訊"
   },
   "news": {
-    "more": "更多消息"
+    "more": "更多新聞",
+    "filters": {
+      "all": "全部",
+      "companyNews": "公司",
+      "productNews": "產品",
+      "exhibition": "活動",
+      "certificationNews": "認證",
+      "insight": "產業洞察",
+      "technicalArticle": "技術文章"
+    },
+    "readMore": "閱讀更多 →"
   }
 }

@@ -19,12 +19,14 @@ public sealed class PageReadService(IDbConnection db) : IPageReadService
     {
         var row = await db.QuerySingleOrDefaultAsync<PageRow>(
             """
-            SELECT e.Id, e.Slug, e.Template, p.Slug AS ParentSlug,
+            SELECT e.Id, e.Slug, e.Template, e.PathPrefix, p.Slug AS ParentSlug,
+                   CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS BannerImageUrl,
                    t.Title, t.Eyebrow, t.Subtitle, t.BannerTitle, t.BannerDescription,
                    t.CtaEyebrow, t.CtaHeadline, t.CtaSubcopy, t.Body, t.LastReviewedLabel,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Pages e
             LEFT JOIN Pages p ON p.Id = e.ParentPageId
+            LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
             INNER JOIN PageTranslations t ON t.PageId = e.Id AND t.Culture = @Culture
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
@@ -33,6 +35,8 @@ public sealed class PageReadService(IDbConnection db) : IPageReadService
         return row is null ? null : new PageDetailDto
         {
             Slug = row.Slug,
+            Path = PublicPaths.Page(row.Slug, row.PathPrefix),
+            BannerImageUrl = row.BannerImageUrl,
             Template = ContentReaders.Camel(((PageTemplate)row.Template).ToString()),
             ParentSlug = row.ParentSlug,
             Title = row.Title,
@@ -61,7 +65,7 @@ public sealed class PageReadService(IDbConnection db) : IPageReadService
     public async Task<IReadOnlyList<SitemapEntryDto>> SitemapAsync()
     {
         const string Query = """
-            SELECT '/' + e.Slug AS Path, e.UpdatedAt, t.Culture
+            SELECT COALESCE('/' + e.PathPrefix, '') + '/' + e.Slug AS Path, e.UpdatedAt, t.Culture
             FROM Pages e INNER JOIN PageTranslations t ON t.PageId = e.Id
             WHERE e.Status = @Published AND e.Slug <> 'home'
             UNION ALL
@@ -103,7 +107,7 @@ public sealed class PageReadService(IDbConnection db) : IPageReadService
     private sealed record SitemapRow(string Path, DateTime UpdatedAt, string Culture);
 
     private sealed record PageRow(
-        int Id, string Slug, byte Template, string? ParentSlug,
+        int Id, string Slug, byte Template, string? PathPrefix, string? ParentSlug, string? BannerImageUrl,
         string? Title, string? Eyebrow, string? Subtitle, string? BannerTitle, string? BannerDescription,
         string? CtaEyebrow, string? CtaHeadline, string? CtaSubcopy, string? Body, string? LastReviewedLabel,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);

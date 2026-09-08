@@ -9,9 +9,19 @@ public class Page : SluggedEntity, IRoutable
 {
     public PageTemplate Template { get; set; }
 
-    /// <summary><c>/resources/faq</c>、sustainability → about 的層級。</summary>
+    /// <summary>資訊架構上的父頁（sustainability / partnership → about）。<b>不決定網址</b>。</summary>
     public int? ParentPageId { get; set; }
     public Page? ParentPage { get; set; }
+
+    /// <summary>
+    /// 網址前綴：<c>/{locale}/{PathPrefix}/{Slug}</c>，<c>null</c> 則是 <c>/{locale}/{Slug}</c>。
+    /// <para>
+    /// 之所以不從 <see cref="ParentPageId"/> 推導：sustainability 的父頁是 about，網址卻是
+    /// <c>/sustainability</c>；而 FAQ 的網址是 <c>/resources/faq</c>。IA 的層級與網址的層級
+    /// 在本站是兩件事（docs/sitemap.md），推導出來的只會有一個是對的。
+    /// </para>
+    /// </summary>
+    public string? PathPrefix { get; set; }
 
     /// <summary>系統頁不可刪（home / privacy / contact…）。</summary>
     public bool IsSystemPage { get; set; }

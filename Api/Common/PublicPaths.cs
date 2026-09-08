@@ -20,8 +20,16 @@ public static class PublicPaths
         _ => $"/news/{slug}",
     };
 
-    /// <summary>首頁的 slug 是 <c>home</c>，但網址是 <c>/</c>（sitemap 也照這條規則）。</summary>
-    public static string Page(string slug) => slug == "home" ? "/" : $"/{slug}";
+    /// <summary>
+    /// 首頁的 slug 是 <c>home</c>，但網址是 <c>/</c>（sitemap 也照這條規則）。
+    /// <paramref name="pathPrefix"/> 給定時是 <c>/{prefix}/{slug}</c>，例如 <c>/resources/faq</c>。
+    /// </summary>
+    public static string Page(string slug, string? pathPrefix = null) => slug switch
+    {
+        "home" => "/",
+        _ when !string.IsNullOrEmpty(pathPrefix) => $"/{pathPrefix}/{slug}",
+        _ => $"/{slug}",
+    };
 
     public static string Category(string slug) => $"/products/{slug}";
 

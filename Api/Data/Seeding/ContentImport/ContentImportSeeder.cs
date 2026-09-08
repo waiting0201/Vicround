@@ -146,6 +146,23 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
         ]),
         // privacy 刻意沒有版塊：純長文走 PageTranslations.Body（database.md §09）。
         new("privacy", "privacy", "privacy", []),
+
+        // Resources 的兩個子頁。FAQ 沒有版塊——題目本身是強型別表（FaqItems），
+        // 頁面只需要 banner；清單由前台打 /v1/faq 取得。
+        new("faq", "faq", "faq", []),
+
+        // 下載中心在確認稿裡是 Resources 的一個區段，本站的資訊架構另給它可索引的網址
+        // （docs/sitemap.md）。banner 沿用 Resources 的那一份——同一份文案先各自落一列，
+        // 之後編輯者可以分開改。
+        new("resources", "resources", "downloads",
+        [
+            new("downloads", BlockType.DownloadList, "downloads"),
+        ]),
+        new("articles", "newsIndex", "news",
+        [
+            new("list", BlockType.ArticleList, "list", Settings: """{"type":"news","limit":12}"""),
+            new("events", BlockType.ExhibitionList, "events", Settings: """{"upcoming":true}"""),
+        ]),
     ];
 
     private async Task ImportPagesAsync(ContentSource source, CancellationToken cancellationToken)
@@ -171,11 +188,31 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
                 continue;
             }
 
+            SynthesizeSections(spec.PageSlug, root);
             EnrichPageTranslations(page, root, spec.PageSlug);
             AddPageBlocks(page, root, spec);
 
             await db.SaveChangesAsync(cancellationToken);
             db.ChangeTracker.Clear();
+        }
+    }
+
+    /// <summary>
+    /// 把來源裡「不是 section 形狀」的欄位補成 section，讓通用轉換吃得下。
+    /// <para>
+    /// news 的列表標題在確認稿裡是兩個扁平字串（<c>listEyebrow</c> / <c>listTitle</c>），
+    /// 不是一個物件。與其為這一頁另寫一支 mapper，不如把來源補成標準形狀。
+    /// </para>
+    /// </summary>
+    private static void SynthesizeSections(string pageSlug, JsonObject root)
+    {
+        if (pageSlug == "news" && root["list"] is null && root["listTitle"] is not null)
+        {
+            root["list"] = new JsonObject
+            {
+                ["eyebrow"] = root["listEyebrow"]?.DeepClone(),
+                ["title"] = root["listTitle"]?.DeepClone(),
+            };
         }
     }
 
