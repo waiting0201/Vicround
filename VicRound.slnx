@@ -1,19 +1,6 @@
 <Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/src/Application/">
-    <Project Path="src/Application/VicRound.Application.csproj" />
-  </Folder>
-  <Folder Name="/src/Domain/">
-    <Project Path="src/Domain/VicRound.Domain.csproj" />
-  </Folder>
-  <Folder Name="/src/Functions/">
-    <Project Path="src/Functions/VicRound.Functions.csproj" />
-  </Folder>
-  <Folder Name="/src/Infrastructure/">
-    <Project Path="src/Infrastructure/VicRound.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/tests/" />
-  <Folder Name="/tests/Application.Tests/">
-    <Project Path="tests/Application.Tests/VicRound.Application.Tests.csproj" />
+  <Project Path="Api/VicRound.Api.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Api.Tests/VicRound.Api.Tests.csproj" />
   </Folder>
 </Solution>

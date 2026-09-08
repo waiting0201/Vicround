@@ -25,8 +25,10 @@ Content is editor-managed through a headless CMS.
 
 ## Stack
 
-- **Backend / CMS API** — **Azure Functions (.NET 10 isolated worker, C#)**, HTTP-triggered;
-  EF Core + SQL Server
+- **Backend / CMS API** — **Azure Functions (.NET 10 isolated worker + ASP.NET Core Integration)**，
+  單一 `Api/` 專案（namespace `VicRound.Api`）。**唯一 HTTP entry point 是 `RouterFunction`（catch-all）**，
+  分派與授權集中在 `AppRouter`；**EF Core 寫入 + Dapper 讀取雙軌**，schema 權威為
+  `Api/Data/Migrations/`。形狀對齊姊妹專案 NTI 的 `docs/10-backend-design.md`（2026-09-08 決定）
 - **Frontend** — **Next.js (App Router, React/TypeScript)**, **SSR** for SEO, **locale-prefixed
   routing** (`/en`, `/zh-Hant`, default `en`)
 - **CMS** — **self-built** admin app: a **Vite + React SPA** (`apps/admin`) built into
@@ -116,23 +118,23 @@ dotnet test  VicRound.slnx
 dotnet test  VicRound.slnx --filter "FullyQualifiedName~Pbkdf2PasswordHasherTests"   # 單一組測試
 
 # EF Core：-p 是 migration 所在的專案，-s 是提供設定的 startup 專案
-dotnet ef migrations add <Name> -p src/Infrastructure -s src/Functions
-dotnet ef database update       -p src/Infrastructure -s src/Functions
-dotnet ef migrations has-pending-model-changes -p src/Infrastructure -s src/Functions
+dotnet ef migrations add <Name> -p Api -s Api
+dotnet ef database update       -p Api -s Api
+dotnet ef migrations has-pending-model-changes -p Api -s Api
 
 # 連線字串一律走環境變數，永不進版控。本機（SQL Server container，資料庫 VicRound）：
 export VICROUND_SQL_CONNECTION='Server=localhost,1433;Database=VicRound;User Id=sa;Password=<local-password>;TrustServerCertificate=True'
 
-# 三層 seeder / 匯入（全部冪等，只補缺不覆寫）。VR=src/Functions/bin/Debug/net10.0/VicRound.Functions.dll
+# 三層 seeder / 匯入（全部冪等，只補缺不覆寫）。VR=Api/bin/Debug/net10.0/VicRound.Api.dll
 dotnet $VR seed [--migrate]        # B 層：super admin、產品線、Solutions、Pages、導覽…
 node scripts/export-content.mjs    # 把 apps/web/content/*.ts 倒成 artifacts/content-export.json
 dotnet $VR import-content          # C 層：確認稿文案進翻譯表
 dotnet $VR import-legacy           # C 層：舊站圖片→Blob、blog→Articles、舊網址→301
                                    #（需 Azurite；reference/ 不在版控，本機才跑得動）
 
-# Functions host（需 Core Tools 與 Azurite；設定放 src/Functions/local.settings.json）
-azurite --silent --location ~/.azurite &
-cd src/Functions && func start               # GET http://localhost:7071/api/v1/health
+# Functions host（需 Core Tools 與 Azurite；設定放 Api/local.settings.json）
+azurite --silent --skipApiVersionCheck --location ~/.azurite &   # 本機 Azurite 版本較舊，需略過 API 版本檢查
+cd Api && func start                         # GET http://localhost:7071/api/v1/health
 
 # ── 前台與後台 — 從 repo 根目錄（pnpm workspace）─────────────────────
 pnpm install

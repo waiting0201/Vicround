@@ -36,24 +36,54 @@ after a publish-time `revalidateTag`. SWA's Free plan supplies the global CDN + 
 
 ## Solution layout
 
-A layered split keeps the three API surfaces and the EF model independent of the Functions host.
+三個 API surface 共用一個 Functions 專案，靠 `AppRouter` 的三張路由表分隔；
+分層由資料夾與鐵律保證，不靠專案邊界。
+
+> **2026-09-08 決策**：後端形狀改為對齊姊妹專案 NTI 的施工標準
+> （`/Users/tim/webapps/NTI/docs/10-backend-design.md`，其範本 `Jabez/Api` 已上線）。
+> 原本規劃的四層專案（Domain / Application / Infrastructure / Functions）收斂成**單一 `Api/` 專案**，
+> 兩個專案的形狀一致，維護時不必在兩套心智模型間切換。
 
 ```
-src/
-  Functions/           Azure Functions host (.NET 10 isolated) — HTTP triggers, DI, both surfaces
-                       (fn-public + fn-admin can be one project with two trigger groups,
-                        or two Function apps sharing Application/Infrastructure)
-  Application/         Use-cases, DTOs, validators, mapping, culture resolution
-  Domain/              Entities + translation entities, enums, domain rules
-  Infrastructure/      EF Core DbContext, migrations, repositories, Blob/email clients
+Api/                   Azure Functions（.NET 10 isolated + ASP.NET Core Integration），namespace VicRound.Api
+  Functions/           trigger binding，僅此而已 —— RouterFunction 是唯一 HTTP entry point（catch-all）
+  Routing/             AppRouter 四個 partial：分派 + 授權
+                         .Public.cs   /v1/**          匿名唯讀，列舉式白名單
+                         .Account.cs  /v1/account/**  會員 JWT，強制 no-store
+                         .Admin.cs    /admin/**       後台 JWT + 權限表（預設拒絕）
+  Middleware/          ExceptionMiddleware（worker 層，非 ASP.NET Core middleware）
+  Handlers/            一個單元一個；HTTP 解析／驗證／協調／ApiResponse 包裝
+  Services/            跨 Handler 的共用服務（JWT／密碼／Blob）
+    Dapper/            <Unit>ReadService —— 純讀取
+  Models/
+    Entities/          EF Core POCO（14 個功能單元的 77 張表）
+    Dtos/              一單元一檔
+  Data/
+    VicRoundDbContext.cs + Configurations/ + Migrations/    ★ schema 權威來源
+    Seeding/           B 層 BootstrapSeeder、C 層 ContentImport / LegacyImport
+  Common/              ApiResponse / AppException / ErrorCodes / PermissionCodes / Constants
 apps/
   web/                 Next.js app — public site only (app/[locale]/**), SSR + SEO/GEO
   admin/               Vite + React SPA — the CMS; builds into apps/web/public/admin, served /admin
 tests/
-  Functions.Tests/     integration tests against the Functions host
-  Application.Tests/    unit tests
+  Api.Tests/           慣例守門測試（EF 模型是否符合 database.md 的全域慣例）+ 單元測試
 docs/                  this folder
 ```
+
+### 分層鐵律
+
+1. **Handler 內禁止直接寫 SQL** —— 讀走 Dapper ReadService，寫走 `VicRoundDbContext`。
+2. **ReadService 禁止寫入** —— 任何 INSERT/UPDATE/DELETE 一律 EF Core。
+3. **Service 禁止回傳 HTTP** —— 只有 Handler 呼叫 `ApiResponse.Ok(...)` / `Fail(...)`。
+4. **Handler 內禁止重複檢查權限碼** —— 授權集中在 `AppRouter`。
+5. **禁止引入**：Repository Pattern、AutoMapper、自訂 IoC 容器。
+6. **DI 全部手寫在 `Program.cs`**，不用組件掃描 —— 註冊清單本身就是模組清冊。
+   碰 `DbContext` / `IDbConnection` 的一律 `Scoped`，沒有例外。
+
+> **與 NTI 的兩處刻意差異**：(1) 密碼雜湊用 PBKDF2 而非 BCrypt —— VicRound 要求零第三方
+> 相依以縮短冷啟動（[database.md §14.2](database.md#142-密碼雜湊users-與-members-共用同一格式)）；
+> (2) VicRound 有**兩套身分**（後台 + 前台會員），因此 `AppRouter` 驗兩種 audience，
+> 而 NTI 只有後台一套。
 
 **前台與後台是兩個獨立的 app，只共用一個網域。** `apps/web` 是公開站，每一條路由都在
 `[locale]` 之下、server-render、帶完整 metadata 與 JSON-LD；`apps/admin` 是後台 SPA，

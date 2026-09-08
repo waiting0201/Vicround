@@ -248,7 +248,9 @@ apps/web/
 1. ~~建 `src/` 的 .NET solution 與 EF Core 模型~~ ✅ 2026-09-08
 2. ~~在能跑的 SQL Server 上套用 migration 與 seeder~~ ✅ 2026-09-08（本機 container）
 2b. ~~把確認稿文案與舊站資料匯入資料庫與 Blob~~ ✅ 2026-09-08
-3. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支，讓前台可以拔掉 `content/`
+2c. ~~後端形狀對齊 NTI 的施工標準（Router / ApiResponse / EF+Dapper 雙軌）~~ ✅ 2026-09-08
+3. Content API 先做 `categories` / `products` / `solutions` / `pages` / `sitemap` 五支
+   （每支＝一個 Handler + 一個 Dapper ReadService + 補公開白名單），讓前台可以拔掉 `content/`
 4. Admin API —— 後台畫面已就緒，接上後把 `VITE_ADMIN_MOCK` 設成 `0` 即可
 5. CI/CD 與 Azure 佈署（[docs/azure-deployment.md](docs/azure-deployment.md)）
 6. Account API 與會員專區（需先補設計稿）

@@ -1,0 +1,90 @@
+namespace VicRound.Api.Common;
+
+/// <summary>
+/// 後台權限碼。值域與 <c>apps/admin/src/lib/resources.ts</c> 的 27 個單元<b>逐字對應</b>，
+/// 不做單複數轉換——後台畫面、路由表與資料庫的角色設定必須是同一組字串。
+/// </summary>
+public static class PermissionCodes
+{
+    public const string CategoriesView = "categories.view";
+    public const string CategoriesEdit = "categories.edit";
+    public const string CategoriesDelete = "categories.delete";
+    public const string ProductsView = "products.view";
+    public const string ProductsEdit = "products.edit";
+    public const string ProductsDelete = "products.delete";
+    public const string SolutionsView = "solutions.view";
+    public const string SolutionsEdit = "solutions.edit";
+    public const string SolutionsDelete = "solutions.delete";
+    public const string ArticlesView = "articles.view";
+    public const string ArticlesEdit = "articles.edit";
+    public const string ArticlesDelete = "articles.delete";
+    public const string PagesView = "pages.view";
+    public const string PagesEdit = "pages.edit";
+    public const string PagesDelete = "pages.delete";
+    public const string ExhibitionsView = "exhibitions.view";
+    public const string ExhibitionsEdit = "exhibitions.edit";
+    public const string ExhibitionsDelete = "exhibitions.delete";
+    public const string FaqCategoriesView = "faq-categories.view";
+    public const string FaqCategoriesEdit = "faq-categories.edit";
+    public const string FaqCategoriesDelete = "faq-categories.delete";
+    public const string FaqItemsView = "faq-items.view";
+    public const string FaqItemsEdit = "faq-items.edit";
+    public const string FaqItemsDelete = "faq-items.delete";
+    public const string DownloadsView = "downloads.view";
+    public const string DownloadsEdit = "downloads.edit";
+    public const string DownloadsDelete = "downloads.delete";
+    public const string ArticleTagsView = "article-tags.view";
+    public const string ArticleTagsEdit = "article-tags.edit";
+    public const string ArticleTagsDelete = "article-tags.delete";
+    public const string AuthorsView = "authors.view";
+    public const string AuthorsEdit = "authors.edit";
+    public const string AuthorsDelete = "authors.delete";
+    public const string CertificationsView = "certifications.view";
+    public const string CertificationsEdit = "certifications.edit";
+    public const string CertificationsDelete = "certifications.delete";
+    public const string MilestonesView = "milestones.view";
+    public const string MilestonesEdit = "milestones.edit";
+    public const string MilestonesDelete = "milestones.delete";
+    public const string LocationsView = "locations.view";
+    public const string LocationsEdit = "locations.edit";
+    public const string LocationsDelete = "locations.delete";
+    public const string TestimonialsView = "testimonials.view";
+    public const string TestimonialsEdit = "testimonials.edit";
+    public const string TestimonialsDelete = "testimonials.delete";
+    public const string PartnerBrandsView = "partner-brands.view";
+    public const string PartnerBrandsEdit = "partner-brands.edit";
+    public const string PartnerBrandsDelete = "partner-brands.delete";
+    public const string ContactChannelsView = "contact-channels.view";
+    public const string ContactChannelsEdit = "contact-channels.edit";
+    public const string ContactChannelsDelete = "contact-channels.delete";
+    public const string ProcessFlowsView = "process-flows.view";
+    public const string ProcessFlowsEdit = "process-flows.edit";
+    public const string ProcessFlowsDelete = "process-flows.delete";
+    public const string MembersView = "members.view";
+    public const string MembersEdit = "members.edit";
+    public const string MembersDelete = "members.delete";
+    public const string SampleRequestsView = "sample-requests.view";
+    public const string SampleRequestsEdit = "sample-requests.edit";
+    public const string SampleRequestsDelete = "sample-requests.delete";
+    public const string ContactInquiriesView = "contact-inquiries.view";
+    public const string ContactInquiriesEdit = "contact-inquiries.edit";
+    public const string ContactInquiriesDelete = "contact-inquiries.delete";
+    public const string BusinessDomainsView = "business-domains.view";
+    public const string BusinessDomainsEdit = "business-domains.edit";
+    public const string BusinessDomainsDelete = "business-domains.delete";
+    public const string NavigationView = "navigation.view";
+    public const string NavigationEdit = "navigation.edit";
+    public const string NavigationDelete = "navigation.delete";
+    public const string RedirectsView = "redirects.view";
+    public const string RedirectsEdit = "redirects.edit";
+    public const string RedirectsDelete = "redirects.delete";
+    public const string SiteSettingsView = "site-settings.view";
+    public const string SiteSettingsEdit = "site-settings.edit";
+    public const string SiteSettingsDelete = "site-settings.delete";
+    public const string MediaView = "media.view";
+    public const string MediaEdit = "media.edit";
+    public const string MediaDelete = "media.delete";
+    public const string UsersView = "users.view";
+    public const string UsersEdit = "users.edit";
+    public const string UsersDelete = "users.delete";
+}

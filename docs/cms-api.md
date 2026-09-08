@@ -21,6 +21,37 @@ Account API 掛在 `fn-public` 而非 `fn-admin`：前台 SSR 對它是同源呼
 `MemberRefreshTokens`、`SampleRequests`、`ContactInquiries`），**碰不到任何內容表**，SQL 端另用
 最小權限的 DB user。詳見 [database.md §14.1](database.md#141-api-surface)。
 
+## 回應信封與錯誤碼
+
+**所有端點一律回傳同一個信封，禁止回裸 data**（作法對齊 NTI `docs/10-backend-design.md` §5，
+實作在 `Api/Common/ApiResponse.cs`）：
+
+```jsonc
+// 成功
+{ "success": true,  "code": null, "data": { ... }, "message": "Success", "errors": [], "timestamp": "..." }
+// 失敗
+{ "success": false, "code": "AUTH_TOKEN_INVALID", "data": null,
+  "message": "缺少或無效的後台憑證。", "errors": [], "timestamp": "..." }
+```
+
+`code` 給程式判斷、`message` 給人看、`errors` 放細節。**前端一律以 `code` 分支，不得比對
+`message` 字串。** 錯誤碼值域見 `Api/Common/ErrorCodes.cs`；VicRound 相對 NTI 多一個
+`AUTH_MEMBER_NOT_APPROVED`（會員尚未通過審核）。
+
+## 路由與授權
+
+只有一個 HTTP trigger（`RouterFunction`，catch-all），`host.json` 的 `routePrefix` 為 `api`，
+其餘分派集中在 `AppRouter`：
+
+| 路徑 | 驗證 | 未登記時的行為 |
+| --- | --- | --- |
+| `/api/v1/**` | 匿名 | **列舉式白名單**（`AppRouter.Public.cs`），沒登記 → `404` |
+| `/api/v1/account/**` | Member JWT | 強制 `Cache-Control: no-store` |
+| `/api/admin/**` | Admin JWT | **預設拒絕**（`AppRouter.Admin.cs` 的權限表），沒登記 → `403` |
+
+兩張表都是「忘了補就會壞在開發階段」的設計：新增公開端點忘了補白名單會 404（不會靜悄悄
+變成公開端點），新增後台端點忘了補權限表會 403（不會靜默放行）。
+
 Each endpoint is an HTTP-triggered function; route templates give the paths below. Versioned
 (`v1`) so the Next.js client can pin a contract. JSON only. `camelCase`. Errors use RFC 7807
 `application/problem+json`. Keep functions thin — call into the `Application` layer.
