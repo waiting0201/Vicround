@@ -9,8 +9,10 @@ public sealed partial class ContentImportSeeder
     private static readonly string[] TitleFields = ["title", "headline", "name", "label", "standard", "property"];
     private static readonly string[] SubtitleFields = ["lead", "subcopy", "description", "platform", "scope", "kind", "category"];
     private static readonly string[] BodyFields = ["body", "note", "doc", "quote", "summary"];
+    // 順序有意義：取第一個存在的欄位。`stats` 要排在 `lines` 前面——產業頁的 why 區段
+    // 兩者都有，而卡片內容在 stats，lines 只是產品線 slug（那份關聯已經在 SolutionCategories）。
     private static readonly string[] ItemFields =
-        ["items", "pillars", "steps", "cards", "values", "capabilities", "groups", "rows", "lines", "channels", "tags", "facts"];
+        ["items", "pillars", "steps", "cards", "stats", "values", "capabilities", "groups", "rows", "lines", "channels", "tags", "facts"];
 
     private void AddPageBlocks(Page page, JsonObject root, PageSpec spec)
     {

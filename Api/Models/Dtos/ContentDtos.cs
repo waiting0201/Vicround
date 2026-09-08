@@ -80,6 +80,10 @@ public sealed record SolutionListItemDto
     public string? Name { get; init; }
     public string? MenuNote { get; init; }
     public string? Summary { get; init; }
+
+    /// <summary>產業卡上的產品線 chip（<c>SolutionCategories</c>）。</summary>
+    public IReadOnlyList<ChipDto> Categories { get; init; } = [];
+
     public bool HasRequestedCulture { get; init; }
 }
 

@@ -154,7 +154,8 @@
     "language": "語言",
     "menu": "選單",
     "breadcrumb": "麵包屑導覽",
-    "close": "關閉"
+    "close": "關閉",
+    "new": "新"
   },
   "account": {
     "dashboard": "總覽",
@@ -186,7 +187,8 @@
     "whereUsed": "應用領域"
   },
   "solutions": {
-    "other": "其他應用"
+    "other": "其他應用",
+    "explore": "了解這個應用 →"
   },
   "faq": {
     "all": "全部問題",

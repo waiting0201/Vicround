@@ -154,7 +154,8 @@
     "language": "Language",
     "menu": "Menu",
     "breadcrumb": "Breadcrumb",
-    "close": "Close"
+    "close": "Close",
+    "new": "New"
   },
   "account": {
     "dashboard": "Dashboard",
@@ -186,7 +187,8 @@
     "whereUsed": "Where it is used"
   },
   "solutions": {
-    "other": "Other applications"
+    "other": "Other applications",
+    "explore": "Explore this application →"
   },
   "faq": {
     "all": "All questions",

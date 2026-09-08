@@ -23,9 +23,9 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
     /// </summary>
     internal static async Task<IReadOnlyList<SolutionListItemDto>> ListAsync(IDbConnection db, string culture)
     {
-        var rows = await db.QueryAsync<SolutionRow>(
+        var rows = (await db.QueryAsync<SolutionRow>(
             """
-            SELECT e.Slug, e.IconName, e.IsNew,
+            SELECT e.Id, e.Slug, e.IconName, e.IsNew,
                    COALESCE(t.Name, f.Name) AS Name,
                    COALESCE(t.MenuNote, f.MenuNote) AS MenuNote,
                    COALESCE(t.Summary, f.Summary) AS Summary,
@@ -36,7 +36,11 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
             WHERE e.Status = @Published
             ORDER BY e.SortOrder
             """,
-            new { culture, DefaultCulture = CultureCodes.Default, Sql.Published });
+            new { culture, DefaultCulture = CultureCodes.Default, Sql.Published })).ToList();
+
+        // 產業卡上的產品線 chip。確認稿的卡片上就有它，而它已經是 SolutionCategories 的關聯，
+        // 不該在版塊裡再抄一份文字（database.md §09 的判準）。
+        var chips = await CategoryChipsAsync(db, culture, rows.Select(r => r.Id).ToArray());
 
         return rows.Select(r => new SolutionListItemDto
         {
@@ -46,8 +50,32 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
             Name = r.Name,
             MenuNote = r.MenuNote,
             Summary = r.Summary,
+            Categories = chips[r.Id].ToList(),
             HasRequestedCulture = r.HasRequestedCulture,
         }).ToList();
+    }
+
+    private static async Task<ILookup<int, ChipDto>> CategoryChipsAsync(
+        IDbConnection db, string culture, int[] solutionIds)
+    {
+        if (solutionIds.Length == 0)
+        {
+            return Array.Empty<(int, ChipDto)>().ToLookup(x => x.Item1, x => x.Item2);
+        }
+
+        var rows = await db.QueryAsync<SolutionCategoryChip>(
+            """
+            SELECT sc.SolutionId, c.Slug, COALESCE(t.Name, f.Name) AS Name
+            FROM SolutionCategories sc
+            INNER JOIN Categories c ON c.Id = sc.CategoryId AND c.Status = @Published
+            LEFT JOIN CategoryTranslations t ON t.CategoryId = c.Id AND t.Culture = @Culture
+            LEFT JOIN CategoryTranslations f ON f.CategoryId = c.Id AND f.Culture = @DefaultCulture
+            WHERE sc.SolutionId IN @Ids
+            ORDER BY sc.SortOrder
+            """,
+            new { Ids = solutionIds, culture, DefaultCulture = CultureCodes.Default, Sql.Published });
+
+        return rows.ToLookup(r => r.SolutionId, r => new ChipDto(r.Slug, r.Name, PublicPaths.Category(r.Slug)));
     }
 
     public async Task<SolutionDetailDto?> GetAsync(string culture, string slug)
@@ -110,8 +138,10 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
     }
 
     private sealed record SolutionRow(
-        string Slug, string? IconName, bool IsNew,
+        int Id, string Slug, string? IconName, bool IsNew,
         string? Name, string? MenuNote, string? Summary, bool HasRequestedCulture);
+
+    private sealed record SolutionCategoryChip(int SolutionId, string Slug, string? Name);
 
     private sealed record SolutionDetailRow(
         int Id, string Slug, string? IconName, bool IsNew,

@@ -100,6 +100,8 @@ export type SolutionListItem = Translated & {
   name: string | null;
   menuNote: string | null;
   summary: string | null;
+  /** 產業卡上的產品線 chip（`SolutionCategories`）。 */
+  categories: Chip[];
 };
 
 export type SolutionDetail = {
