@@ -177,7 +177,9 @@
     "cta": "Request the certificate",
     "label": "Certifications",
     "partners": "Partner Brands",
-    "exhibitions": "Exhibition Records"
+    "exhibitions": "Exhibition Records",
+    "view": "View details →",
+    "pendingAction": "Awaiting details"
   },
   "spec": {
     "property": "Property",
@@ -237,5 +239,41 @@
     },
     "readMore": "Read more →",
     "nextExhibition": "Next exhibition"
+  },
+  "member": {
+    "tabs": {
+      "signIn": "Sign in",
+      "register": "Create account"
+    },
+    "signIn": {
+      "email": "Business email",
+      "password": "Password",
+      "remember": "Keep me signed in",
+      "forgot": "Forgot password?",
+      "submit": "Sign in"
+    },
+    "register": {
+      "name": "Name *",
+      "company": "Company *",
+      "email": "Business email *",
+      "role": "Role",
+      "roles": [
+        "Engineering / R&D",
+        "Procurement",
+        "Product management",
+        "Quality",
+        "Other"
+      ],
+      "password": "Password *",
+      "confirm": "Confirm password *",
+      "consentBefore": "I agree to the ",
+      "consentLink": "Privacy Policy",
+      "consentAfter": " and consent to Vicround storing my account details.",
+      "submit": "Create account",
+      "note": "Accounts are verified against a business domain. Approval usually completes within one business day."
+    },
+    "footnoteBefore": "Not ready for an account? Public spec summaries and FAQs are open to everyone in ",
+    "footnoteLink": "Resources",
+    "footnoteAfter": "."
   }
 }

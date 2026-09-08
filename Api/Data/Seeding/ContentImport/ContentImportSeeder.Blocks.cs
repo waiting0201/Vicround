@@ -42,12 +42,51 @@ public sealed partial class ContentImportSeeder
                 continue;
             }
 
+            // 來源以「群組 + id 清單」表達的 reference block（About 的三類認證）：
+            // 一組一個版塊，選哪幾張存成查詢參數，內容仍然來自強型別表。
+            if (section.Arr("groups") is { } groups && groups.Count > 0)
+            {
+                foreach (var (group, index) in groups.Select((g, i) => (g, i)))
+                {
+                    var anchor = $"{blockSpec.Anchor}-{index + 1}";
+                    if (group is null || existing.ContainsKey(anchor))
+                    {
+                        continue;
+                    }
+
+                    var groupBlock = BuildBlock(group, blockSpec.Type, anchor, blockSpec.Tone, sortOrder++, withItems: false);
+                    groupBlock.SettingsJson = SlugSettings(group) ?? blockSpec.Settings;
+                    page.Blocks.Add(groupBlock);
+                    Count("版塊");
+                }
+
+                continue;
+            }
+
             var block = BuildBlock(section, blockSpec.Type, blockSpec.Anchor, blockSpec.Tone, sortOrder++, blockSpec.WithItems);
-            block.SettingsJson = blockSpec.Settings;
+            block.SettingsJson = SlugSettings(section) ?? blockSpec.Settings;
             page.Blocks.Add(block);
             Count("版塊");
             Count("版塊子項", block.Items.Count);
         }
+    }
+
+    /// <summary>
+    /// 來源如果已經指名「要顯示哪幾筆」（<c>ids</c> 或 <c>items[].id</c>），就把它變成
+    /// reference block 的查詢參數。這比分類篩選精確：確認稿的永續頁挑的四張認證跨了兩個分類。
+    /// </summary>
+    private static string? SlugSettings(JsonNode section)
+    {
+        var ids = (section.Arr("ids") ?? [])
+            .Select(id => id?.GetValue<string>())
+            .Concat((section.Arr("items") ?? []).Select(item => item.Str("id")))
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Distinct()
+            .ToList();
+
+        return ids.Count == 0
+            ? null
+            : "{\"slugs\":[" + string.Join(",", ids.Select(id => "\"" + id + "\"")) + "]}";
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
 import { CertificationDialog } from './CertificationDialog';
-import { CERTIFICATIONS } from '@/content/certifications';
-import { localize } from '@/lib/content';
+import { getCertifications } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import type { Locale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
@@ -15,12 +14,23 @@ import { ROUTES } from '@/lib/routes';
  * 都能點開 —— 產品頁的 compliance 表也需要。
  * </p>
  */
-export function CertificationLayer({ locale }: { locale: Locale }) {
+export async function CertificationLayer({ locale }: { locale: Locale }) {
   const t = translator(locale);
+  const certifications = (await getCertifications(locale)) ?? [];
 
   return (
     <CertificationDialog
-      certifications={localize(locale, CERTIFICATIONS)}
+      certifications={certifications.map((certification) => ({
+        id: certification.slug,
+        category: certification.category,
+        title: certification.title ?? certification.slug,
+        summary: certification.summary ?? certification.shortNote ?? '',
+        issuer: certification.issuerName ?? '',
+        validity: certification.validityText ?? '',
+        scope: certification.scopeText ?? '',
+        sites: certification.sitesText ?? '',
+        todo: certification.isPlaceholder,
+      }))}
       contactHref={localeHref(locale, ROUTES.contact)}
       labels={{
         issuer: t('certification.issuer'),

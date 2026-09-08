@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
-import { BlockHeading, BlockSection, FeatureGridBlock, MediaSlot, cardStyle } from '@/components/blocks';
-import { Icon } from '@/components/Icon';
+import { BlockHeading, BlockSection, FeatureGridBlock, MediaSlot, StepCards } from '@/components/blocks';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
-import type { ProcessStep } from '@/lib/content-api';
 import { block, getPage, getTechnologies, requirePage } from '@/lib/content-api';
 import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
@@ -36,57 +34,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
     description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
-}
-
-function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[]; accent?: string }) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${Math.min(steps.length || 4, 4)}, 1fr)`,
-        gap: 20,
-        marginTop: 40,
-      }}
-    >
-      {steps.map((step, index) => (
-        <div key={step.title ?? index} style={cardStyle}>
-          <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: step.accentColorHex ?? accent }}>
-            {String(step.stepNumber || index + 1).padStart(2, '0')}
-          </span>
-          {step.iconName ? (
-            <span
-              style={{
-                borderRadius: 12,
-                width: 40,
-                height: 40,
-                background: 'rgba(100,54,239,0.1)',
-                color: '#6436ef',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Icon name={step.iconName} size={18} />
-            </span>
-          ) : null}
-          <span
-            style={{ font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}
-          >
-            {step.title}
-          </span>
-          <p
-            style={{
-              margin: 0,
-              font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-              color: 'var(--page-muted)',
-            }}
-          >
-            {step.body}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export default async function TechnologiesPage({ params }: Params) {

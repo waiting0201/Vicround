@@ -1,6 +1,9 @@
+import { CertChip } from '@/components/CertificationDialog';
 import { Icon } from '@/components/Icon';
 import { Container } from '@/components/sections';
-import type { ContentBlock, ProductListItem, SpecificationRow } from '@/lib/content-api';
+import type { Certification, ContentBlock, ProcessStep, ProductListItem, SpecificationRow, Testimonial } from '@/lib/content-api';
+import { localizeHtml } from '@/lib/html';
+import type { Locale } from '@/lib/locale';
 
 /**
  * 版塊的共用渲染件 —— 樣式逐項取自 `mockup/Rounded Design/`。
@@ -398,5 +401,155 @@ export function BlockSection({
     >
       <Container style={{ padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)' }}>{children}</Container>
     </section>
+  );
+}
+
+/** 有序步驟卡（核心製程、共同開發、OEM/ODM、詢問流程共用）。 */
+export function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[]; accent?: string }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.min(steps.length || 4, 4)}, 1fr)`,
+        gap: 20,
+        marginTop: 40,
+      }}
+    >
+      {steps.map((step, index) => (
+        <div key={step.title ?? index} style={cardStyle}>
+          <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: step.accentColorHex ?? accent }}>
+            {String(step.stepNumber || index + 1).padStart(2, '0')}
+          </span>
+          {step.iconName ? (
+            <span style={{ ...iconBadgeStyle, width: 40, height: 40 }}>
+              <Icon name={step.iconName} size={18} />
+            </span>
+          ) : null}
+          <span style={{ font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}>
+            {step.title}
+          </span>
+          <p
+            style={{
+              margin: 0,
+              font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+              color: 'var(--page-muted)',
+            }}
+          >
+            {step.body}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 圖文左右分割。`imageRight` 由呼叫端決定，mockup 是逐段交錯的。 */
+export function MediaTextSplitBlock({
+  block,
+  locale,
+  imageLabel,
+  imageRight = true,
+}: {
+  block: ContentBlock;
+  locale: Locale;
+  imageLabel: string;
+  imageRight?: boolean;
+}) {
+  const copy = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      {block.eyebrow ? <p style={eyebrowStyle}>{block.eyebrow}</p> : null}
+      {block.title ? <h2 style={sectionTitleStyle}>{block.title}</h2> : null}
+      {block.body ? (
+        <div className="vr-prose" dangerouslySetInnerHTML={{ __html: localizeHtml(locale, block.body)! }} />
+      ) : null}
+      {block.ctaLabel ? (
+        <span style={{ font: "600 13px/1.4 'Geologica', sans-serif", color: '#6436ef' }}>{block.ctaLabel}</span>
+      ) : null}
+    </div>
+  );
+
+  const media = <MediaSlot url={block.items[0]?.linkUrl} label={imageLabel} />;
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(32px, 5vw, 72px)',
+        alignItems: 'center',
+      }}
+    >
+      {imageRight ? copy : media}
+      {imageRight ? media : copy}
+    </div>
+  );
+}
+
+/**
+ * 認證卡。點下去開全站唯一的認證彈窗（`components/CertificationDialog.tsx`），
+ * 資料來自 `Certifications`——這裡不重寫一份認證說明。
+ */
+export function CertificationCards({
+  certifications,
+  labels,
+  columns = 4,
+}: {
+  certifications: Certification[];
+  labels: { view: string; pending: string };
+  columns?: number;
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 20, marginTop: 40 }}>
+      {certifications.map((certification) => (
+        <CertChip
+          key={certification.slug}
+          id={certification.slug}
+          label={certification.title ?? certification.slug}
+          description={certification.shortNote ?? undefined}
+          action={certification.isPlaceholder ? labels.pending : labels.view}
+          pending={certification.isPlaceholder}
+          variant="card"
+        />
+      ))}
+    </div>
+  );
+}
+
+/** 客戶推薦。具名需書面授權，因此姓名可能為空，只顯示職稱與公司類型（database.md §08）。 */
+export function TestimonialCards({ testimonials }: { testimonials: Testimonial[] }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.min(testimonials.length || 3, 3)}, 1fr)`,
+        gap: 20,
+        marginTop: 40,
+      }}
+    >
+      {testimonials.map((testimonial, index) => (
+        <figure key={index} style={{ ...cardStyle, margin: 0, gap: 16 }}>
+          <blockquote
+            style={{
+              margin: 0,
+              font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
+              color: 'var(--page-fg)',
+            }}
+          >
+            {testimonial.quote}
+          </blockquote>
+          <figcaption
+            style={{
+              marginTop: 'auto',
+              font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+              color: 'var(--page-faint)',
+            }}
+          >
+            {[testimonial.authorName, testimonial.authorTitle, testimonial.companyType ?? testimonial.brandName]
+              .filter(Boolean)
+              .join(' · ')}
+          </figcaption>
+        </figure>
+      ))}
+    </div>
   );
 }

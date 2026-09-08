@@ -69,8 +69,11 @@ internal static class ReferenceBlockResolver
             BlockType.CertificationList => new BlockReferenceDto
             {
                 Certifications = Take(
-                    await CertificationReadService.ListAsync(
-                        db, culture, CertificationReadService.ParseCategory(settings.Category)),
+                    Pick(
+                        await CertificationReadService.ListAsync(
+                            db, culture, CertificationReadService.ParseCategory(settings.Category)),
+                        settings.Slugs,
+                        c => c.Slug),
                     settings.Limit),
             },
             BlockType.ProcessFlowRef => new BlockReferenceDto
@@ -105,6 +108,17 @@ internal static class ReferenceBlockResolver
 
     private static IReadOnlyList<T> Take<T>(IReadOnlyList<T> items, int? limit) =>
         limit is { } n && n < items.Count ? items.Take(n).ToList() : items;
+
+    /// <summary>
+    /// 編輯者指名的清單。<b>順序照指名的順序</b>——「先放哪一張」是編輯決定，不是資料庫排序。
+    /// </summary>
+    private static IReadOnlyList<T> Pick<T>(IReadOnlyList<T> items, string[]? slugs, Func<T, string> slugOf) =>
+        slugs is null or []
+            ? items
+            : slugs.Select(slug => items.FirstOrDefault(item => slugOf(item) == slug))
+                .Where(item => item is not null)
+                .Select(item => item!)
+                .ToList();
 
     /// <summary>
     /// Resources hub 只顯示標記為精選的幾題，FAQ 頁顯示全部（<c>FaqItems.IsFeatured</c>，§05）。
@@ -163,7 +177,8 @@ internal static class ReferenceBlockResolver
         bool? Upcoming = null,
         bool? Featured = null,
         bool FeaturedOnly = false,
-        int? Limit = null)
+        int? Limit = null,
+        string[]? Slugs = null)
     {
         private static readonly BlockSettings Empty = new();
 
@@ -189,7 +204,8 @@ internal static class ReferenceBlockResolver
                     Upcoming: Bool(root, "upcoming"),
                     Featured: Bool(root, "featured"),
                     FeaturedOnly: Bool(root, "featuredOnly") ?? false,
-                    Limit: Int(root, "limit"));
+                    Limit: Int(root, "limit"),
+                    Slugs: Strings(root, "slugs"));
             }
             catch (JsonException)
             {
@@ -205,6 +221,14 @@ internal static class ReferenceBlockResolver
         private static bool? Bool(JsonElement root, string name) =>
             root.TryGetProperty(name, out var value) && value.ValueKind is JsonValueKind.True or JsonValueKind.False
                 ? value.GetBoolean()
+                : null;
+
+        private static string[]? Strings(JsonElement root, string name) =>
+            root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Array
+                ? value.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => item.GetString()!)
+                    .ToArray()
                 : null;
 
         private static int? Int(JsonElement root, string name) =>

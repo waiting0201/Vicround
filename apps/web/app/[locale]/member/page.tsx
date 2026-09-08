@@ -7,10 +7,10 @@ import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { Container } from '@/components/sections';
-import { member } from '@/content/member';
-import { localize } from '@/lib/content';
-import { translator } from '@/lib/i18n';
+import { block, getPage, requirePage } from '@/lib/content-api';
+import { getMessages, translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
+import { bannerImage } from '@/lib/page-assets';
 import { localeHref } from '@/lib/nav';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
@@ -28,13 +28,13 @@ type Params = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, member);
+  const page = requirePage(await getPage(locale, 'member'), 'member');
 
   return pageMetadata({
     locale,
     path: ROUTES.member,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -42,7 +42,10 @@ export default async function MemberPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, member);
+  const messages = getMessages(locale);
+
+  const page = requirePage(await getPage(locale, 'member'), 'member');
+  const benefits = block(page, 'benefits');
 
   return (
     <>
@@ -51,11 +54,10 @@ export default async function MemberPage({ params }: Params) {
       <PageShell tone="dark">
         <PageBanner
           tone="dark"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.member')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
         <section>
@@ -70,7 +72,11 @@ export default async function MemberPage({ params }: Params) {
           >
             <MemberForms
               privacyHref={localeHref(locale, ROUTES.privacy)}
-              labels={{ tabs: c.tabs, signIn: c.signIn, register: c.register }}
+              labels={{
+                tabs: messages.member.tabs,
+                signIn: messages.member.signIn,
+                register: messages.member.register,
+              }}
             />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -84,7 +90,7 @@ export default async function MemberPage({ params }: Params) {
                     color: '#a184f5',
                   }}
                 >
-                  {c.benefits.eyebrow}
+                  {benefits?.eyebrow}
                 </p>
                 <h2
                   style={{
@@ -93,11 +99,11 @@ export default async function MemberPage({ params }: Params) {
                     color: '#ffffff',
                   }}
                 >
-                  {c.benefits.title}
+                  {benefits?.title}
                 </h2>
               </div>
 
-              {c.benefits.items.map((item) => (
+              {(benefits?.items ?? []).map((item) => (
                 <div
                   key={item.title}
                   style={{
@@ -122,7 +128,7 @@ export default async function MemberPage({ params }: Params) {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon name={item.icon} size={18} />
+                    <Icon name={item.iconName ?? 'shield-check'} size={18} />
                   </span>
                   <div>
                     <span
@@ -155,17 +161,24 @@ export default async function MemberPage({ params }: Params) {
                   color: 'rgba(255,255,255,0.45)',
                 }}
               >
-                {c.benefits.footnoteBefore}
+                {t('member.footnoteBefore')}
                 <Link href={localeHref(locale, ROUTES.resources)} style={{ color: '#a184f5', fontWeight: 600 }}>
-                  {c.benefits.footnoteLink}
+                  {t('member.footnoteLink')}
                 </Link>
-                {c.benefits.footnoteAfter}
+                {t('member.footnoteAfter')}
               </p>
             </div>
           </Container>
         </section>
 
-        <PageCTA locale={locale} eyebrow={c.cta.eyebrow} headline={c.cta.headline} subcopy={c.cta.subcopy} />
+        {page.ctaHeadline ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={page.ctaEyebrow ?? ''}
+            headline={page.ctaHeadline}
+            subcopy={page.ctaSubcopy ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );

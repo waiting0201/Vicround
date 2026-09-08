@@ -177,7 +177,9 @@
     "cta": "索取證書",
     "label": "認證",
     "partners": "合作品牌",
-    "exhibitions": "參展紀錄"
+    "exhibitions": "參展紀錄",
+    "view": "查看詳情 →",
+    "pendingAction": "待提供"
   },
   "spec": {
     "property": "項目",
@@ -237,5 +239,41 @@
     },
     "readMore": "閱讀更多 →",
     "nextExhibition": "下一場展會"
+  },
+  "member": {
+    "tabs": {
+      "signIn": "登入",
+      "register": "註冊帳號"
+    },
+    "signIn": {
+      "email": "公司電子郵件",
+      "password": "密碼",
+      "remember": "保持登入",
+      "forgot": "忘記密碼？",
+      "submit": "登入"
+    },
+    "register": {
+      "name": "姓名 *",
+      "company": "公司 *",
+      "email": "公司電子郵件 *",
+      "role": "職務",
+      "roles": [
+        "工程／研發",
+        "採購",
+        "產品管理",
+        "品保",
+        "其他"
+      ],
+      "password": "密碼 *",
+      "confirm": "確認密碼 *",
+      "consentBefore": "我同意",
+      "consentLink": "隱私權政策",
+      "consentAfter": "，並同意盈絲保存我的帳號資料。",
+      "submit": "註冊帳號",
+      "note": "帳號會以企業網域驗證，審核通常於一個工作天內完成。"
+    },
+    "footnoteBefore": "還不想開帳號？公開的規格摘要與常見問題都在",
+    "footnoteLink": "資源中心",
+    "footnoteAfter": "，開放給所有人。"
   }
 }

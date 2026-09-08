@@ -1,29 +1,37 @@
 import type { Metadata } from 'next';
+import { ArticleBody, tableOfContents } from '@/components/ArticleBody';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageShell } from '@/components/PageShell';
 import { Container } from '@/components/sections';
-import { privacy } from '@/content/privacy';
-import { localize } from '@/lib/content';
+import { getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
-/** Privacy & Legal —— 逐區塊對照 `mockup/Rounded Design/privacy.dc.html`（側欄目錄 + 條文）。 */
+/**
+ * 隱私權與法律聲明 —— 版型對照 `mockup/Rounded Design/privacy.dc.html`。
+ *
+ * <p>
+ * 純長文，因此走 `PageTranslations.Body` 而不是版塊（database.md §09）；
+ * 側欄目錄由條文的錨點產生，改條文不用另外維護一份目錄。
+ * </p>
+ */
 type Params = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, privacy);
+  const page = requirePage(await getPage(locale, 'privacy'), 'privacy');
 
   return pageMetadata({
     locale,
     path: ROUTES.privacy,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -31,7 +39,9 @@ export default async function PrivacyPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, privacy);
+
+  const page = requirePage(await getPage(locale, 'privacy'), 'privacy');
+  const toc = tableOfContents(page.body);
 
   return (
     <>
@@ -40,11 +50,10 @@ export default async function PrivacyPage({ params }: Params) {
       <PageShell tone="light">
         <PageBanner
           tone="light"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.privacy')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
         <section>
@@ -67,48 +76,29 @@ export default async function PrivacyPage({ params }: Params) {
                 borderLeft: '1px solid var(--page-border)',
               }}
             >
-              {c.sections.map((section) => (
+              {toc.map((section) => (
                 <a key={section.id} href={`#${section.id}`} className="vr-toc-link">
-                  {section.title}
+                  {section.text}
                 </a>
               ))}
             </nav>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
-              <p
-                style={{
-                  margin: 0,
-                  font: "500 12px/1.4 'IBM Plex Mono', monospace",
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--page-faint)',
-                }}
-              >
-                {c.updated}
-              </p>
+              {page.lastReviewedLabel ? (
+                <p
+                  style={{
+                    margin: 0,
+                    font: "500 12px/1.4 'IBM Plex Mono', monospace",
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: 'var(--page-faint)',
+                  }}
+                >
+                  {page.lastReviewedLabel}
+                </p>
+              ) : null}
 
-              {c.sections.map((section) => (
-                <div key={section.id} id={section.id} style={{ scrollMarginTop: 104 }}>
-                  <h2
-                    style={{
-                      margin: 0,
-                      font: "500 1.375rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-fg)',
-                    }}
-                  >
-                    {section.title}
-                  </h2>
-                  <p
-                    style={{
-                      margin: '14px 0 0',
-                      font: "400 1rem/1.8 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'var(--page-muted)',
-                    }}
-                  >
-                    {section.body}
-                  </p>
-                </div>
-              ))}
+              <ArticleBody html={page.body} locale={locale} />
             </div>
           </Container>
         </section>
