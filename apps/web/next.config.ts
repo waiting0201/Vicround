@@ -6,15 +6,23 @@ import type { NextConfig } from 'next';
  */
 const nextConfig: NextConfig = {
   /**
-   * ⚠️ **刻意不設 `output: 'standalone'`。**
+   * SWA Free 單一環境上限 250MB —— standalone 是必須，不是最佳化選項。
+   * 產物由 `scripts/pack-standalone.mjs` 收尾（見 package.json 的 postbuild）：
+   * 補上 `.next/static` 與 `public/`，並壓平 pnpm workspace 造成的兩層巢狀。
+   */
+  output: 'standalone',
+
+  /**
+   * ⚠️ **不要**把 `outputFileTracingRoot` 釘在這個 app 上來避開巢狀。
    *
-   * SWA 的 hybrid Next.js 只支援「平台自己 build」的產物形狀；上傳自建的 standalone
-   * 會在部署最後停在 `Web app warm up timed out`，而且沒有其他診斷訊息
-   * （2026-09-08 實測三次：修好 pnpm 符號連結、攤平 monorepo 巢狀、補上
-   * /.swa/health.html 都無效）。因此 build 交給 SWA 的 Oryx，`apps/web` 就是它的
-   * 應用根目錄——這也是 `apps/web/package.json` 的相依必須自給自足的原因。
+   * 那樣產物確實會變平坦（`.next/standalone/server.js`），但 pnpm 的相依都躺在
+   * workspace 根的 `.pnpm` store 裡 —— tracing 根縮小之後那些檔案落在範圍外，
+   * Next 只會留下**指向 standalone 之外的符號連結**。體積大幅下降看起來像優化，
+   * 其實是空的，SWA 打包時會以 `Could not find file .../node_modules/react` 失敗。
    *
-   * 代價是產物大小要自己盯著（SWA Free 單一環境 250MB）。
+   * 正確做法是保留 repo 根當 tracing 根（相依會真的被複製進來），再由 postbuild
+   * 把巢狀那兩層壓平。壓平時只搬 app 自己的檔案，`node_modules` 留在 standalone 根 ——
+   * 連 node_modules 一起搬會變成 `Cannot find module 'styled-jsx/package.json'`。
    */
 
   images: {

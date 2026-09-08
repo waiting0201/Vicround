@@ -19,9 +19,11 @@ on:
       - 'apps/**'
   workflow_dispatch:
 
+# CI 對同一分支可以互相取消；但部署一旦開始就不取消 —— 取消會在 SWA 上留下
+# 半套版本，而下一次部署才會發現。
 concurrency:
   group: web-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   id-token: write
@@ -31,6 +33,7 @@ env:
   NODE_VERSION: '22'
   RESOURCE_GROUP: VicRoundUS
   STATIC_WEB_APP: stapp-vicround-prod
+  API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
 
 jobs:
   build_and_deploy:
@@ -50,7 +53,9 @@ jobs:
       # standalone 產物裡只會留下指向 .pnpm store 的連結，換一台機器就 MODULE_NOT_FOUND。
       # 只有 CI 這樣裝；本機開發維持 pnpm 預設。
       - name: Install
-        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+        run: pnpm install --frozen-lockfile
+        env:
+          NPM_CONFIG_NODE_LINKER: hoisted
 
       - name: Lint
         run: pnpm lint
@@ -59,19 +64,30 @@ jobs:
       - name: Content language check
         run: node scripts/check-content-language.mjs
 
-      # build 期間會呼叫 Content API 預先產生頁面，因此指向正式後端。
-      #
-      # `NEXT_PUBLIC_SITE_URL` 在 build 時就被內嵌，而它同時決定 robots.txt 要不要開放索引
-      # （`lib/site.ts` 的 IS_PRODUCTION_SITE）。目前指向 SWA 的預設網域 → 整站 Disallow，
-      # 綁上 www.vicround.com 之後把 repo 變數 SITE_URL 改掉即可，不必動程式。
-      # 只在 CI 建後台 SPA（產物進 apps/web/public/admin，隨前台一起上傳）。
-      # 前台本身交給 SWA 的 Oryx 建——那是它唯一支援的形狀。
+      # 後台 SPA 先建，產物落在 apps/web/public/admin —— 它是公開站的一部分，
+      # 順序反過來部署出去的 /admin 就是上一次的版本。
       - name: Build admin SPA
         run: pnpm --filter admin build
 
-      # Oryx 會在 apps/web 裡自己安裝相依，本機裝的 pnpm 符號連結搬過去只會壞掉。
-      - name: Clean workspace links before upload
-        run: rm -rf apps/web/node_modules apps/web/.next
+      # build 期間會呼叫 Content API 預先產生頁面，因此指向正式後端。
+      #
+      # `NEXT_PUBLIC_SITE_URL` 在 build 時就被內嵌，而它同時決定 robots.txt 要不要開放
+      # 索引（`lib/site.ts` 的 IS_PRODUCTION_SITE）。目前指向 SWA 的預設網域 → 整站
+      # Disallow；綁上 www.vicround.com 之後把 repo 變數 SITE_URL 改掉即可，不必動程式。
+      #
+      # `NEXT_PUBLIC_MEDIA_BASE` 沒設就是空字串：版位素材照舊隨產物打包（見
+      # lib/page-assets.ts 與 scripts/pack-standalone.mjs，兩邊綁在一起）。
+      - name: Build web
+        run: pnpm --filter web build
+        env:
+          API_BASE: ${{ env.API_BASE }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
+          NEXT_PUBLIC_MEDIA_BASE: ${{ vars.MEDIA_BASE }}
+
+      # postbuild 已經跑過 250MB 閘（apps/web/scripts/check-size.mjs），
+      # 這裡只把數字留在 log 裡，方便日後回頭看是哪一次開始變大的。
+      - name: Report bundle size
+        run: du -sh apps/web/.next/standalone
 
       - name: Azure login (OIDC)
         if: github.event_name != 'pull_request'
@@ -96,23 +112,47 @@ jobs:
           azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
           action: upload
           app_location: apps/web
+          api_location: ''
           output_location: ''
+          # 產物已經自己建好並由 postbuild 壓平過了。讓 action 用 Oryx 再建一次，
+          # 在 pnpm workspace 下會產生巢狀的 standalone 路徑，症狀是 CSS 與字型 404
+          # 而部署顯示成功；更早的一版則是一路跑到最後回 `Web app warm up timed out`。
+          skip_app_build: true
           skip_api_build: true
-        env:
-          # Oryx 的建置環境變數：預先產生頁面時要打得到 Content API，
-          # 而 NEXT_PUBLIC_SITE_URL 同時決定 robots.txt 開不開放索引。
-          API_BASE: https://func-vicround-prod.azurewebsites.net/api/v1
-          NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
 
+      # 「部署成功」不等於「跑得起來」，也不等於「靜態檔找得到」—— standalone 沒有
+      # 被正確壓平時，HTML 會回 200 而 CSS 全部 404。兩者都要驗。
       - name: Smoke test
         if: github.event_name != 'pull_request'
         run: |
           HOST=$(az staticwebapp show -n "$STATIC_WEB_APP" -g "$RESOURCE_GROUP" --query defaultHostname -o tsv)
           for attempt in 1 2 3 4 5 6 7 8; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/en" || true)
+            code=$(curl -s -m 20 -o /tmp/home.html -w '%{http_code}' "https://$HOST/en" || true)
             echo "attempt $attempt -> $code"
-            if [ "$code" = "200" ]; then exit 0; fi
+            if [ "$code" = "200" ]; then break; fi
             sleep 20
           done
-          echo "::error::/en 在部署後沒有回 200。"
-          exit 1
+          if [ "$code" != "200" ]; then
+            echo "::error::/en 在部署後沒有回 200。"
+            exit 1
+          fi
+
+          CSS=$(grep -o '/_next/static/css/[^"]*\.css' /tmp/home.html | head -1)
+          if [ -z "$CSS" ]; then
+            echo "::error::/en 的 HTML 裡沒有樣式表連結，版面必然是壞的。"
+            exit 1
+          fi
+          css_code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' "https://$HOST$CSS" || true)
+          echo "css $CSS -> $css_code"
+          if [ "$css_code" != "200" ]; then
+            echo "::error::樣式表回 $css_code —— standalone 的 .next/static 沒有被打包進去。"
+            exit 1
+          fi
+
+          # -L：standalone 會把 /admin/ 正規化成 /admin（308），跟瀏覽器一樣跟過去再看結果
+          admin_code=$(curl -sL -m 20 -o /dev/null -w '%{http_code}' "https://$HOST/admin/" || true)
+          echo "/admin/ -> $admin_code"
+          if [ "$admin_code" != "200" ]; then
+            echo "::error::/admin/ 回 $admin_code —— public/ 沒有被打包進 standalone。"
+            exit 1
+          fi

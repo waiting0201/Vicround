@@ -11,13 +11,26 @@
  * 這裡只是還沒指定時的退路（見 `bannerImage`）。
  * </p>
  */
+/**
+ * 素材根位址。空字串＝素材隨站台一起打包（本機與尚未接 Blob 時的行為）；
+ * 設成 Blob 容器的公開網址時，`scripts/pack-standalone.mjs` 會把 `public/assets`
+ * 排除在部署產物之外，250MB 的額度就不必花在圖片上。
+ *
+ * ⚠️ 兩邊是綁在一起的：這個變數有值，產物裡就沒有 `public/assets`。少改一邊
+ * 就是整站版位圖 404。
+ */
+const MEDIA_BASE = (process.env.NEXT_PUBLIC_MEDIA_BASE ?? '').replace(/\/$/, '');
+
+/** 把 `/assets/...` 指到素材根位址。沒設 MEDIA_BASE 時原樣輸出。 */
+const asset = (path: string): string => `${MEDIA_BASE}${path}`;
+
 const BANNERS: Record<string, string> = {
-  'optical-film': '/assets/banner-optical-film.jpg',
-  'textile-foam': '/assets/banner-textile-foam.jpg',
-  acoustic: '/assets/banner-acoustic.jpg',
+  'optical-film': asset('/assets/banner-optical-film.jpg'),
+  'textile-foam': asset('/assets/banner-textile-foam.jpg'),
+  acoustic: asset('/assets/banner-acoustic.jpg'),
 };
 
-const DEFAULT_BANNER = '/assets/banner-brand.jpg';
+const DEFAULT_BANNER = asset('/assets/banner-brand.jpg');
 
 /** CMS 指定的 banner 優先；沒有就用該產品線的設計素材，再沒有就用品牌預設圖。 */
 export function bannerImage(fromCms: string | null | undefined, key?: string): string {
@@ -27,14 +40,14 @@ export function bannerImage(fromCms: string | null | undefined, key?: string): s
 /** 產品線的方形情境圖（產品頁卡片與首頁交錯區用）。 */
 export function categoryImage(slug: string): string | undefined {
   const images: Record<string, string> = {
-    'optical-film': '/assets/product-optical-film.jpg',
-    'textile-foam': '/assets/product-textile-foam.jpg',
-    acoustic: '/assets/product-acoustic.jpg',
+    'optical-film': asset('/assets/product-optical-film.jpg'),
+    'textile-foam': asset('/assets/product-textile-foam.jpg'),
+    acoustic: asset('/assets/product-acoustic.jpg'),
   };
   return images[slug];
 }
 
-export const HERO_IMAGE = '/assets/hero-banner-01.jpg';
+export const HERO_IMAGE = asset('/assets/hero-banner-01.jpg');
 
 /**
  * 產品線的強調色。取自設計系統的 category token（`app/ds/tokens/colors.css`），

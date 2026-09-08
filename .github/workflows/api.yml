@@ -19,9 +19,11 @@ on:
       - 'tests/**'
   workflow_dispatch:
 
+# CI 對同一分支可以互相取消；部署一旦開始就不取消 —— Flex Consumption 沒有 slot，
+# 取消或兩個部署疊在一起就是半套版本覆蓋同一個 app。
 concurrency:
   group: api-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # OIDC 換 token 需要 id-token: write；其餘維持唯讀。
 permissions:
@@ -54,8 +56,14 @@ jobs:
       - name: Test
         run: dotnet test VicRound.slnx -c Release --no-build --nologo
 
+      # ⚠️ **一定要指定 RID。** 不指定的話 NuGet 會把每個平台的原生資產都塞進
+      # `runtimes/`（SqlClient 的 Windows SNI 等），冷啟動時 Flex Consumption 得先把
+      # 那包下載解壓，全部落在 30 秒的 app init 上限裡。實測 28MB → 23MB。
       - name: Publish
-        run: dotnet publish Api/VicRound.Api.csproj -c Release -o ${{ env.OUTPUT_PATH }} --nologo
+        run: dotnet publish Api/VicRound.Api.csproj -c Release -r linux-x64 --self-contained false -o ${{ env.OUTPUT_PATH }} --nologo
+
+      - name: Report package size
+        run: du -sh ${{ env.OUTPUT_PATH }}
 
       # local.settings.json 設了 CopyToPublishDirectory=Never，這裡再確認一次：
       # 它含連線字串與 JWT 簽章金鑰，跟著產物上去等於把密鑰放進伺服器的檔案系統。
@@ -155,7 +163,8 @@ jobs:
       - name: Smoke test
         run: |
           for attempt in 1 2 3 4 5 6; do
-            code=$(curl -s -o /tmp/health.json -w '%{http_code}' "https://${FUNCTION_APP}.azurewebsites.net/api/v1/health" || true)
+            # -m 是必要的：app 起不來時連線會掛著不回應，沒有逾時這一步不會在合理時間內收斂
+            code=$(curl -s -m 15 -o /tmp/health.json -w '%{http_code}' "https://${FUNCTION_APP}.azurewebsites.net/api/v1/health" || true)
             echo "attempt $attempt -> $code"
             if [ "$code" = "200" ]; then cat /tmp/health.json; exit 0; fi
             sleep 15
