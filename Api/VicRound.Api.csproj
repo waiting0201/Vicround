@@ -23,6 +23,11 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- C 層匯入的來源：客戶確認稿（database.md §18.1）。跟著 build 複製，
+         `import-content` 因此不必依賴工作目錄。 -->
+    <None Update="Data/Seeding/ContentImport/confirmed-copy.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

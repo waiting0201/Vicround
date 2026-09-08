@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getNavigation } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import type { Locale } from '@/lib/locale';
 import { FOOTER_LINKS, localeHref } from '@/lib/nav';
@@ -28,8 +29,15 @@ const SOCIALS = [
   },
 ];
 
-export function SiteFooter({ locale }: { locale: Locale }) {
+export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = translator(locale);
+
+  // 頁尾三組導覽都由 `NavigationItems` 供應（footer / footerLegal / social）。
+  // 社群連結目前沒有資料——網址待客戶提供，因此仍用 mockup 的佔位按鈕。
+  const groups = await getNavigation(locale);
+  const links = groups?.find((group) => group.location === 'footer')?.items ?? [];
+  const legal = groups?.find((group) => group.location === 'footerLegal')?.items ?? [];
+  const socials = groups?.find((group) => group.location === 'social')?.items ?? [];
 
   return (
     <footer
@@ -72,18 +80,28 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             flex: '1 1 520px',
           }}
         >
-          {FOOTER_LINKS.map((key) => (
-            <Link key={key} href={localeHref(locale, ROUTES[key])} className="vr-footer-link">
-              {t(`nav.${key}`)}
-            </Link>
-          ))}
+          {links.length > 0
+            ? links.map((item) => (
+                <Link
+                  key={item.path ?? item.label}
+                  href={localeHref(locale, item.path ?? '/')}
+                  className="vr-footer-link"
+                >
+                  {item.label}
+                </Link>
+              ))
+            : FOOTER_LINKS.map((key) => (
+                <Link key={key} href={localeHref(locale, ROUTES[key])} className="vr-footer-link">
+                  {t(`nav.${key}`)}
+                </Link>
+              ))}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto' }}>
-          {SOCIALS.map((social) => (
+          {SOCIALS.map((social, index) => (
             <a
               key={social.name}
-              href={social.url}
+              href={socials[index]?.path ?? social.url}
               aria-label={social.name}
               className="vr-social"
               target="_blank"
@@ -125,16 +143,24 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         >
           {t('site.legalName')}
         </span>
-        <Link
-          href={localeHref(locale, ROUTES.privacy)}
-          style={{
-            font: "400 0.8125rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
-            color: 'rgba(255,255,255,0.45)',
-            textDecoration: 'none',
-          }}
-        >
-          {t('nav.privacy')}
-        </Link>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          {(legal.length > 0
+            ? legal.map((item) => ({ href: item.path ?? ROUTES.privacy, label: item.label ?? '' }))
+            : [{ href: ROUTES.privacy, label: t('nav.privacy') }]
+          ).map((item) => (
+            <Link
+              key={item.href}
+              href={localeHref(locale, item.href)}
+              style={{
+                font: "400 0.8125rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                color: 'rgba(255,255,255,0.45)',
+                textDecoration: 'none',
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </footer>
   );

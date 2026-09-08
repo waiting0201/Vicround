@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BlockHeading, BlockSection, StepCards, cardStyle, eyebrowStyle, sectionTitleStyle } from '@/components/blocks';
+import { BlockHeading, BlockSection, StepCards, cardStyle, sectionTitleStyle } from '@/components/blocks';
 import { ContactForm } from '@/components/ContactForm';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';

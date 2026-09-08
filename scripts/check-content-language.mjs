@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const TARGETS = ['apps/web/content', 'apps/web/messages'];
+const TARGETS = ['apps/web/messages', 'Api/Data/Seeding/ContentImport'];
 
 const CYRILLIC = /[Ѐ-ӿ]/;
 const HANGUL = /[가-힯]/;

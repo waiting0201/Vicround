@@ -79,10 +79,14 @@ internal static class SeedCommand
 
         if (args.Contains("import-content", StringComparer.OrdinalIgnoreCase))
         {
-            var path = configuration["file"] ?? "artifacts/content-export.json";
+            // 確認稿與程式一起進版控（會跟著 build 複製到輸出目錄），
+            // 因此不論從哪個工作目錄執行都找得到；`--file` 可指向另一份匯入檔。
+            var path = configuration["file"]
+                ?? Path.Combine(AppContext.BaseDirectory, "Data", "Seeding", "ContentImport", "confirmed-copy.json");
+
             if (!File.Exists(path))
             {
-                await Console.Error.WriteLineAsync($"找不到 {path}。先跑 `node scripts/export-content.mjs` 產生它。");
+                await Console.Error.WriteLineAsync($"找不到 {path}。");
                 return 1;
             }
 

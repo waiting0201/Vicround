@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CertChip } from '@/components/CertificationDialog';
 import { Icon } from '@/components/Icon';
 import { Container } from '@/components/sections';
@@ -550,6 +551,119 @@ export function TestimonialCards({ testimonials }: { testimonials: Testimonial[]
           </figcaption>
         </figure>
       ))}
+    </div>
+  );
+}
+
+/** 公司歷程。有 `Milestones` 就用它（含年份），沒有就退回版塊自帶的文字卡。 */
+export function MilestoneTimeline({ block }: { block: ContentBlock }) {
+  const milestones = block.reference?.milestones ?? [];
+
+  const entries =
+    milestones.length > 0
+      ? milestones.map((milestone) => ({
+          label: String(milestone.year),
+          title: milestone.title,
+          body: milestone.body,
+        }))
+      : block.items.map((item) => ({ label: item.badge, title: item.title, body: item.body }));
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${Math.min(entries.length || 4, 4)}, 1fr)`,
+        gap: 20,
+        marginTop: 40,
+      }}
+    >
+      {entries.map((entry, index) => (
+        <div key={entry.title ?? index} style={cardStyle}>
+          {entry.label ? (
+            <span style={{ font: "500 13px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>{entry.label}</span>
+          ) : null}
+          <span style={{ font: "600 1rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}>
+            {entry.title}
+          </span>
+          <p
+            style={{
+              margin: 0,
+              font: "400 0.875rem/1.65 'Geologica', 'GenYoGothic TW', sans-serif",
+              color: 'var(--page-muted)',
+            }}
+          >
+            {entry.body}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** 可點擊的卡片格（About 的合作方式、永續導引）。連結由版塊子項的 `linkUrl` 決定。 */
+export function OfferingGrid({
+  block,
+  hrefFor,
+  columns,
+}: {
+  block: ContentBlock;
+  hrefFor: (url: string) => string;
+  columns?: number;
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns ?? Math.min(block.items.length || 3, 3)}, 1fr)`,
+        gap: 20,
+        marginTop: 'clamp(36px, 4vw, 56px)',
+      }}
+    >
+      {block.items.map((item, index) => {
+        const content = (
+          <>
+            {item.iconName ? (
+              <span style={iconBadgeStyle}>
+                <Icon name={item.iconName} size={20} />
+              </span>
+            ) : null}
+            <span
+              style={{ font: "600 1.0625rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}
+            >
+              {item.title}
+            </span>
+            <span
+              style={{
+                font: "400 0.875rem/1.65 'Geologica', 'GenYoGothic TW', sans-serif",
+                color: 'var(--page-muted)',
+              }}
+            >
+              {item.body}
+            </span>
+            {item.linkLabel ? (
+              <span
+                style={{
+                  marginTop: 'auto',
+                  font: "600 13px/1.4 'Geologica', sans-serif",
+                  color: 'var(--page-accent)',
+                }}
+              >
+                {item.linkLabel} →
+              </span>
+            ) : null}
+          </>
+        );
+
+        return item.linkUrl ? (
+          <Link key={item.title ?? index} href={hrefFor(item.linkUrl)} className="vr-dark-card" style={cardStyle}>
+            {content}
+          </Link>
+        ) : (
+          <div key={item.title ?? index} style={cardStyle}>
+            {content}
+          </div>
+        );
+      })}
     </div>
   );
 }

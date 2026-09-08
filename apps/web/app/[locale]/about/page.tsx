@@ -1,38 +1,52 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import {
+  BlockHeading,
+  BlockSection,
+  CertificationCards,
+  FeatureGridBlock,
+  MediaTextSplitBlock,
+  MilestoneTimeline,
+  OfferingGrid,
+  cardStyle,
+} from '@/components/blocks';
 import { CertChip } from '@/components/CertificationDialog';
-import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
-import { Container, ImageSlot } from '@/components/sections';
-import { about } from '@/content/about';
-import { CERTIFICATIONS } from '@/content/certifications';
-import { localize } from '@/lib/content';
+import { ImageSlot } from '@/components/sections';
+import type { ContentBlock } from '@/lib/content-api';
+import { getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
+import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
 /**
- * About Us —— 逐區塊對照 `mockup/Rounded Design/about-us.dc.html`。
- * 這是確認稿裡三個深色頁之一（首頁、About、會員專區）。
+ * About Us —— 版型逐區塊對照 `mockup/Rounded Design/about-us.dc.html`（深色頁）。
+ *
+ * <p>
+ * 認證分三類、據點、公司歷程都是 reference block：認證與 Sustainability／Technologies
+ * 共用同一批 `Certifications`，據點與 Contact 共用同一批 `Locations`。
+ * 歷程目前還沒有年份（`Milestones` 待客戶提供），因此退回版塊自帶的文字卡。
+ * </p>
  */
 type Params = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
-  const c = localize(locale, about);
+  const page = requirePage(await getPage(locale, 'about'), 'about');
 
   return pageMetadata({
     locale,
     path: ROUTES.about,
-    title: c.banner.title,
-    description: c.banner.description,
+    title: page.seo?.title ?? page.bannerTitle ?? page.title ?? '',
+    description: page.seo?.description ?? page.bannerDescription ?? undefined,
   });
 }
 
@@ -40,38 +54,173 @@ export default async function AboutPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
-  const c = localize(locale, about);
-  const certs = localize(locale, CERTIFICATIONS);
 
-  const eyebrow: React.CSSProperties = {
-    margin: 0,
-    font: "600 13px/1.2 'Geologica', sans-serif",
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    color: '#a184f5',
-  };
-  const heading: React.CSSProperties = {
-    margin: '12px 0 0',
-    font: "500 clamp(2rem, 3.5vw, 2.75rem)/1.1 'Geologica', 'GenYoGothic TW', sans-serif",
-    color: '#ffffff',
-  };
-  const card: React.CSSProperties = {
-    background: '#17172a',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 22,
-    padding: '28px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-    textDecoration: 'none',
-  };
-  const cardTitle: React.CSSProperties = {
-    font: "600 1.125rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
-    color: '#ffffff',
-  };
-  const cardBody: React.CSSProperties = {
-    font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-    color: 'rgba(255,255,255,0.55)',
+  const page = requirePage(await getPage(locale, 'about'), 'about');
+  const href = (url: string) => localeHref(locale, url);
+
+  const certificationLabels = { view: t('certification.view'), pending: t('certification.pendingAction') };
+
+  const renderBlock = (block: ContentBlock) => {
+    switch (block.blockType) {
+      case 'mediaTextSplit':
+        return (
+          <MediaTextSplitBlock
+            block={block}
+            locale={locale}
+            imageLabel={t('common.imagePlaceholder')}
+            imageRight={false}
+          />
+        );
+
+      case 'milestoneTimeline':
+        return (
+          <>
+            <BlockHeading block={block} />
+            <MilestoneTimeline block={block} />
+          </>
+        );
+
+      case 'locationList':
+        return (
+          <>
+            <BlockHeading block={block} />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 'clamp(24px, 3vw, 40px)',
+                marginTop: 40,
+                alignItems: 'start',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {(block.reference?.locations ?? []).map((location) => (
+                  <div key={`${location.city}-${location.type}`} style={{ ...cardStyle, gap: 6 }}>
+                    <span
+                      style={{
+                        font: "500 12px/1.4 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--page-accent)',
+                      }}
+                    >
+                      {t(`locations.${location.type}`)}
+                    </span>
+                    <span
+                      style={{
+                        font: "600 1rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                        color: 'var(--page-fg)',
+                      }}
+                    >
+                      {location.name ?? location.city}
+                    </span>
+                    <span
+                      style={{
+                        font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                        color: 'var(--page-muted)',
+                      }}
+                    >
+                      {location.addressLine}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <ImageSlot alt={t('common.mapPlaceholder')} label={t('common.mapPlaceholder')} ratio="2 / 1" />
+            </div>
+          </>
+        );
+
+      case 'certificationList':
+        // 永續段落底下那一排是 chip，三個分類則是卡片
+        return block.anchor === 'sustainability-certs' ? (
+          <>
+            <p
+              style={{
+                margin: 0,
+                font: "500 12px/1.4 'IBM Plex Mono', monospace",
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                color: 'var(--page-faint)',
+              }}
+            >
+              {block.title}
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+              {(block.reference?.certifications ?? []).map((certification) => (
+                <CertChip
+                  key={certification.slug}
+                  id={certification.slug}
+                  label={certification.title ?? certification.slug}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <BlockHeading block={block} />
+            <CertificationCards
+              certifications={block.reference?.certifications ?? []}
+              labels={certificationLabels}
+            />
+          </>
+        );
+
+      case 'offeringGrid':
+        return (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                gap: 24,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <BlockHeading block={block} />
+              </div>
+              {block.ctaLabel ? (
+                <Link href={localeHref(locale, ROUTES.partnership)} className="vr-dark-btn">
+                  {block.ctaLabel}
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ) : null}
+            </div>
+            <OfferingGrid block={block} hrefFor={href} />
+          </>
+        );
+
+      default:
+        return (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                gap: 24,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <BlockHeading block={block} />
+              </div>
+              {block.ctaLabel ? (
+                <Link href={localeHref(locale, ROUTES.sustainability)} className="vr-dark-btn">
+                  {block.ctaLabel}
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ) : null}
+            </div>
+            {block.items.some((item) => item.linkUrl) ? (
+              <OfferingGrid block={block} hrefFor={href} columns={Math.min(block.items.length, 4)} />
+            ) : (
+              <FeatureGridBlock block={{ ...block, eyebrow: null, title: null, subtitle: null }} />
+            )}
+          </>
+        );
+    }
   };
 
   return (
@@ -80,338 +229,26 @@ export default async function AboutPage({ params }: Params) {
 
       <PageShell tone="dark">
         <PageBanner
-          tone="dark"
-          eyebrow={c.banner.eyebrow}
-          title={c.banner.title}
-          description={c.banner.description}
-          image={c.banner.image}
-          imageLabel={c.banner.imageLabel}
+          eyebrow={page.eyebrow ?? t('nav.about')}
+          title={page.bannerTitle ?? page.title ?? ''}
+          description={page.bannerDescription ?? undefined}
+          image={bannerImage(page.bannerImageUrl)}
         />
 
-        {/* ============ 品牌願景 ============ */}
-        <section id="vision" style={{ scrollMarginTop: 90 }}>
-          <Container
-            style={{
-              padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 'clamp(32px, 5vw, 72px)',
-              alignItems: 'center',
-            }}
-          >
-            <ImageSlot alt={c.vision.imageLabel} label={c.vision.imageLabel} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <p style={eyebrow}>{c.vision.eyebrow}</p>
-              <h2 style={{ ...heading, margin: 0 }}>{c.vision.title}</h2>
-              <p
-                style={{
-                  margin: 0,
-                  font: "400 1rem/1.7 'Geologica', 'GenYoGothic TW', sans-serif",
-                  color: 'rgba(255,255,255,0.62)',
-                  textWrap: 'pretty',
-                }}
-              >
-                {c.vision.body}
-              </p>
-            </div>
-          </Container>
-        </section>
+        {page.blocks.map((block, index) => (
+          <BlockSection key={block.anchor ?? index} id={block.anchor ?? undefined} raised={index % 2 === 1}>
+            {renderBlock(block)}
+          </BlockSection>
+        ))}
 
-        {/* ============ 品牌價值 ============ */}
-        <section style={{ background: '#10101d' }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.values.eyebrow}</p>
-            <h2 style={heading}>{c.values.title}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.values.items.map((item) => (
-                <div key={item.title} style={card}>
-                  <span
-                    style={{
-                      borderRadius: 12,
-                      width: 44,
-                      height: 44,
-                      background: 'rgba(100,54,239,0.16)',
-                      color: '#a184f5',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name={item.icon} size={20} />
-                  </span>
-                  <span style={cardTitle}>{item.title}</span>
-                  <span style={cardBody}>{item.body}</span>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 發展歷程 ============ */}
-        <section id="history" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.history.eyebrow}</p>
-            <h2 style={heading}>{c.history.title}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.history.items.map((item) => (
-                <div key={item.label} style={{ ...card, border: '1px dashed rgba(255,255,255,0.22)' }}>
-                  <span
-                    style={{
-                      font: "500 13px/1.4 'IBM Plex Mono', monospace",
-                      letterSpacing: '0.04em',
-                      color: '#a184f5',
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                  <span style={cardBody}>{item.body}</span>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 製造 ============ */}
-        <section id="manufacturing" style={{ background: '#10101d', scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.manufacturing.eyebrow}</p>
-            <h2 style={heading}>{c.manufacturing.title}</h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'rgba(255,255,255,0.62)',
-                textWrap: 'pretty',
-              }}
-            >
-              {c.manufacturing.lead}
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-              {c.manufacturing.capabilities.map((item) => (
-                <Link key={item.title} href={localeHref(locale, item.href)} className="vr-dark-card" style={card}>
-                  <span
-                    style={{
-                      borderRadius: 12,
-                      width: 44,
-                      height: 44,
-                      background: 'rgba(100,54,239,0.16)',
-                      color: '#a184f5',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name={item.icon} size={20} />
-                  </span>
-                  <span style={cardTitle}>{item.title}</span>
-                  <span style={cardBody}>{item.body}</span>
-                  <span
-                    style={{
-                      marginTop: 'auto',
-                      font: "600 13px/1.4 'Geologica', sans-serif",
-                      color: '#a184f5',
-                    }}
-                  >
-                    {item.cta} →
-                  </span>
-                </Link>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 'clamp(36px, 4vw, 56px)' }}>
-              <p
-                style={{
-                  margin: 0,
-                  font: "500 12px/1.4 'IBM Plex Mono', monospace",
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.4)',
-                }}
-              >
-                {c.manufacturing.locationsEyebrow}
-              </p>
-              <h3
-                style={{
-                  margin: '12px 0 0',
-                  font: "500 1.5rem/1.25 'Geologica', 'GenYoGothic TW', sans-serif",
-                  color: '#ffffff',
-                }}
-              >
-                {c.manufacturing.locationsTitle}
-              </h3>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 24 }}>
-                {c.manufacturing.locations.map((location) => (
-                  <div key={location.name} style={{ ...card, border: '1px dashed rgba(255,255,255,0.22)' }}>
-                    <span style={cardTitle}>{location.name}</span>
-                    <span style={cardBody}>{location.note}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 24 }}>
-                <ImageSlot alt={c.manufacturing.mapLabel} label={c.manufacturing.mapLabel} ratio="2 / 1" />
-              </div>
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 永續 ============ */}
-        <section id="sustainability" style={{ scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                gap: 24,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <p style={eyebrow}>{c.sustainability.eyebrow}</p>
-                <h2 style={heading}>{c.sustainability.title}</h2>
-              </div>
-              <Link href={localeHref(locale, ROUTES.sustainability)} className="vr-dark-btn">
-                {c.sustainability.cta}
-                <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 'clamp(36px, 4vw, 56px)' }}>
-              {c.sustainability.items.map((item) => (
-                <Link key={item.title} href={localeHref(locale, item.href)} className="vr-dark-card" style={card}>
-                  <span style={cardTitle}>{item.title}</span>
-                  <span style={cardBody}>{item.body}</span>
-                </Link>
-              ))}
-            </div>
-
-            <p
-              style={{
-                margin: '32px 0 12px',
-                font: "500 12px/1.4 'IBM Plex Mono', monospace",
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.4)',
-              }}
-            >
-              {c.sustainability.certsLabel}
-            </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              {c.sustainability.certIds.map((id) => {
-                const cert = certs.find((item) => item.id === id);
-                return cert ? <CertChip key={id} id={id} label={cert.title} /> : null;
-              })}
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 認證（三個分類，每張卡開彈窗） ============ */}
-        <section id="certifications" style={{ background: '#10101d', scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <p style={eyebrow}>{c.certification.eyebrow}</p>
-            <h2 style={heading}>{c.certification.title}</h2>
-            <p
-              style={{
-                margin: '16px 0 0',
-                font: "400 1rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'rgba(255,255,255,0.62)',
-              }}
-            >
-              {c.certification.lead}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 40, marginTop: 40 }}>
-              {c.certification.groups.map((group) => (
-                <div key={group.title}>
-                  <h3
-                    style={{
-                      margin: 0,
-                      font: "600 1.125rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: '#ffffff',
-                    }}
-                  >
-                    {group.title}
-                  </h3>
-                  <p
-                    style={{
-                      margin: '8px 0 0',
-                      font: "400 0.9375rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                      color: 'rgba(255,255,255,0.55)',
-                    }}
-                  >
-                    {group.body}
-                  </p>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${group.ids.length > 3 ? 4 : 3}, 1fr)`,
-                      gap: 20,
-                      marginTop: 20,
-                    }}
-                  >
-                    {group.ids.map((id) => {
-                      const cert = certs.find((item) => item.id === id);
-                      if (!cert) return null;
-                      return (
-                        <CertChip
-                          key={id}
-                          id={id}
-                          label={cert.title}
-                          description={c.certification.notes[id]}
-                          action={cert.todo ? c.certification.pending : c.certification.view}
-                          pending={cert.todo}
-                          variant="card"
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        {/* ============ 合作夥伴 ============ */}
-        <section id="partnership" style={{ background: '#10101d', scrollMarginTop: 90 }}>
-          <Container style={{ padding: 'clamp(56px, 8vw, 100px) clamp(24px, 5vw, 80px)' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                gap: 24,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <p style={eyebrow}>{c.partnership.eyebrow}</p>
-                <h2 style={heading}>{c.partnership.title}</h2>
-              </div>
-              <Link href={localeHref(locale, ROUTES.partnership)} className="vr-dark-btn">
-                {c.partnership.cta}
-                <span aria-hidden="true">→</span>
-              </Link>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 'clamp(36px, 4vw, 56px)' }}>
-              {c.partnership.items.map((item) => (
-                <Link key={item.title} href={localeHref(locale, item.href)} className="vr-dark-card" style={card}>
-                  <span style={cardTitle}>{item.title}</span>
-                  <span style={cardBody}>{item.body}</span>
-                  <span style={{ marginTop: 'auto', font: "600 13px/1.4 'Geologica', sans-serif", color: '#a184f5' }}>
-                    {item.cta} →
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </Container>
-        </section>
-
-        <PageCTA locale={locale} eyebrow={c.cta.eyebrow} headline={c.cta.headline} subcopy={c.cta.subcopy} />
+        {page.ctaHeadline ? (
+          <PageCTA
+            locale={locale}
+            eyebrow={page.ctaEyebrow ?? ''}
+            headline={page.ctaHeadline}
+            subcopy={page.ctaSubcopy ?? ''}
+          />
+        ) : null}
       </PageShell>
     </>
   );

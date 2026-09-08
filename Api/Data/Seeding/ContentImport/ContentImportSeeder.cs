@@ -92,6 +92,10 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
             new("materials", BlockType.CategoryGrid, "materials", BlockTone.Dark),
             new("industries", BlockType.SolutionGrid, "industries", BlockTone.Dark, """{"limit":4}"""),
             new("trust", BlockType.LogoWall, "trust", BlockTone.Dark),
+            new("trust-certs", BlockType.CertificationList, "trust-certs", BlockTone.Dark),
+            new("trust-partners", BlockType.PartnerBrandWall, "trust-partners", BlockTone.Dark),
+            new("trust-exhibitions", BlockType.ExhibitionList, "trust-exhibitions", BlockTone.Dark,
+                Settings: """{"upcoming":true,"limit":3}"""),
             new("sustainability", BlockType.Cta, "sustainability", BlockTone.Dark),
         ]),
         new("products", "products", "products",
@@ -115,7 +119,9 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
             new("values", BlockType.FeatureGrid, "values", BlockTone.Dark),
             new("history", BlockType.MilestoneTimeline, "history", BlockTone.Dark),
             new("manufacturing", BlockType.FeatureGrid, "manufacturing", BlockTone.Dark),
+            new("manufacturing-locations", BlockType.LocationList, "manufacturing-locations", BlockTone.Dark),
             new("sustainability", BlockType.FeatureGrid, "sustainability", BlockTone.Dark),
+            new("sustainability-certs", BlockType.CertificationList, "sustainability-certs", BlockTone.Dark),
             new("certification", BlockType.CertificationList, "certifications", BlockTone.Dark),
             new("partnership", BlockType.OfferingGrid, "partnership", BlockTone.Dark),
         ]),
@@ -220,6 +226,48 @@ public sealed partial class ContentImportSeeder(VicRoundDbContext db, ILogger<Co
                 ["eyebrow"] = root["listEyebrow"]?.DeepClone(),
                 ["title"] = root["listTitle"]?.DeepClone(),
             };
+        }
+
+        if (pageSlug == "home" && root["trust"] is JsonObject trust)
+        {
+            // 信任牆的三排（認證 chip、合作品牌 logo、展會）在來源裡是 trust 的幾個欄位，
+            // 補成三個 section，各自成為一個 reference block。
+            root["trust-certs"] ??= new JsonObject { ["ids"] = trust["certificationIds"]?.DeepClone() };
+            root["trust-partners"] ??= new JsonObject { ["title"] = trust["partnerLabel"]?.DeepClone() };
+            root["trust-exhibitions"] ??= new JsonObject { ["title"] = trust["exhibitionLabel"]?.DeepClone() };
+
+            // 首頁 CTA 底下那一行業務信箱是語言中立的字串，包成雙語才進得了翻譯欄位。
+            if (root["sustainability"] is JsonObject cta && cta["note"] is null && cta["email"]?.GetValue<string>() is { } email)
+            {
+                cta["note"] = new JsonObject
+                {
+                    [CultureCodes.English] = email,
+                    [CultureCodes.TraditionalChinese] = email,
+                };
+            }
+        }
+
+        if (pageSlug == "about")
+        {
+            // 據點清單與永續段落底下的認證 chip 在來源裡是母段落的欄位，
+            // 補成獨立 section 之後就能各自成為一個 reference block。
+            if (root["manufacturing-locations"] is null && root["manufacturing"] is JsonObject manufacturing)
+            {
+                root["manufacturing-locations"] = new JsonObject
+                {
+                    ["eyebrow"] = manufacturing["locationsEyebrow"]?.DeepClone(),
+                    ["title"] = manufacturing["locationsTitle"]?.DeepClone(),
+                };
+            }
+
+            if (root["sustainability-certs"] is null && root["sustainability"] is JsonObject sustainability)
+            {
+                root["sustainability-certs"] = new JsonObject
+                {
+                    ["title"] = sustainability["certsLabel"]?.DeepClone(),
+                    ["ids"] = sustainability["certIds"]?.DeepClone(),
+                };
+            }
         }
 
         if (pageSlug == "contact" && root["hurry"] is null && root["direct"] is JsonObject direct)
