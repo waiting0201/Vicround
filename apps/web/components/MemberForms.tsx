@@ -2,15 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { AccountError, register as apiRegister, signIn as apiSignIn } from '@/lib/account-client';
 
 /**
  * 會員登入／註冊分頁 —— 逐項對照 `mockup/Rounded Design/member.dc.html`（深色頁）。
  *
  * <p>
- * ⚠️ **尚未接上** Account API：登入是 `POST /api/v1/account/login`，
- * 註冊是 `POST /api/v1/account/register`（註冊時後端會先比對 `BusinessDomainRules`，
+ * 送出走同源的 `/api/v1/account/**`（`app/api/v1/account/[...path]`）：登入是
+ * `POST …/login`，註冊是 `POST …/register`（後端會先比對 `BusinessDomainRules`，
  * 封鎖網域直接回 400 且不建帳號 —— 見 docs/cms-api.md）。
  * 會員 token 與後台 token 完全隔離，兩邊互不通用。
+ * </p>
+ *
+ * <p>
+ * <b>註冊成功不會自動登入</b>：帳號這時還是 `PendingEmailVerification`，
+ * 直接把人丟進會員專區只會看到一頁「請去收信」。所以留在原地顯示後端回的那句話。
  * </p>
  */
 export type MemberLabels = {
@@ -38,6 +45,18 @@ export type MemberLabels = {
   };
 };
 
+/**
+ * 職務下拉的後端列舉值，順序必須與 `messages.member.register.roles` 一致
+ * （後端是 `MemberEnumNames.ParseJobRole`）。兩邊都是五個選項，改一邊就要改另一邊。
+ */
+export const MEMBER_ROLE_VALUES = [
+  'engineeringRnd',
+  'procurement',
+  'productManagement',
+  'quality',
+  'other',
+];
+
 const labelStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -57,8 +76,81 @@ const fieldStyle: React.CSSProperties = {
   outlineColor: '#6436ef',
 };
 
-export function MemberForms({ labels, privacyHref }: { labels: MemberLabels; privacyHref: string }) {
+export function MemberForms({
+  labels,
+  privacyHref,
+  locale,
+  accountHref,
+  roleValues,
+}: {
+  labels: MemberLabels;
+  privacyHref: string;
+  locale: string;
+  accountHref: string;
+  /** 與 `labels.register.roles` 同順序的後端列舉值。 */
+  roleValues: string[];
+}) {
+  const router = useRouter();
   const [tab, setTab] = useState<'signIn' | 'register'>('signIn');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
+  function reset() {
+    setError(null);
+    setDone(null);
+  }
+
+  async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    reset();
+    setBusy(true);
+
+    try {
+      await apiSignIn(String(form.get('email') ?? ''), String(form.get('password') ?? ''));
+      router.push(accountHref);
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof AccountError ? caught.message : '登入失敗，請稍後再試。');
+      setBusy(false);
+    }
+  }
+
+  async function onRegister(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    reset();
+
+    const password = String(form.get('password') ?? '');
+
+    // 兩次密碼不一致就不必送出——這是純前端的一致性檢查，後端只認一個 password 欄位。
+    if (password !== String(form.get('confirm') ?? '')) {
+      setError(labels.register.confirm);
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const result = await apiRegister({
+        email: String(form.get('email') ?? ''),
+        password,
+        fullName: String(form.get('fullName') ?? ''),
+        companyName: String(form.get('companyName') ?? ''),
+        jobRole: String(form.get('jobRole') ?? ''),
+        phone: String(form.get('phone') ?? '') || undefined,
+        consent: form.get('consent') === 'on',
+        culture: locale,
+      });
+
+      setDone(result.message);
+    } catch (caught) {
+      setError(caught instanceof AccountError ? caught.message : '註冊失敗，請稍後再試。');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div
@@ -76,18 +168,35 @@ export function MemberForms({ labels, privacyHref }: { labels: MemberLabels; pri
             type="button"
             className="vr-member-tab"
             data-active={tab === id}
-            onClick={() => setTab(id)}
+            onClick={() => {
+              setTab(id);
+              reset();
+            }}
           >
             {labels.tabs[id]}
           </button>
         ))}
       </div>
 
-      {tab === 'signIn' ? (
-        <form
-          onSubmit={(event) => event.preventDefault()}
-          style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+      {(error || done) && (
+        <p
+          role={error ? 'alert' : 'status'}
+          style={{
+            margin: '0 0 18px',
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: `1px solid ${error ? 'rgba(255,138,138,0.4)' : 'rgba(138,255,176,0.35)'}`,
+            background: error ? 'rgba(255,138,138,0.08)' : 'rgba(138,255,176,0.07)',
+            font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+            color: error ? '#ff8a8a' : '#8affb0',
+          }}
         >
+          {error ?? done}
+        </p>
+      )}
+
+      {tab === 'signIn' ? (
+        <form onSubmit={onSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label style={labelStyle}>
             {labels.signIn.email}
             <input type="email" name="email" autoComplete="username" required style={fieldStyle} />
@@ -134,43 +243,42 @@ export function MemberForms({ labels, privacyHref }: { labels: MemberLabels; pri
             </span>
           </div>
 
-          <button type="submit" className="vr-btn" style={{ marginTop: 10 }}>
+          <button type="submit" className="vr-btn" style={{ marginTop: 10 }} disabled={busy}>
             {labels.signIn.submit}
             <span aria-hidden="true">→</span>
           </button>
         </form>
       ) : (
-        <form
-          onSubmit={(event) => event.preventDefault()}
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
-        >
+        <form onSubmit={onRegister} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <label style={labelStyle}>
             {labels.register.name}
-            <input type="text" required style={fieldStyle} />
+            <input type="text" name="fullName" autoComplete="name" required style={fieldStyle} />
           </label>
           <label style={labelStyle}>
             {labels.register.company}
-            <input type="text" required style={fieldStyle} />
+            <input type="text" name="companyName" autoComplete="organization" required style={fieldStyle} />
           </label>
           <label style={labelStyle}>
             {labels.register.email}
-            <input type="email" required style={fieldStyle} />
+            <input type="email" name="email" autoComplete="email" required style={fieldStyle} />
           </label>
           <label style={labelStyle}>
             {labels.register.role}
-            <select style={fieldStyle}>
-              {labels.register.roles.map((role) => (
-                <option key={role}>{role}</option>
+            <select name="jobRole" style={fieldStyle}>
+              {labels.register.roles.map((role, index) => (
+                <option key={role} value={roleValues[index] ?? 'other'}>
+                  {role}
+                </option>
               ))}
             </select>
           </label>
           <label style={labelStyle}>
             {labels.register.password}
-            <input type="password" autoComplete="new-password" required style={fieldStyle} />
+            <input type="password" name="password" autoComplete="new-password" minLength={12} required style={fieldStyle} />
           </label>
           <label style={labelStyle}>
             {labels.register.confirm}
-            <input type="password" autoComplete="new-password" required style={fieldStyle} />
+            <input type="password" name="confirm" autoComplete="new-password" minLength={12} required style={fieldStyle} />
           </label>
 
           <label
@@ -185,6 +293,7 @@ export function MemberForms({ labels, privacyHref }: { labels: MemberLabels; pri
           >
             <input
               type="checkbox"
+              name="consent"
               required
               style={{ marginTop: 3, accentColor: '#6436ef', width: 16, height: 16 }}
             />
@@ -198,7 +307,7 @@ export function MemberForms({ labels, privacyHref }: { labels: MemberLabels; pri
           </label>
 
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" className="vr-btn">
+            <button type="submit" className="vr-btn" disabled={busy}>
               {labels.register.submit}
               <span aria-hidden="true">→</span>
             </button>

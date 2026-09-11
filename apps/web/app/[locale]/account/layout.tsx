@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { ROUTES } from '@/lib/routes';
+import { AccountProvider } from '@/components/AccountSession';
 
 /**
  * 會員專區的殼。
@@ -39,15 +40,17 @@ export default async function AccountLayout({
   ] as const;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-12 md:flex-row">
-      <nav aria-label={t('nav.account')} className="flex shrink-0 flex-col gap-2 text-sm md:w-56">
-        {items.map((item) => (
-          <Link key={item.key} href={item.href}>
-            {t(`account.${item.key}`)}
-          </Link>
-        ))}
-      </nav>
-      <div className="flex-1">{children}</div>
-    </div>
+    <AccountProvider>
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-12 md:flex-row">
+        <nav aria-label={t('nav.account')} className="flex shrink-0 flex-col gap-2 text-sm md:w-56">
+          {items.map((item) => (
+            <Link key={item.key} href={item.href}>
+              {t(`account.${item.key}`)}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex-1">{children}</div>
+      </div>
+    </AccountProvider>
   );
 }

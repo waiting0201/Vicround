@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
-import { MemberForms } from '@/components/MemberForms';
+import { MemberForms, MEMBER_ROLE_VALUES } from '@/components/MemberForms';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
@@ -71,6 +71,9 @@ export default async function MemberPage({ params }: Params) {
             }}
           >
             <MemberForms
+              locale={locale}
+              accountHref={localeHref(locale, ROUTES.account)}
+              roleValues={MEMBER_ROLE_VALUES}
               privacyHref={localeHref(locale, ROUTES.privacy)}
               labels={{
                 tabs: messages.member.tabs,

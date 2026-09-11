@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { PageScaffold, Todo } from '@/components/PageScaffold';
+import { SampleRequestsScreen } from '@/components/account/AccountScreens';
+import { guardLabels, sampleStatusNames } from '@/lib/account-labels';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { pageMetadata } from '@/lib/seo';
@@ -11,18 +12,30 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
 
-  // noIndex：會員專區不進索引，也不宣告 canonical/hreflang（見 account/layout.tsx）
-  return pageMetadata({ locale, path: '/account/sample-requests', title: t('account.sampleRequests'), noIndex: true });
+  return pageMetadata({
+    locale,
+    path: '/account/sample-requests',
+    title: t('account.sampleRequests'),
+    noIndex: true,
+  });
 }
 
-export default async function AccountPage({ params }: Params) {
+export default async function SampleRequestsPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
 
   return (
-    <PageScaffold title={t('account.sampleRequests')}>
-      <Todo api="GET /api/v1/account/sample-requests、POST /api/v1/account/sample-requests" note="樣品申請列表與新增。" />
-    </PageScaffold>
+    <SampleRequestsScreen
+      locale={locale}
+      guard={guardLabels(locale)}
+      statusNames={sampleStatusNames(locale)}
+      labels={{
+        title: t('account.samples.title'),
+        empty: t('account.samples.empty'),
+        submitted: t('account.samples.submitted'),
+        items: t('account.samples.items'),
+      }}
+    />
   );
 }

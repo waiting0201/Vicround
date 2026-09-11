@@ -168,7 +168,90 @@
     "sampleRequests": "Sample requests",
     "profile": "Profile",
     "signIn": "Sign in",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "loading": "Loading your account…",
+    "signInRequired": "Sign in to continue",
+    "signInBody": "This area is for registered customers. Sign in with your business email, or create an account.",
+    "status": {
+      "pendingEmailVerification": {
+        "title": "Verify your email",
+        "body": "We sent a verification link to your business email. The link is valid for three days."
+      },
+      "pendingApproval": {
+        "title": "Approval in progress",
+        "body": "Your email is verified and your account is with our team. Approval usually completes within one business day."
+      },
+      "approved": {
+        "title": "Account active",
+        "body": ""
+      },
+      "rejected": {
+        "title": "Application not approved",
+        "body": "Please contact us if you believe this is a mistake."
+      },
+      "suspended": {
+        "title": "Account suspended",
+        "body": "Please contact your Vicround representative."
+      }
+    },
+    "overview": {
+      "title": "Account overview",
+      "statusLabel": "Status",
+      "companyLabel": "Company",
+      "emailLabel": "Email",
+      "approvedLabel": "Approved on"
+    },
+    "downloadsScreen": {
+      "title": "Documents",
+      "empty": "No documents are available for your account yet.",
+      "download": "Download",
+      "memberOnly": "Member only",
+      "onRequest": "On request",
+      "version": "Version",
+      "validUntil": "Valid until",
+      "failed": "Could not get the download link. Please try again."
+    },
+    "samples": {
+      "title": "Sample requests",
+      "empty": "You have not submitted any sample requests yet.",
+      "number": "Request",
+      "status": "Status",
+      "submitted": "Submitted",
+      "items": "Items",
+      "tracking": "Tracking",
+      "view": "View",
+      "reorder": "Order the same spec again",
+      "reorderFailed": "Could not create the new request.",
+      "shipTo": "Ship to",
+      "itemsTitle": "Items",
+      "quantity": "Quantity",
+      "spec": "Requested spec",
+      "back": "Back to sample requests",
+      "notFound": "That request number does not exist on your account."
+    },
+    "profileScreen": {
+      "title": "Profile",
+      "name": "Name",
+      "company": "Company",
+      "role": "Role",
+      "phone": "Phone",
+      "email": "Email",
+      "emailNote": "Your email identifies the account and cannot be changed here.",
+      "save": "Save changes",
+      "saved": "Profile updated.",
+      "failed": "Could not save your profile."
+    },
+    "sampleStatus": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "underReview": "Under review",
+      "approved": "Approved",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "unknown": "—"
+    }
   },
   "certification": {
     "issuer": "Issuing body",
@@ -310,5 +393,8 @@
     "production": "Production",
     "sales": "Sales",
     "researchAndDevelopment": "R&D"
+  },
+  "product": {
+    "specifications": "Specifications"
   }
 }

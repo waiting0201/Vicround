@@ -147,14 +147,18 @@ pnpm sync:tokens                             # 從 mockup 同步設計 token 進
 node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位混入中文
 ```
 
-## 前台頁面現況（2026-09-08）
+## 前台頁面現況（2026-09-11）
 
 **客戶確認稿的 25 個頁面已全數實作**（版型、色彩、字級、間距逐項對照
-`mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。另有 6 條路由仍是鷹架，
-因為**確認稿裡沒有對應頁**：
+`mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。**原本的 6 條鷹架也已全部接上
+API**——確認稿沒有這幾頁，所以版型沿用會員專區殼層既有的 Tailwind 語彙，不自創第二套視覺：
 
-- `/{locale}/products/{category}/{slug}` 產品詳情 —— 確認稿只做到三個產品線頁
-- `/{locale}/account/**`（5 條）會員專區 —— 確認稿只做到 `/member` 登入註冊入口
+- `/{locale}/products/{category}/{slug}` 產品詳情 —— 接 `GET /v1/products/{slug}`
+- `/{locale}/account/**`（5 條）會員專區 —— 接 Account API，**資料一律在瀏覽器端取**
+  （`no-store` + 會員 JWT，不得進 Data Cache）
+
+⚠️ 會員的**寄信管道尚未接上**：驗證信與重設密碼信目前只寫進遙測
+（`LoggingMemberNotifier`），因此完整的註冊 → 驗證 → 核准流程還沒辦法端到端跑完。
 
 進度明細見 [STATUS.md](STATUS.md)。
 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { PageScaffold, Todo } from '@/components/PageScaffold';
+import { DownloadsScreen } from '@/components/account/AccountScreens';
+import { guardLabels } from '@/lib/account-labels';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { pageMetadata } from '@/lib/seo';
@@ -11,18 +12,28 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
 
-  // noIndex：會員專區不進索引，也不宣告 canonical/hreflang（見 account/layout.tsx）
   return pageMetadata({ locale, path: '/account/downloads', title: t('account.downloads'), noIndex: true });
 }
 
-export default async function AccountPage({ params }: Params) {
+export default async function AccountDownloadsPage({ params }: Params) {
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);
 
   return (
-    <PageScaffold title={t('account.downloads')}>
-      <Todo api="GET /api/v1/account/downloads、POST /api/v1/account/downloads/{slug}/link" note="memberOnly 檔案換 10 分鐘 SAS URL，僅 Approved 會員可取得。" />
-    </PageScaffold>
+    <DownloadsScreen
+      locale={locale}
+      guard={guardLabels(locale)}
+      labels={{
+        title: t('account.downloadsScreen.title'),
+        empty: t('account.downloadsScreen.empty'),
+        download: t('account.downloadsScreen.download'),
+        memberOnly: t('account.downloadsScreen.memberOnly'),
+        onRequest: t('account.downloadsScreen.onRequest'),
+        version: t('account.downloadsScreen.version'),
+        validUntil: t('account.downloadsScreen.validUntil'),
+        failed: t('account.downloadsScreen.failed'),
+      }}
+    />
   );
 }

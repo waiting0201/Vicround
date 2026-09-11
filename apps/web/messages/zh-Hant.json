@@ -168,7 +168,90 @@
     "sampleRequests": "樣品申請",
     "profile": "帳戶資料",
     "signIn": "登入",
-    "signOut": "登出"
+    "signOut": "登出",
+    "loading": "正在載入你的帳號…",
+    "signInRequired": "請先登入",
+    "signInBody": "此區域僅開放給已註冊的客戶。請以公司電子郵件登入，或建立帳號。",
+    "status": {
+      "pendingEmailVerification": {
+        "title": "請驗證電子郵件",
+        "body": "我們已寄出驗證連結到你的公司信箱，連結三天內有效。"
+      },
+      "pendingApproval": {
+        "title": "審核中",
+        "body": "電子郵件已驗證，申請已送交我們的團隊，通常一個工作天內完成審核。"
+      },
+      "approved": {
+        "title": "帳號已啟用",
+        "body": ""
+      },
+      "rejected": {
+        "title": "申請未通過",
+        "body": "若你認為這是誤判，請與我們聯絡。"
+      },
+      "suspended": {
+        "title": "帳號已停權",
+        "body": "請與你的 VICROUND 業務窗口聯繫。"
+      }
+    },
+    "overview": {
+      "title": "帳戶總覽",
+      "statusLabel": "狀態",
+      "companyLabel": "公司",
+      "emailLabel": "電子郵件",
+      "approvedLabel": "核准日期"
+    },
+    "downloadsScreen": {
+      "title": "文件",
+      "empty": "目前沒有可供你的帳號下載的文件。",
+      "download": "下載",
+      "memberOnly": "限會員",
+      "onRequest": "需詢問",
+      "version": "版本",
+      "validUntil": "有效至",
+      "failed": "無法取得下載連結，請再試一次。"
+    },
+    "samples": {
+      "title": "樣品申請",
+      "empty": "你尚未送出任何樣品申請。",
+      "number": "單號",
+      "status": "狀態",
+      "submitted": "送出時間",
+      "items": "品項",
+      "tracking": "物流追蹤",
+      "view": "查看",
+      "reorder": "重下同批規格",
+      "reorderFailed": "無法建立新的申請單。",
+      "shipTo": "收件資訊",
+      "itemsTitle": "申請品項",
+      "quantity": "數量",
+      "spec": "規格需求",
+      "back": "回樣品申請列表",
+      "notFound": "你的帳號中沒有這個單號。"
+    },
+    "profileScreen": {
+      "title": "個人資料",
+      "name": "姓名",
+      "company": "公司",
+      "role": "職務",
+      "phone": "電話",
+      "email": "電子郵件",
+      "emailNote": "電子郵件是帳號識別，無法在此變更。",
+      "save": "儲存變更",
+      "saved": "個人資料已更新。",
+      "failed": "無法儲存個人資料。"
+    },
+    "sampleStatus": {
+      "draft": "草稿",
+      "submitted": "已送出",
+      "underReview": "審核中",
+      "approved": "已核准",
+      "shipped": "已出貨",
+      "delivered": "已送達",
+      "rejected": "未通過",
+      "cancelled": "已取消",
+      "unknown": "—"
+    }
   },
   "certification": {
     "issuer": "發證機構",
@@ -310,5 +393,8 @@
     "production": "生產基地",
     "sales": "業務據點",
     "researchAndDevelopment": "研發中心"
+  },
+  "product": {
+    "specifications": "規格"
   }
 }

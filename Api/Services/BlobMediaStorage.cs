@@ -1,6 +1,7 @@
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.Extensions.Logging;
 
 namespace VicRound.Api.Services;
@@ -46,5 +47,33 @@ public sealed class BlobMediaStorage(BlobServiceClient client, ILogger<BlobMedia
         }
 
         return new StoredBlob(containerName, blobPath, isPrivate ? null : blob.Uri.ToString());
+    }
+
+    public Task<Uri> CreateReadLinkAsync(
+        string container,
+        string blobPath,
+        TimeSpan lifetime,
+        CancellationToken cancellationToken = default)
+    {
+        var blob = client.GetBlobContainerClient(container).GetBlobClient(blobPath);
+
+        // 用連線字串建立的 client 握有帳戶金鑰，可以直接簽；改用受控識別時這裡會是 false，
+        // 屆時要換成 user delegation key。先明確擋下，不要簽出一個沒有授權的網址。
+        if (!blob.CanGenerateSasUri)
+        {
+            throw new InvalidOperationException(
+                "目前的 Blob 認證方式無法簽發 SAS（需要帳戶金鑰或 user delegation key）。");
+        }
+
+        // 往前挪一點，容忍伺服器之間的時鐘差——差幾秒就會讓剛簽出的連結先失效。
+        var builder = new BlobSasBuilder(BlobSasPermissions.Read, DateTimeOffset.UtcNow.Add(lifetime))
+        {
+            BlobContainerName = container,
+            BlobName = blobPath,
+            Resource = "b",
+            StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5),
+        };
+
+        return Task.FromResult(blob.GenerateSasUri(builder));
     }
 }

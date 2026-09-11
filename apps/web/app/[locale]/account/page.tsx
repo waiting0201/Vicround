@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { PageScaffold, Todo } from '@/components/PageScaffold';
+import { OverviewScreen } from '@/components/account/AccountScreens';
+import { guardLabels, memberStatusNames } from '@/lib/account-labels';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { pageMetadata } from '@/lib/seo';
@@ -21,8 +22,18 @@ export default async function AccountPage({ params }: Params) {
   const t = translator(locale);
 
   return (
-    <PageScaffold title={t('account.dashboard')}>
-      <Todo api="GET /api/v1/account/me" note="帳戶狀態（PendingApproval／Approved／Suspended）與捷徑。" />
-    </PageScaffold>
+    <OverviewScreen
+      locale={locale}
+      guard={guardLabels(locale)}
+      labels={{
+        title: t('account.overview.title'),
+        statusLabel: t('account.overview.statusLabel'),
+        companyLabel: t('account.overview.companyLabel'),
+        emailLabel: t('account.overview.emailLabel'),
+        approvedLabel: t('account.overview.approvedLabel'),
+        statusNames: memberStatusNames(locale),
+        signOut: t('account.signOut'),
+      }}
+    />
   );
 }

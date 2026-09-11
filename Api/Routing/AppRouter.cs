@@ -32,7 +32,10 @@ public sealed partial class AppRouter(
     ArticleHandler articles,
     ResourceHandler resources,
     TechnologyHandler technologies,
-    ContactHandler contact)
+    ContactHandler contact,
+    AccountAuthHandler accountAuth,
+    AccountDownloadsHandler accountDownloads,
+    AccountSampleRequestsHandler accountSamples)
 {
     /// <summary>
     /// <see cref="GetRequiredPermission"/> 的預設回傳值：<b>未列在權限表的 <c>/admin/*</c> 一律拒絕</b>。
@@ -61,6 +64,19 @@ public sealed partial class AppRouter(
 
         switch (segments)
         {
+            // 會員的「還沒有 token」端點：註冊、登入、換發、驗證信與重設密碼。
+            // 仍然 no-store——回應裡有 token 與帳號狀態，不該進任何快取。
+            case ["v1", "account", "register"]
+                or ["v1", "account", "login"]
+                or ["v1", "account", "refresh"]
+                or ["v1", "account", "logout"]
+                or ["v1", "account", "verify-email"]
+                or ["v1", "account", "resend-verification"]
+                or ["v1", "account", "forgot-password"]
+                or ["v1", "account", "reset-password"]:
+                req.HttpContext.Response.Headers.CacheControl = "no-store";
+                break;
+
             // 會員專區：只收 member audience，且一律 no-store（docs/cms-api.md）。
             case ["v1", "account", ..]:
                 req.HttpContext.User = jwt.ValidateRequest(req, TokenAudiences.Member)

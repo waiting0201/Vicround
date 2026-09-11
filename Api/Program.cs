@@ -106,6 +106,9 @@ services.AddScoped<IDownloadReadService, DownloadReadService>();
 services.AddScoped<ITechnologyReadService, TechnologyReadService>();
 services.AddScoped<IContactInquiryService, ContactInquiryService>();
 services.AddScoped<IAdminAuthService, AdminAuthService>();
+services.AddScoped<IAccountAuthService, AccountAuthService>();
+// 寄信管道尚未接上：暫時把連結寫進遙測（見 IMemberNotifier 的說明）。
+services.AddScoped<IMemberNotifier, LoggingMemberNotifier>();
 services.AddScoped<IAdminCrudService, AdminCrudService>();
 services.AddScoped<IRevalidationService, RevalidationService>();
 services.AddScoped<HealthHandler>();
@@ -121,6 +124,9 @@ services.AddScoped<AdminAuthHandler>();
 services.AddScoped<AdminContentHandler>();
 services.AddScoped<AdminMediaHandler>();
 services.AddScoped<AdminActionHandler>();
+services.AddScoped<AccountAuthHandler>();
+services.AddScoped<AccountDownloadsHandler>();
+services.AddScoped<AccountSampleRequestsHandler>();
 services.AddScoped<AppRouter>();
 services.AddHttpContextAccessor();
 

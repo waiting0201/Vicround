@@ -11,7 +11,7 @@
 
 ## 一句話現況
 
-**前台與後台都已接上自己的 API；剩下的是會員專區與 Azure 部署。**
+**前台、後台與會員專區都已接上自己的 API；剩下的是上線收尾（素材、網域）。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
@@ -31,7 +31,9 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 灌入同一份文案。
 
 **Content API 的公開端點已全數上線**（20 支，見第六節）；**Admin API 也已上線**
-（登入 + 27 個單元的 CRUD）。**Account API 尚未實作。**
+（登入 + 27 個單元的 CRUD）。**Account API 也已上線**（16 支：註冊／登入／換發／驗證信／
+忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請）——⚠️ 但**寄信管道尚未接上**，
+驗證信與重設密碼信目前只寫進遙測（`LoggingMemberNotifier`，與詢問單的通知信是同一個待辦）。
 
 **正式環境已經跑起來**（2026-09-08）：前台 `https://green-desert-0eeb2ce1e.3.azurestaticapps.net`、
 API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
@@ -70,7 +72,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
 | Content API（`fn-public`） | ✅ | **19 支端點已上線並實跑驗證**（含 contact 寫入與 reference block 解析）；只剩 `/search` 待定 Phase |
-| Account API（會員） | ⬜ | 未開工（需先補會員專區設計稿） |
+| Account API（會員） | 🟡 | 16 支端點已實作並通過建置與測試；**寄信未接**、尚未在實際環境跑過完整註冊流程 |
 | Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
@@ -133,7 +135,9 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 > 其餘皆為淺色（`#ffffff` / `#14141f`）。實作收斂成 `components/PageShell.tsx` 的 `data-tone`，
 > 版型元件一律讀 `var(--page-*)`。新增頁面前先確認 mockup 那一頁的最外層底色。
 
-### 🟡 仍是鷹架（6 條路由檔）—— 確認稿沒有對應頁
+### ✅ 原本的 6 條鷹架已全部接上 API（2026-09-11）
+
+確認稿沒有這幾頁，因此版型沿用會員專區殼層既有的 Tailwind 語彙，沒有自創第二套視覺。
 
 （這 6 條沒有接 API，因為還沒有設計稿；`/products/{category}/{slug}` 的資料端點
 `GET /v1/products/{slug}` 其實已經可用。）
@@ -141,7 +145,7 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 | 路由 | 現況 | 需要什麼才能做 |
 | --- | --- | --- |
 | `/products/{category}/{slug}` 產品詳情 | banner + 待接 API 提示框 | 設計稿（確認稿只做到產品線頁） |
-| `/account`、`/account/downloads`、`/account/profile`、`/account/sample-requests`、`/account/sample-requests/{no}` | 側欄 + 待接 API 提示框，已 `noindex` | 設計稿 + Account API（確認稿只做到 `/member`） |
+| `/account`、`/account/downloads`、`/account/profile`、`/account/sample-requests`、`/account/sample-requests/{no}` | ✅ 已接 Account API（瀏覽器端取資料，`noindex` 不變） | — |
 
 ---
 
@@ -254,7 +258,7 @@ apps/web/
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
-| Account API `/api/v1/account/**` | ⬜ | Router 已驗 member token 並強制 `no-store`；Handler 未實作 |
+| Account API `/api/v1/account/**` | 🟡 | 16 支端點實作完成（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store` |
 | **Admin API** `/api/admin/**` | ✅ | 登入（access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機 |
 | CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、72 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
@@ -310,8 +314,8 @@ apps/web/
 | ⛔ 版位照片與 partner logo | 等客戶提供 | 目前顯示 mockup 自己的虛線佔位框。舊站 212 張圖已在 Blob，但**內文引用的 2863 個檔名只有約 10% 在匯出裡**，其餘須另外取得 |
 | ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
 | ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
-| ⛔ 產品詳情頁設計 | 確認稿沒有這一頁 | `/products/{category}/{slug}` 維持鷹架 |
-| ⛔ 會員專區內頁設計 | 確認稿只到 `/member` | `/account/**` 五頁維持鷹架 |
+| 🟡 產品詳情頁設計 | 確認稿沒有這一頁 | 已接 `GET /v1/products/{slug}`，渲染簡介／說明／規格表；**圖庫、認證與相關下載該端點還沒回**，等補上再加版塊 |
+| ⛔ 寄信管道 | 等 Communication Services / SMTP | 驗證信、重設密碼信與詢問單通知信都卡在這裡 |
 | ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
 | ⛔ 訓練型 AI 爬蟲政策 | 等客戶決策 | `app/robots.ts` 目前只放行檢索型，訓練型不列 |
 | ⛔ 後台 refresh token 的 cookie | 等後端 | 後台改為 SPA 之後，`fn-admin` 需以 `Set-Cookie` 回 httpOnly refresh token |
@@ -341,7 +345,7 @@ apps/web/
    - 決定預覽網域 `vicround.4webdemo.com` 的索引策略：Cloudflare 的 managed robots.txt
      目前是 `Allow: /`，但頁面 canonical 指向別的網域，兩者衝突
    - 舊站 301 已在正式環境（實測 `/v1/redirects` 241 筆）✅
-6. Account API 與會員專區（需先補設計稿）
+6. ~~Account API 與會員專區~~ ✅ 2026-09-11（寄信待接）
 
 ---
 

@@ -174,6 +174,19 @@ antiBotToken?, website? }`. Respond `202 Accepted` with
 
 ## Account API (member-authenticated)
 
+> **實作進度（2026-09-11）**：下列 16 支端點都已實作
+> （`AccountAuthService` + `AccountAuthHandler` / `AccountDownloadsHandler` /
+> `AccountSampleRequestsHandler`），前台的 `/member` 與 `/account/**` 也已接上。
+>
+> ⚠️ **寄信管道尚未接上**——`verify-email`、`resend-verification`、`forgot-password`
+> 會正常產生一次性 token 並落庫，但信寄不出去（`LoggingMemberNotifier` 只把連結寫進
+> 遙測）。這與詢問單的通知信是同一個待辦，等 Communication Services / SMTP 就緒後
+> 換掉 `IMemberNotifier` 的實作即可，狀態機不用動。
+>
+> refresh token 走 httpOnly cookie `vr_member_rt`（`Path=/api/v1/account`）。
+> **前台的同源代理必須原樣坐落在 `/api/v1/account/**`**，否則 cookie 的 Path 對不上，
+> 登入會成功但下一次 refresh 永遠拿不到 cookie。
+
 ```
 POST /api/v1/account/register                  POST /api/v1/account/verify-email
 POST /api/v1/account/login                     POST /api/v1/account/resend-verification

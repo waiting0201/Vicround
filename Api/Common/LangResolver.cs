@@ -34,6 +34,10 @@ public static class LangResolver
         return CultureCodes.Default;
     }
 
+    /// <summary>不支援的（或空的）語系一律退回預設值，不丟例外——語系是偏好，不是驗證項目。</summary>
+    public static string NormalizeOrDefault(string? code) =>
+        IsSupported(code) ? Normalize(code!) : CultureCodes.Default;
+
     private static bool IsSupported(string? code) =>
         !string.IsNullOrWhiteSpace(code)
         && CultureCodes.All.Any(c => string.Equals(c, code, StringComparison.OrdinalIgnoreCase));
