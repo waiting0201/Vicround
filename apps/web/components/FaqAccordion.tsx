@@ -149,15 +149,26 @@ export function FaqAccordion({
 
               {/* 收合時用 hidden 而不是不渲染 —— 答案要留在 HTML 裡給爬蟲與 AI 引擎 */}
               <div hidden={!isOpen(item.id)} style={{ padding: '0 0 24px' }}>
-                <p
-                  style={{
-                    margin: 0,
-                    font: "400 0.9375rem/1.75 'Geologica', 'GenYoGothic TW', sans-serif",
-                    color: 'var(--page-muted)',
-                  }}
-                >
-                  {item.answer}
-                </p>
+                {/*
+                  編輯者在 CMS 用換行分段（來源 FAQ 有近七成是多段落）。HTML 會把
+                  換行吃掉，所以在這裡拆成一段一個 <p>，而不是丟一坨文字給讀者。
+                */}
+                {item.answer
+                  .split(/\n+/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p
+                      key={index}
+                      style={{
+                        margin: index === 0 ? 0 : '14px 0 0',
+                        font: "400 0.9375rem/1.75 'Geologica', 'GenYoGothic TW', sans-serif",
+                        color: 'var(--page-muted)',
+                      }}
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
                 {item.href && item.linkLabel ? (
                   <Link
                     href={item.href}

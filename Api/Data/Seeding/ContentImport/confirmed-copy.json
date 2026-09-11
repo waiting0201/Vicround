@@ -1906,261 +1906,1016 @@
             }
           },
           {
-            "id": "spec",
+            "id": "optical-film",
             "label": {
-              "en": "Specification",
-              "zh-Hant": "規格"
+              "en": "Optical Films",
+              "zh-Hant": "光學膜"
             }
           },
           {
-            "id": "order",
+            "id": "textile-foam",
             "label": {
-              "en": "Ordering & samples",
-              "zh-Hant": "下單與樣品"
+              "en": "Textile & Foam",
+              "zh-Hant": "紡織與泡棉"
             }
           },
           {
-            "id": "testing",
+            "id": "acoustic",
             "label": {
-              "en": "Testing & validation",
-              "zh-Hant": "測試與驗證"
+              "en": "Acoustic Materials",
+              "zh-Hant": "聲學材料"
+            }
+          },
+          {
+            "id": "esg",
+            "label": {
+              "en": "ESG / Sustainability",
+              "zh-Hant": "ESG 與永續"
             }
           },
           {
             "id": "compliance",
             "label": {
-              "en": "Compliance",
-              "zh-Hant": "法規符合"
+              "en": "Certification / Compliance",
+              "zh-Hant": "認證與合規"
             }
           },
           {
-            "id": "partner",
+            "id": "oem",
             "label": {
-              "en": "Partnership",
-              "zh-Hant": "合作"
+              "en": "General / OEM Cooperation",
+              "zh-Hant": "一般與 OEM 合作"
             }
           }
         ],
         "items": [
           {
             "id": "q1",
-            "category": "spec",
+            "category": "optical-film",
             "question": {
-              "en": "What is the difference between anti-glare (AG) and anti-reflective (AR) film?",
-              "zh-Hant": "抗眩光（AG）與抗反射（AR）膜有什麼不同？"
+              "en": "How does a privacy filter work?",
+              "zh-Hant": "防窺片的原理是什麼？"
             },
             "answer": {
-              "en": "Anti-glare film scatters reflected light with a micro-textured surface, so a bright reflection becomes a soft haze. Anti-reflective film cancels the reflection optically with thin-film interference layers. AG is cheaper, more scratch-tolerant and generally better outdoors; AR preserves contrast and text sharpness but costs more and marks more easily. For sunlight-readable industrial and automotive displays we usually start from AG.",
-              "zh-Hant": "抗眩光膜以微結構表面散射反射光，讓刺眼的反射變成柔和的霧感；抗反射膜則以薄膜干涉層在光學上抵銷反射。AG 較便宜、較耐刮，戶外表現通常較好；AR 能保留對比與文字銳利度，但成本較高也較容易留痕。針對需在陽光下判讀的工控與車用顯示器，我們通常從 AG 開始。"
+              "en": "A privacy filter uses microlouver optical technology to restrict screen light to a viewing zone of approximately 60° in front of the display. From the side, the microlouvers block much of the emitted light, making the screen appear dark and helping protect on-screen information from casual viewing. This technology is widely used on laptops, desktop monitors, medical displays, and other applications where visual privacy is important. VICROUND can also develop solutions for different screen sizes, mounting methods, and privacy-angle requirements. Contact our technical team for customized specifications.",
+              "zh-Hant": "防窺片採用微百葉光學技術，把螢幕光線限制在顯示器正前方約 60° 的可視範圍內。從側面看，微百葉會遮蔽大部分射出的光線，使畫面看起來偏暗，協助避免螢幕上的資訊被旁人隨意窺看。這項技術廣泛應用於筆記型電腦、桌上型螢幕、醫療顯示器，以及其他重視視覺隱私的場合。盈絲也能針對不同螢幕尺寸、安裝方式與防窺角度需求開發解決方案，歡迎與技術團隊聯繫討論客製規格。"
             },
             "href": "/products/optical-film",
             "linkLabel": {
-              "en": "See the Optical Film grades",
-              "zh-Hant": "查看光學膜等級"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q2",
-            "category": "spec",
+            "category": "optical-film",
             "question": {
-              "en": "How do I choose a haze level for an anti-glare film?",
-              "zh-Hant": "抗眩光膜的霧度該怎麼選？"
+              "en": "What is the difference between AR (Anti-Reflection) film and AG (Anti-Glare) film?",
+              "zh-Hant": "AR（抗反射）膜與 AG（抗眩光）膜有什麼不同？"
             },
             "answer": {
-              "en": "Haze trades glare suppression against text sharpness. Below 5 % you keep crisp text but only soften strong reflections; above 20 % reflections almost disappear but fine type starts to sparkle, especially on high-PPI panels. Most centre-stack automotive displays land between 8 % and 15 %. We send coupons across the range so your display team can judge it on the real panel.",
-              "zh-Hant": "霧度是在抑制眩光與文字銳利度之間取捨。低於 5 % 文字仍清晰，但只能柔化強反射；高於 20 % 反射幾乎消失，細小文字卻會開始閃爍，在高 PPI 面板上尤其明顯。多數車用中控顯示器落在 8 % 到 15 % 之間。我們會提供整個區間的試片，讓您的顯示器團隊在真實面板上判斷。"
+              "en": "AR (Anti-Reflection) film uses optical structures to reduce surface reflection and improve light transmission and image clarity, making it suitable for applications that prioritize high transparency, resolution, and display quality.\nAG (Anti-Glare) film uses a microstructured surface to diffuse reflected light, reducing glare and distracting reflections from ambient lighting. It is suitable for office, industrial, automotive, and outdoor display applications.\nThe main difference lies in how the two films manage light and the purpose they serve. VICROUND can help select an appropriate AR, AG, or combined-function film based on display specifications, operating environment, and optical requirements.",
+              "zh-Hant": "AR（抗反射）膜以光學結構降低表面反射、提升透光率與影像清晰度，適合重視高透明度、解析度與顯示品質的應用。\nAG（抗眩光）膜以微結構表面擴散反射光，降低環境照明造成的眩光與干擾反射，適用於辦公、工業、車用與戶外顯示應用。\n兩者的主要差異在於處理光線的方式與訴求的目的。盈絲可依顯示器規格、使用環境與光學需求，協助選擇合適的 AR、AG 或複合功能膜。"
             },
-            "href": "/contact",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Request a haze coupon set",
-              "zh-Hant": "索取霧度試片組"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q3",
-            "category": "spec",
+            "category": "optical-film",
             "question": {
-              "en": "Can two surface functions be combined in one film?",
-              "zh-Hant": "兩種表面功能可以做在同一片膜上嗎？"
+              "en": "How is the antibacterial performance of VICROUND screen protection films evaluated?",
+              "zh-Hant": "盈絲螢幕保護膜的抗菌性能是如何評估的？"
             },
             "answer": {
-              "en": "Yes, and most production parts do. A hard coat is almost always the base layer, with anti-glare texture and an anti-fingerprint top layer applied over it. Anti-fog and anti-fingerprint are the one pairing that needs care, because one wants a hydrophilic surface and the other a hydrophobic one — in that case we zone the coating rather than stack it.",
-              "zh-Hant": "可以，而且多數量產件都是這樣。硬塗層幾乎一定是底層，上面再做抗眩光紋理與抗指紋表層。唯一需要留意的組合是防霧與抗指紋 —— 一個要親水、一個要疏水，這種情況我們會採分區塗佈而非疊層。"
+              "en": "Some VICROUND antibacterial screen protection films have undergone third-party antibacterial performance testing in accordance with ISO 22196. Under standardized test conditions, the method evaluates antibacterial activity on the material surface against specified bacterial strains. Actual results depend on the product, test organism, and test conditions.\nFor applications such as medical equipment, public touchscreens, and ATMs, applicable products and supporting test information can be confirmed based on project requirements.",
+              "zh-Hant": "部分盈絲抗菌螢幕保護膜已依 ISO 22196 完成第三方抗菌性能測試。該方法在標準化的測試條件下，評估材料表面對指定菌株的抗菌活性。實際結果會因產品、測試菌種與測試條件而有所不同。\n針對醫療設備、公共觸控螢幕與 ATM 等應用，可依專案需求確認適用的產品與相關測試資料。"
             },
             "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Compare film families",
-              "zh-Hant": "比較膜材系列"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q4",
-            "category": "order",
+            "category": "optical-film",
             "question": {
-              "en": "What is the minimum order quantity for a custom film grade?",
-              "zh-Hant": "客製膜材等級的最小訂購量是多少？"
+              "en": "What is the difference between 4-way and 2-way privacy filters?",
+              "zh-Hant": "四向與雙向防窺片有什麼不同？"
             },
             "answer": {
-              "en": "Standard grades ship from stock with no minimum beyond one master roll. A custom coating formulation normally needs a single production run — around 3,000 square metres — though we can often trial the formulation on a shorter pilot coat first so you are not committing to a full run to find out whether it works.",
-              "zh-Hant": "標準等級為現貨出貨，除一支母卷外沒有其他最小量限制。客製塗佈配方通常需要一次完整生產 —— 約 3,000 平方公尺 —— 但我們多半可以先用較短的試塗驗證配方，您不必為了確認可行性就投入一整次生產。"
+              "en": "A 2-way privacy filter limits viewing from the left and right sides and is suitable for typical office environments. A 4-way privacy filter limits viewing from the top, bottom, left, and right, providing broader visual privacy for public areas, bank counters, or environments with higher privacy requirements. Selection should consider user movement around the workstation and the required light transmission. VICROUND offers OEM customization for both configurations.",
+              "zh-Hant": "雙向防窺片限制左右兩側的可視角度，適合一般辦公環境；四向防窺片則同時限制上下左右，能為公共區域、銀行櫃檯或隱私要求較高的環境提供更全面的視覺防護。選擇時應一併考量使用者在工作位置周邊的移動狀況，以及所需的透光率。兩種規格盈絲皆提供 OEM 客製。"
             },
-            "href": "/contact",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Discuss a custom grade",
-              "zh-Hant": "討論客製等級"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q5",
-            "category": "order",
+            "category": "optical-film",
             "question": {
-              "en": "How long does it take to receive samples?",
-              "zh-Hant": "拿到樣品需要多久？"
+              "en": "Is higher light transmission always better for a privacy filter?",
+              "zh-Hant": "防窺片的透光率是不是越高越好？"
             },
             "answer": {
-              "en": "Standard grades ship within 72 hours of an approved request. Die-cut parts to your own drawing take about 48 hours for prototype tooling, plus shipping. Custom formulations depend on where they fall in the coating schedule and are quoted case by case, usually two to four weeks.",
-              "zh-Hant": "標準等級在申請核准後 72 小時內出貨。依您圖面製作的模切件，樣品模具約需 48 小時，再加上運送時間。客製配方則視塗佈排程而定，逐案報期，通常兩到四週。"
+              "en": "Not necessarily. A higher-transmission privacy filter can reduce screen brightness loss and provide a brighter, clearer front-viewing experience, while a lower-transmission filter may make the overall image appear darker. Light transmission itself does not determine the privacy viewing angle. The best choice should consider ambient lighting, anti-glare requirements, touchscreen use, and privacy needs. VICROUND can provide different specifications and OEM samples based on the required screen brightness and clarity.",
+              "zh-Hant": "不一定。透光率較高的防窺片能減少螢幕亮度損失，正面觀看更明亮清晰；透光率較低者，整體畫面則可能顯得較暗。透光率本身並不決定防窺的可視角度。較合適的選擇應一併考量環境照明、抗眩光需求、觸控使用情境與防窺程度。盈絲可依所需的螢幕亮度與清晰度，提供不同規格與 OEM 樣品。"
             },
-            "href": "/contact",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Request samples",
-              "zh-Hant": "索取樣品"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q6",
-            "category": "order",
+            "category": "optical-film",
             "question": {
-              "en": "Do you supply die-cut parts or only roll stock?",
-              "zh-Hant": "你們供應模切件還是只有捲材？"
+              "en": "What is the difference between Flexible Glass film and conventional tempered glass?",
+              "zh-Hant": "可撓玻璃膜與傳統強化玻璃有什麼不同？"
             },
             "answer": {
-              "en": "Both. We slit, laminate and die-cut in house, and most customers take finished parts rather than roll stock because it removes a converting step and a tolerance stack from their own line. Send a DXF and we will quote the tooling — prototype tools are typically ready within 48 hours.",
-              "zh-Hant": "兩者都有。分條、貼合與模切都在自家廠內完成，多數客戶選擇成品件而非捲材，因為這樣可以從自己的產線上少掉一道加工與一層公差堆疊。把 DXF 給我們就能報模具費 —— 樣品模具通常 48 小時內完成。"
+              "en": "Conventional tempered glass offers high hardness (9H) and good scratch resistance, but it is rigid and may not be suitable for curved displays. Flexible Glass film combines 9H hardness and high light transmission with greater flexibility, making it suitable for curved displays, industrial equipment, and transparent safety windows on machine tools. VICROUND Flexible Glass film can be customized to equipment dimensions and is available for OEM/ODM projects.",
+              "zh-Hant": "傳統強化玻璃具備高硬度（9H）與良好的耐刮性，但材質剛性較高，不一定適用於曲面顯示器。可撓玻璃膜兼具 9H 硬度與高透光率，同時具有更好的可撓性，適合曲面顯示器、工業設備，以及工具機上的透明安全視窗。盈絲可撓玻璃膜可依設備尺寸客製，並支援 OEM／ODM 專案。"
             },
-            "href": "/products/textile-foam",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "See converting capability",
-              "zh-Hant": "查看加工能力"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q7",
-            "category": "testing",
+            "category": "optical-film",
             "question": {
-              "en": "Will you test on our housing rather than a standard coupon?",
-              "zh-Hant": "你們會在我們的機殼上測試，而不是用標準試片嗎？"
+              "en": "What products can VICROUND PET anti-fog film be used for?",
+              "zh-Hant": "盈絲 PET 防霧膜可以用在哪些產品上？"
             },
             "answer": {
-              "en": "For acoustic and sealing parts we insist on it. Insertion loss and ingress performance are dominated by the port and cavity geometry, so a coupon result tells you very little about your product. Send us the housing or the CAD and we will run the measurement on the real geometry during qualification.",
-              "zh-Hant": "聲學與密封件我們堅持這樣做。插入損失與防護表現主要由開孔與腔體幾何決定，試片結果對您的產品參考價值很低。把機殼或 CAD 給我們，驗證階段就會在真實幾何上量測。"
+              "en": "VICROUND anti-fog film is suitable for lenses where clear visibility is important, including outdoor goggles, ski goggles, safety goggles, sunglasses, and diving masks.\nChanges in temperature and humidity, such as moving between cold outdoor conditions and a warm indoor environment, leaving an air-conditioned room for the outdoors, wearing a mask while cycling, or perspiring during exercise, can cause lenses to fog. VICROUND anti-fog film helps reduce the impact of fogging on visibility and can be customized for sports, outdoor, industrial safety, and underwater applications.",
+              "zh-Hant": "盈絲防霧膜適用於重視清晰視野的鏡片類產品，包括戶外護目鏡、滑雪風鏡、安全護目鏡、太陽眼鏡與潛水面鏡。\n溫度與濕度的變化——例如從寒冷的戶外進入溫暖的室內、離開冷氣房到戶外、騎車時配戴口罩，或運動時流汗——都可能造成鏡片起霧。盈絲防霧膜有助於降低起霧對視野的影響，並可針對運動、戶外、工業安全與水下應用進行客製。"
             },
-            "href": "/solutions/acoustic-solutions",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "How we validate acoustic parts",
-              "zh-Hant": "我們如何驗證聲學件"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q8",
-            "category": "testing",
+            "category": "optical-film",
             "question": {
-              "en": "What ageing tests do you run as standard?",
-              "zh-Hant": "標準會做哪些老化測試？"
+              "en": "What is the difference between PET anti-fog film and TAC anti-fog film?",
+              "zh-Hant": "PET 防霧膜與 TAC 防霧膜有什麼不同？"
             },
             "answer": {
-              "en": "Consumer grades get 500 hours of damp heat at 85 °C / 85 % RH. Automotive grades get 1000 hours plus 300 thermal-shock cycles between −40 °C and 105 °C. Weatherable and PV grades run 2000 hours of QUV against the IEC 61215 profile. In every case we re-measure the functional property afterwards, not just adhesion.",
-              "zh-Hant": "消費性等級做 500 小時 85 °C／85 % RH 濕熱。車用等級做 1000 小時，另加 −40 °C 至 105 °C 的 300 次熱衝擊循環。耐候與太陽能等級依 IEC 61215 條件做 2000 小時 QUV。每一種情況我們都會在測試後重新量測功能特性，而不只是附著力。"
+              "en": "Conventional TAC anti-fog film provides good anti-fog performance and is widely used in optical and transparent protective products, but TAC may swell or deform after absorbing moisture to saturation.\nConventional PET anti-fog film generally offers better dimensional stability and lower moisture absorption, although traditional PET solutions have often provided shorter-duration anti-fog performance. VICROUND PET anti-fog film is designed to combine PET's low moisture absorption and dimensional stability with longer-lasting anti-fog performance.\nIt can be used for goggles, ski goggles, safety goggles, sunglasses, diving masks, and other transparent windows or optical products requiring anti-fog functionality, with customization and sample testing available for different applications.",
+              "zh-Hant": "傳統 TAC 防霧膜具備良好的防霧效果，廣泛應用於光學與透明防護產品，但 TAC 在吸濕達到飽和後，可能發生膨脹或變形。\n傳統 PET 防霧膜的尺寸安定性通常較佳、吸濕率較低，不過過去的 PET 方案多半防霧持續時間較短。盈絲 PET 防霧膜的設計目標，是在保有 PET 低吸濕與尺寸安定特性的同時，延長防霧效果的持續時間。\n可應用於護目鏡、滑雪風鏡、安全護目鏡、太陽眼鏡、潛水面鏡，以及其他需要防霧功能的透明視窗或光學產品，並可依不同應用提供客製與樣品測試。"
             },
-            "href": "/resources/downloads",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Download test reports",
-              "zh-Hant": "下載測試報告"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q9",
-            "category": "compliance",
+            "category": "optical-film",
             "question": {
-              "en": "Which certifications does Vicround hold?",
-              "zh-Hant": "盈絲持有哪些認證？"
+              "en": "How should the optical and anti-fog quality of anti-fog film be evaluated?",
+              "zh-Hant": "防霧膜的光學與防霧品質該如何評估？"
             },
             "answer": {
-              "en": "ISO 9001 and ISO 14001 across our manufacturing sites, ISO 22196 test reports for antimicrobial grades, BSCI for social compliance, and GRS for recycled-content textile lines. Automotive lines run to IATF 16949 practice. Current certificates are in the member area and are re-issued as they renew.",
-              "zh-Hant": "各生產據點持有 ISO 9001 與 ISO 14001，抗菌等級備有 ISO 22196 測試報告，社會責任方面為 BSCI，回收成分紡織產線為 GRS。車用產線依 IATF 16949 實務運作。最新證書放在會員專區，換證後會重新上傳。"
+              "en": "Anti-fog film quality can mainly be evaluated in two areas: anti-fog performance and optical clarity. Based on the product and end-use application, VICROUND can refer to applicable ISO or EN test methods to evaluate anti-fog performance, optical properties, and related specifications.\nBecause requirements may differ among safety goggles, sports eyewear, ski goggles, and other end products, the applicable test method, conditions, and acceptance criteria should be confirmed for the intended application.",
+              "zh-Hant": "防霧膜的品質主要可從防霧性能與光學清晰度兩方面評估。盈絲可依產品與終端應用，參考適用的 ISO 或 EN 測試方法，評估防霧性能、光學特性與相關規格。\n由於安全護目鏡、運動眼鏡、滑雪風鏡等終端產品的要求不盡相同，適用的測試方法、條件與允收標準應依實際應用確認。"
             },
-            "href": "/sustainability",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "See certifications and standards",
-              "zh-Hant": "查看認證與標準"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q10",
-            "category": "compliance",
+            "category": "optical-film",
             "question": {
-              "en": "Can you supply RoHS, REACH and EUDR documentation?",
-              "zh-Hant": "能提供 RoHS、REACH 與 EUDR 文件嗎？"
+              "en": "What solar-panel surface issues can Solar Enhancement Film help address?",
+              "zh-Hant": "太陽能增效膜可以改善太陽能板的哪些表面問題？"
             },
             "answer": {
-              "en": "Yes. RoHS and REACH declarations ship with every qualification sample. For EUDR we hold geolocation and due-diligence records for the natural-fibre content in our textile lines, and we can issue a due-diligence statement per shipment ahead of the enforcement date.",
-              "zh-Hant": "可以。每一份驗證樣品都附 RoHS 與 REACH 聲明。EUDR 方面，我們保有紡織產線天然纖維成分的地理位置與盡職調查紀錄，並可在強制實施日前依出貨批次出具盡職調查聲明。"
+              "en": "Outdoor solar panels may experience localized shading when bird droppings, dust, or other contaminants accumulate on the surface, which can affect light exposure and power-generation performance.\nVICROUND Solar Enhancement Film is designed around light transmission, stain resistance, and surface protection. Applied to the panel surface, it can help reduce the impact of contaminant adhesion and surface soiling. Actual performance varies depending on the solar module, installation environment, operating conditions, and test method.",
+              "zh-Hant": "戶外太陽能板的表面若累積鳥糞、灰塵或其他污染物，可能造成局部遮蔽，進而影響受光與發電表現。\n盈絲太陽能增效膜以透光率、抗污性與表面防護為設計重點，貼附於板面後，有助於降低污染物附著與表面積污的影響。實際效果會因太陽能模組、安裝環境、運轉條件與測試方法而有所不同。"
             },
-            "href": "/sustainability",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Read our EUDR response",
-              "zh-Hant": "閱讀我們的 EUDR 因應"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q11",
-            "category": "compliance",
+            "category": "optical-film",
             "question": {
-              "en": "Do you provide a carbon footprint figure per part?",
-              "zh-Hant": "會提供每個零件的碳足跡數字嗎？"
+              "en": "What applications are suitable for ARWR water- and stain-repellent film, and how can it help with rain and mud on optical surfaces?",
+              "zh-Hant": "ARWR 疏水抗污膜適合哪些應用？對光學表面的雨水與泥污有什麼幫助？"
             },
             "answer": {
-              "en": "For products covered by our TRIPs carbon-management programme, yes — a cradle-to-gate figure per square metre or per part, with the calculation boundary stated. For everything else we can give you the site-level intensity figure and be explicit that it is not a product-level number.",
-              "zh-Hant": "納入 TRIPs 碳管理方案的產品可以 —— 提供每平方公尺或每件的搖籃到大門數值，並載明計算邊界。其餘產品我們會提供據點層級的強度數字，並明確說明那不是產品層級的數值。"
+              "en": "Outdoor lenses, including automotive cameras, surveillance and sensing lenses, and sports goggles can have their visibility affected by rain, dirty water, or mud. VICROUND ARWR water- and stain-repellent film features hydrophobic and easy-clean surface properties that help water droplets and contaminants slide off more readily, supporting optical clarity and light transmission.",
+              "zh-Hant": "車用鏡頭、監控與感測鏡頭、運動護目鏡等戶外光學鏡片，視野容易受到雨水、髒污水或泥漬影響。盈絲 ARWR 疏水抗污膜具備疏水與易清潔的表面特性，有助於水滴與污染物更快滑落，維持光學清晰度與透光表現。"
             },
-            "href": "/sustainability",
+            "href": "/products/optical-film",
             "linkLabel": {
-              "en": "Carbon footprint management",
-              "zh-Hant": "碳足跡管理"
+              "en": "See the Optical Film range",
+              "zh-Hant": "查看光學膜產品"
             }
           },
           {
             "id": "q12",
-            "category": "partner",
+            "category": "textile-foam",
             "question": {
-              "en": "Do you take OEM/ODM development programs?",
-              "zh-Hant": "你們承接 OEM／ODM 開發專案嗎？"
+              "en": "What products are included in VICROUND's Textile & Foam portfolio?",
+              "zh-Hant": "盈絲的紡織與泡棉產品線包含哪些產品？"
             },
             "answer": {
-              "en": "Most of our volume is OEM/ODM. A typical program runs spec review, material selection, prototype tooling, qualification, then production release, with one engineer owning it end to end. We are equally happy building to your drawing or developing the specification with you from the application requirement.",
-              "zh-Hant": "我們大部分的量都是 OEM／ODM。典型專案流程是規格檢視、材料選定、樣品模具、驗證，再到量產放行，全程由同一位工程師負責。依您的圖面製作，或從應用需求與您一起訂出規格，兩種我們都做。"
+              "en": "VICROUND's Textile & Foam portfolio includes mouse pads, desk mats, wrist rests, anti-slip base materials, and functional fabrics for gaming, office, and consumer-electronics accessories.\nWe provide OEM/ODM and customized development services, with options for materials, dimensions, thickness, printing, surface feel, and functional treatments. By integrating textile, foaming, lamination, and composite-processing capabilities, we develop material and finished-product solutions for different product requirements.",
+              "zh-Hant": "盈絲的紡織與泡棉產品線包含滑鼠墊、桌墊、護腕墊、防滑底材，以及應用於電競、辦公與消費性電子配件的機能布。\n我們提供 OEM／ODM 與客製化開發服務，材質、尺寸、厚度、印刷、表面觸感與機能處理皆可選配。透過整合紡織、發泡、貼合與複合加工能力，為不同的產品需求開發材料與成品解決方案。"
             },
-            "href": "/partnership",
+            "href": "/products/textile-foam",
             "linkLabel": {
-              "en": "How OEM/ODM works with us",
-              "zh-Hant": "OEM／ODM 的合作方式"
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
             }
           },
           {
             "id": "q13",
-            "category": "partner",
+            "category": "textile-foam",
             "question": {
-              "en": "Are you looking for regional distributors?",
-              "zh-Hant": "你們在找區域經銷商嗎？"
+              "en": "Can mouse pads and desk mats be customized in size and printing?",
+              "zh-Hant": "滑鼠墊與桌墊可以客製尺寸與印刷嗎？"
             },
             "answer": {
-              "en": "Yes, in territories where we do not yet have direct coverage. We look for partners with existing technical sales capability in electronics, automotive or medical device supply chains, since these products are specified rather than shelf-bought. Send a company profile and the territory you cover.",
-              "zh-Hant": "是的，在我們尚未直接覆蓋的地區。我們尋找在電子、車用或醫療器材供應鏈已具備技術銷售能力的夥伴 —— 這類產品是被指定選用而非上架販售。請提供公司簡介與您負責的地區。"
+              "en": "Yes. VICROUND offers customization covering dimensions, from standard sizes to oversized desk mats, surface material selection, base thickness, and full-surface printing of brand logos and graphics. Colors can be matched to Pantone references to support brand consistency. Customers can provide artwork for sampling and approval before mass production.",
+              "zh-Hant": "可以。盈絲提供的客製範圍涵蓋尺寸（從標準尺寸到加大桌墊）、表面材質選擇、底材厚度，以及品牌標誌與圖樣的滿版印刷。顏色可對應 Pantone 色號比對，協助維持品牌一致性。客戶可提供完稿檔進行打樣，確認後再進入量產。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q14",
+            "category": "textile-foam",
+            "question": {
+              "en": "What recycled-material and certification options are available for VICROUND Textile & Foam products?",
+              "zh-Hant": "盈絲的紡織與泡棉產品有哪些回收材料與認證選項？"
+            },
+            "answer": {
+              "en": "Some VICROUND textile and foam products can use recycled materials or material solutions that meet GRS (Global Recycled Standard) requirements, depending on product specifications and project needs.\nIf a project has requirements for GRS, recycled-content percentage, material traceability, or other specific criteria, please raise them at the beginning of the project. We will confirm the applicable solution and documentation based on the actual product, material source, and supply chain certification status.",
+              "zh-Hant": "部分盈絲紡織與泡棉產品可採用回收材料，或符合 GRS（全球回收標準）要求的材料方案，實際仍視產品規格與專案需求而定。\n若專案對 GRS、回收成分比例、材料可追溯性或其他特定條件有要求，請在專案初期提出。我們會依實際產品、材料來源與供應鏈的認證狀態，確認可行的方案與文件。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q15",
+            "category": "textile-foam",
+            "question": {
+              "en": "What is the minimum order quantity (MOQ) for OEM Textile & Foam products?",
+              "zh-Hant": "紡織與泡棉產品的 OEM 最低訂購量（MOQ）是多少？"
+            },
+            "answer": {
+              "en": "MOQ varies by product, specification, and material. Standard mouse pad programs may start from several hundred pieces, while fully customized printed products generally require a higher MOQ due to sampling and production setup. VICROUND offers flexible cooperation options. Submit your specifications and our sales team will confirm the applicable quotation and MOQ.",
+              "zh-Hant": "MOQ 會因產品、規格與材料而異。標準滑鼠墊專案可能自數百件起訂；全客製印刷產品因涉及打樣與產線調機，MOQ 通常較高。盈絲提供彈性的合作方式，歡迎提供您的規格，由業務團隊確認適用的報價與 MOQ。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q16",
+            "category": "textile-foam",
+            "question": {
+              "en": "How are water- and stain-resistant functions achieved on desk mats?",
+              "zh-Hant": "桌墊的防水與抗污功能是怎麼做到的？"
+            },
+            "answer": {
+              "en": "VICROUND can provide water-resistant, water-repellent, and stain-resistant treatments for different desk mat materials. Fabric surfaces can use DWR (Durable Water Repellent) treatments to lower surface energy, helping water bead up and making it easier to wipe away. Some polymer materials rely on their dense structure to reduce penetration by moisture and stains.\nMaterial selection and functional treatments can be customized for office, gaming, and other use cases. Actual protection performance depends on the material and surface treatment specification.",
+              "zh-Hant": "盈絲可針對不同桌墊材質提供防水、撥水與抗污處理。布面可採用 DWR（耐久撥水）處理降低表面能，讓水珠不易鋪展、更容易擦除；部分高分子材料則藉由本身緻密的結構，減少水分與污漬滲入。\n材質選擇與機能處理可依辦公、電競等不同使用情境客製。實際的防護表現取決於材料與表面處理規格。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q17",
+            "category": "textile-foam",
+            "question": {
+              "en": "What is the sampling process, lead time, and cost?",
+              "zh-Hant": "打樣的流程、工期與費用如何？"
+            },
+            "answer": {
+              "en": "Process: After receiving the artwork file and product requirements, VICROUND will conduct an initial feasibility review before arranging sample production.\nLead time: Products that do not require tooling are typically around 4 weeks; products requiring tooling generally start from about 5–6 weeks. Actual timing depends on product specifications, materials, and process requirements and is subject to VICROUND's final confirmation.\nCost: Sample costs are evaluated based on product size, quantity, materials, processing method, and freight. Contact us for a project-specific quotation.",
+              "zh-Hant": "流程：收到完稿檔與產品需求後，盈絲會先進行可行性初步評估，再安排樣品製作。\n工期：不需開模的產品約 4 週；需開模的產品一般自 5～6 週起。實際時程視產品規格、材料與製程需求而定，並以盈絲最終確認為準。\n費用：樣品費用會依產品尺寸、數量、材料、加工方式與運費評估。歡迎與我們聯繫取得專案報價。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q18",
+            "category": "textile-foam",
+            "question": {
+              "en": "What artwork format should I provide for my own design?",
+              "zh-Hant": "自行設計時，完稿檔要提供什麼格式？"
+            },
+            "answer": {
+              "en": "VICROUND recommends Adobe Illustrator (AI) or PDF vector files. Text should be converted to outlines, and artwork dimensions and proportions should be accurate.\nFor raster images, a resolution of at least 300 dpi is recommended. If specific brand colors are required, please provide the corresponding Pantone references for color confirmation during sampling and production.\nActual printable area, bleed, and processing limitations will be confirmed according to the dieline and production requirements of each product.",
+              "zh-Hant": "盈絲建議提供 Adobe Illustrator（AI）或 PDF 向量檔，文字請轉外框，稿件尺寸與比例需正確。\n若為點陣圖，建議解析度至少 300 dpi。如需指定品牌色，請一併提供對應的 Pantone 色號，供打樣與生產時對色確認。\n實際可印刷範圍、出血與加工限制，會依各產品的刀模線與生產條件確認。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q19",
+            "category": "textile-foam",
+            "question": {
+              "en": "What packaging options are available, and can the packaging be customized?",
+              "zh-Hant": "包裝有哪些選項？可以客製嗎？"
+            },
+            "answer": {
+              "en": "VICROUND offers packaging options such as paper envelopes and paper tubes, as well as customized packaging development. Dimensions, structure, materials, and printing can be adjusted based on product and brand requirements.\nIf a customer has specific requirements for packaging materials, recycling labels, FSC certified materials, or applicable regulations in a target market, these can be raised at the beginning of the project. We will confirm an appropriate solution based on the actual product, packaging design, and target market requirements.",
+              "zh-Hant": "盈絲提供紙袋、紙筒等包裝選項，也可進行客製包裝開發，尺寸、結構、材質與印刷皆可依產品與品牌需求調整。\n若客戶對包裝材質、回收標示、FSC 認證材料，或目標市場的適用法規有特定要求，可在專案初期提出。我們會依實際產品、包裝設計與目標市場要求，確認合適的方案。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q20",
+            "category": "textile-foam",
+            "question": {
+              "en": "How are VICROUND mouse pads laminated, and can delamination or bubbling occur over time?",
+              "zh-Hant": "盈絲滑鼠墊採用什麼貼合方式？長期使用會脫層或起泡嗎？"
+            },
+            "answer": {
+              "en": "VICROUND mouse pads use glue-free lamination, in which the surface fabric and foam base are bonded through the manufacturing process, reducing the use of conventional chemical adhesives.\nLamination stability is evaluated through high-temperature/high-humidity and tensile testing to help reduce the risk of delamination, separation, or bubbling during long-term use while supporting product durability and lower adhesive use.",
+              "zh-Hant": "盈絲滑鼠墊採用無膠貼合，表布與泡棉底材透過製程本身結合，減少傳統化學膠黏劑的使用。\n貼合的穩定性會透過高溫高濕與拉力測試驗證，有助於降低長期使用時脫層、分離或起泡的風險，同時兼顧產品耐用性與較低的膠黏劑用量。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q21",
+            "category": "textile-foam",
+            "question": {
+              "en": "What surface-material options are available for gaming-grade products?",
+              "zh-Hant": "電競等級產品有哪些表面材質可選？"
+            },
+            "answer": {
+              "en": "VICROUND offers gaming surfaces including Control, Balanced, Speed, Hybrid, and Icy Touch for different preferences in precision, balanced control, fast glide, and cool/smooth feel. PP and tempered-glass hard surfaces are also available for applications that prioritize very low friction and fast glide. Surface material, weave, glide resistance, and tactile feel can be customized according to brand positioning and gaming requirements.",
+              "zh-Hant": "盈絲提供 Control、Balanced、Speed、Hybrid 與 Icy Touch 等電競表面，對應精準操控、均衡手感、快速滑順與冰涼滑順等不同偏好。若應用特別重視極低摩擦與快速滑動，也可選擇 PP 與強化玻璃等硬質表面。表面材質、織法、滑動阻力與觸感皆可依品牌定位與電競需求客製。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q22",
+            "category": "textile-foam",
+            "question": {
+              "en": "How should a fabric mouse pad be cleaned? Can it be washed with water?",
+              "zh-Hant": "布面滑鼠墊該怎麼清潔？可以水洗嗎？"
+            },
+            "answer": {
+              "en": "Yes. The cleaning method should be selected according to the level of soiling.\nDaily cleaning: Wipe the surface gently with a damp cloth and allow it to air-dry in a shaded area.\nDeep cleaning: Hand-wash gently with room-temperature water and a neutral detergent, then air-dry in a cool, ventilated place.\nMachine washing: Some products can be machine-washed, but repeated machine washing may cause print fading or wear to stitched edges. Hand washing is recommended to better preserve appearance and service life.\nAvoid hot water, bleach, tumble drying, and prolonged direct sunlight.",
+              "zh-Hant": "可以，清潔方式建議依髒污程度選擇。\n日常清潔：以微濕的布輕輕擦拭表面，置於陰涼處自然風乾。\n深層清潔：以常溫水搭配中性清潔劑輕柔手洗，再放在陰涼通風處晾乾。\n機洗：部分產品可機洗，但反覆機洗可能造成印刷褪色或車邊磨損，建議以手洗較能維持外觀與使用壽命。\n請避免熱水、漂白劑、烘乾，以及長時間曝曬於陽光下。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q23",
+            "category": "textile-foam",
+            "question": {
+              "en": "How does mouse-pad thickness affect wrist comfort and mouse feedback?",
+              "zh-Hant": "滑鼠墊的厚度會如何影響手腕舒適度與操作回饋？"
+            },
+            "answer": {
+              "en": "Thickness mainly affects wrist comfort, support, and operating feedback.\nThin pads (1.5–2 mm): Sit close to the desk and provide direct, firm feedback; suitable for users who prefer a solid feel or need portability.\nStandard pads (3–4 mm): Balance feedback, stability, and cushioning, making them a versatile choice for gaming and everyday use.\nThick pads (5–8 mm): Provide more cushioning and wrist support and can help compensate for uneven desk surfaces. Softer bases can also provide additional control depending on downward pressure.\nGlide speed and control are driven mainly by surface material and weave, while thickness further tunes support and feedback.",
+              "zh-Hant": "厚度主要影響手腕舒適度、支撐性與操作回饋。\n薄墊（1.5～2 mm）：貼近桌面，回饋直接而扎實，適合偏好硬派手感或需要攜帶性的使用者。\n標準厚度（3～4 mm）：在回饋、穩定性與緩衝之間取得平衡，是電競與日常使用的通用選擇。\n厚墊（5～8 mm）：提供較多緩衝與手腕支撐，也有助於補償不平整的桌面。較軟的底材還能依下壓力道提供額外的操控感。\n滑動速度與操控性主要由表面材質與織法決定，厚度則進一步調整支撐性與回饋。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q24",
+            "category": "textile-foam",
+            "question": {
+              "en": "How do gaming users and office users choose a fabric surface?",
+              "zh-Hant": "電競使用者與辦公使用者該如何挑選布面？"
+            },
+            "answer": {
+              "en": "Different use cases call for different surface characteristics.\nGaming users typically choose Speed, Control, Balanced, or Hybrid surfaces based on game type and operating style, focusing on glide speed, stopping control, and sensor tracking stability.\nOffice users often prioritize long-term comfort, skin-friendly feel, smooth movement, and durability, and may prefer fine-textured fabrics or Icy Touch surfaces while also considering stain resistance, ease of cleaning, and anti-slip performance.\nVICROUND can combine surface material, weave, and base construction to develop customized solutions for different use cases.",
+              "zh-Hant": "不同的使用情境，需要的表面特性也不同。\n電競使用者通常會依遊戲類型與操作習慣，在 Speed、Control、Balanced 或 Hybrid 表面之間選擇，重點放在滑動速度、煞停操控與感測器追蹤的穩定性。\n辦公使用者多半更重視長時間的舒適度、親膚觸感、順暢移動與耐用性，可能偏好細緻織紋的布面或 Icy Touch 表面，同時也會考量抗污、易清潔與防滑表現。\n盈絲可結合表面材質、織法與底材結構，為不同使用情境開發客製化方案。"
+            },
+            "href": "/products/textile-foam",
+            "linkLabel": {
+              "en": "See Textile & Foam products",
+              "zh-Hant": "查看紡織與泡棉產品"
+            }
+          },
+          {
+            "id": "q25",
+            "category": "acoustic",
+            "question": {
+              "en": "Where can VICROUND acoustic materials be used, and how should absorption materials be selected for offices or commercial spaces with excessive echo or reverberation?",
+              "zh-Hant": "盈絲的聲學材料可以用在哪些場所？辦公室或商業空間回音、殘響過多時，該如何挑選吸音材料？"
+            },
+            "answer": {
+              "en": "VICROUND acoustic materials are suitable for offices, meeting rooms, commercial spaces, studios, and audiovisual or creative spaces where echo and reverberation need to be managed. Selection can consider room size, use case, installation location, NRC, thickness, and sound-absorption performance. Appropriate placement on walls or ceilings can help reduce reverberation and improve speech clarity and acoustic comfort.",
+              "zh-Hant": "盈絲聲學材料適用於辦公室、會議室、商業空間、錄音室，以及需要控制回音與殘響的視聽或創作空間。挑選時可一併考量空間大小、使用情境、安裝位置、NRC（降噪係數）、厚度與吸音表現。在牆面或天花板做適當配置，有助於降低殘響、提升語音清晰度與聽覺舒適度。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q26",
+            "category": "acoustic",
+            "question": {
+              "en": "What is the difference between sound absorption and soundproofing?",
+              "zh-Hant": "吸音與隔音有什麼不同？"
+            },
+            "answer": {
+              "en": "Sound absorption mainly improves echo and reverberation within a room by absorbing reflected sound, helping speech sound clearer and the listening environment feel more comfortable. VICROUND acoustic materials are primarily designed for this type of acoustic treatment.\nSoundproofing, by contrast, reduces sound transmission between spaces—for example, blocking outdoor noise or preventing indoor sound from traveling to adjacent rooms—and usually requires an integrated structural approach involving walls, doors, windows, and sealing.\nIn simple terms: sound absorption improves sound within a space; soundproofing reduces sound transmission between spaces.",
+              "zh-Hant": "吸音主要是透過吸收反射音，改善同一空間內的回音與殘響，讓語音更清楚、聆聽環境更舒適。盈絲聲學材料主要就是為這類聲學處理而設計。\n隔音則是降低聲音在空間之間的傳遞——例如阻擋戶外噪音，或避免室內聲音傳到相鄰房間——通常需要牆體、門窗與氣密的整體結構性作法。\n簡單來說：吸音改善的是空間「內」的聲音，隔音降低的是空間「間」的聲音傳遞。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q27",
+            "category": "acoustic",
+            "question": {
+              "en": "What is the difference between PET acoustic panels and conventional acoustic foam?",
+              "zh-Hant": "PET 吸音板與傳統吸音棉有什麼不同？"
+            },
+            "answer": {
+              "en": "PET acoustic panels are lightweight and offer design flexibility in thickness, density, color, and shape, making them suitable for offices, commercial spaces, and studios where both acoustics and interior design matter. Some products can also use recycled PET material.\nConventional acoustic foam has a different material structure and acoustic profile. Absorption performance, durability, appearance, and cost for both materials vary with material type, density, thickness, and use environment. The appropriate solution should be selected based on the actual space and acoustic requirements.",
+              "zh-Hant": "PET 吸音板重量輕，在厚度、密度、顏色與造型上具有設計彈性，適合同時重視聲學表現與室內設計的辦公室、商業空間與錄音室。部分產品也可採用回收 PET 材料。\n傳統吸音棉的材料結構與聲學特性則有所不同。兩種材料的吸音表現、耐用性、外觀與成本，都會隨材料類型、密度、厚度與使用環境而變化，應依實際空間與聲學需求選擇合適的方案。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q28",
+            "category": "acoustic",
+            "question": {
+              "en": "What is the OEM customization process for acoustic materials?",
+              "zh-Hant": "聲學材料的 OEM 客製流程是什麼？"
+            },
+            "answer": {
+              "en": "The VICROUND acoustic material OEM process generally includes: 1) requirement confirmation (application, dimensions, and sound-absorption requirements), 2) material selection and quotation, 3) sample production (approximately 3–4 weeks), 4) customer sample approval, and 5) mass-production scheduling. Technical support is available throughout the process, and third-party acoustic performance testing can be arranged when required. Submit your requirements through our inquiry form to get started.",
+              "zh-Hant": "盈絲聲學材料的 OEM 流程大致包含： 1）需求確認（應用場景、尺寸與吸音要求）， 2）材料選擇與報價，3）樣品製作（約 3～4 週）， 4）客戶確認樣品，以及 5）量產排程。全程皆有技術支援，必要時亦可安排第三方聲學性能測試。歡迎透過詢價表單提出需求，我們將與您展開後續討論。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q29",
+            "category": "acoustic",
+            "question": {
+              "en": "What environmental and material-compliance information is available for VICROUND acoustic materials?",
+              "zh-Hant": "盈絲聲學材料有哪些環境與材料合規資訊？"
+            },
+            "answer": {
+              "en": "Some VICROUND acoustic materials can use recycled polyester (rPET) depending on product specifications. GRS, REACH, and related chemical-testing information can be confirmed for applicable products and project requirements.\nMaterial composition, certification, and test scope may differ by product. If you have specific compliance requirements, contact us to confirm the applicable product and supporting documentation.",
+              "zh-Hant": "部分盈絲聲學材料可依產品規格採用再生聚酯（rPET）。GRS、REACH 與相關化學測試資訊，可就適用產品與專案需求確認。\n材料組成、認證與測試範圍會因產品而異。若您有特定的合規要求，歡迎與我們聯繫，確認適用的產品與佐證文件。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q30",
+            "category": "acoustic",
+            "question": {
+              "en": "Do VICROUND acoustic materials offer flame-retardant performance?",
+              "zh-Hant": "盈絲的聲學材料具備防焰性能嗎？"
+            },
+            "answer": {
+              "en": "Certain VICROUND acoustic material specifications have been tested for flame retardant performance in accordance with CNS 10285 Method A-2 and have achieved Grade 1 flame retardant performance. Performance may vary by product and material specification. If your project has specific flame-retardant requirements, contact us to confirm the applicable product and supporting test information.",
+              "zh-Hant": "部分盈絲聲學材料規格已依 CNS 10285 A-2 法完成防焰性能測試，並達到防焰一級。實際性能會因產品與材料規格而異。若您的專案有特定的防焰要求，歡迎與我們聯繫，確認適用的產品與相關測試資料。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q31",
+            "category": "acoustic",
+            "question": {
+              "en": "How should VICROUND acoustic products be maintained and cleaned?",
+              "zh-Hant": "盈絲的聲學產品該如何保養與清潔？"
+            },
+            "answer": {
+              "en": "For routine care, remove dust with a vacuum cleaner fitted with a soft brush attachment. Localized stains can be gently wiped with a slightly damp soft cloth and a neutral detergent. Avoid bleach, strong acidic or alkaline solvents, and hard brushes, as these may damage the fiber surface or color.",
+              "zh-Hant": "日常保養可使用裝有軟毛刷頭的吸塵器除塵。局部污漬可用微濕的軟布搭配中性清潔劑輕輕擦拭。請避免漂白劑、強酸或強鹼溶劑與硬毛刷，以免損傷纖維表面或造成褪色。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q32",
+            "category": "acoustic",
+            "question": {
+              "en": "Can VICROUND acoustic products be recycled when they are replaced or reach end of life?",
+              "zh-Hant": "盈絲的聲學產品在更換或屆齡報廢時可以回收嗎？"
+            },
+            "answer": {
+              "en": "Some VICROUND acoustic products are designed with disassembly and material recovery in mind and use recyclable materials such as PET. At end of life, the product may be evaluated for an appropriate PET recycling stream based on its construction and the recycling facilities and rules available in the local market.\nActual recyclability and recycling routes depend on product composition, local collection and recycling systems, and processing conditions.",
+              "zh-Hant": "部分盈絲聲學產品在設計時已納入拆解與材料回收的考量，並採用 PET 等可回收材料。產品屆齡時，可依其結構，以及當地市場的回收設施與規範，評估是否進入合適的 PET 回收流程。\n實際的可回收性與回收管道，取決於產品組成、當地的收運與回收體系，以及處理條件。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q33",
+            "category": "acoustic",
+            "question": {
+              "en": "How is modular circular design applied to VICROUND acoustic products?",
+              "zh-Hant": "模組化的循環設計如何應用在盈絲的聲學產品上？"
+            },
+            "answer": {
+              "en": "Our products use a modular structure. When a space is reconfigured, relocated, or partially damaged, individual components can be replaced or rearranged instead of removing the entire installation, helping reduce unnecessary renovation waste.",
+              "zh-Hant": "我們的產品採用模組化結構。當空間重新配置、搬遷或局部損壞時，可以更換或重新排列個別模組，而不必整組拆除，有助於減少不必要的裝修廢棄物。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q34",
+            "category": "acoustic",
+            "question": {
+              "en": "How much acoustic treatment is needed to achieve a noticeable reduction in echo or reverberation?",
+              "zh-Hant": "要做多少聲學處理，才能明顯改善回音或殘響？"
+            },
+            "answer": {
+              "en": "The required coverage depends on room size, the degree of echo, wall and ceiling materials, and the absorption performance of the selected material. There is no single percentage that applies to every space. In general, larger rooms, spaces with more hard surfaces, or rooms with stronger reverberation may require greater coverage. Treatment can often begin at the primary sound-reflection areas.",
+              "zh-Hant": "所需的施作面積取決於空間大小、回音的嚴重程度、牆面與天花板材質，以及所選材料的吸音表現，並沒有一個適用於所有空間的固定比例。一般而言，空間較大、硬質表面較多，或殘響較強的房間，需要的覆蓋面積也較大。實務上通常可從主要的音波反射區域開始處理。"
+            },
+            "href": "/products/acoustic",
+            "linkLabel": {
+              "en": "See Acoustic materials",
+              "zh-Hant": "查看聲學材料"
+            }
+          },
+          {
+            "id": "q35",
+            "category": "esg",
+            "question": {
+              "en": "How does VICROUND advance ESG and sustainability?",
+              "zh-Hant": "盈絲如何推動 ESG 與永續？"
+            },
+            "answer": {
+              "en": "VICROUND incorporates ESG considerations into business operations, supply-chain management, and product development, and continues to advance sustainability across environmental, social, and governance areas.\nEnvironmental (E): We work on greenhouse-gas management, resource efficiency, and recycled-material applications, and have committed to setting science-based emissions-reduction targets under the SBTi framework.\nSocial (S): Through mechanisms such as BSCI and Sedex, we address labor rights, occupational safety, and supply-chain social responsibility.\nGovernance (G): Through quality management, supplier management, regulatory compliance, and product traceability, we continue to strengthen operational and supply-chain management.\nVICROUND continues to integrate relevant sustainability principles into day-to-day operations and product development and provides related information based on actual project and customer requirements.",
+              "zh-Hant": "盈絲將 ESG 考量納入營運、供應鏈管理與產品開發，並持續在環境、社會與治理三個面向推動永續作為。\n環境（E）：我們投入溫室氣體管理、資源效率與回收材料應用，並已承諾在 SBTi 架構下設定科學基礎減碳目標。\n社會（S）：透過 BSCI、Sedex 等機制，處理勞工權益、職業安全與供應鏈社會責任等議題。\n治理（G）：透過品質管理、供應商管理、法規遵循與產品可追溯性，持續強化營運與供應鏈管理。\n盈絲持續將相關永續原則融入日常營運與產品開發，並依實際專案與客戶需求提供相關資訊。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Our sustainability approach",
+              "zh-Hant": "我們的永續作法"
+            }
+          },
+          {
+            "id": "q36",
+            "category": "esg",
+            "question": {
+              "en": "How does VICROUND manage greenhouse-gas emissions and carbon reduction?",
+              "zh-Hant": "盈絲如何管理溫室氣體排放與減碳？"
+            },
+            "answer": {
+              "en": "VICROUND uses greenhouse gas inventory and management practices to better understand emissions associated with its operations and to identify improvement opportunities in material selection, process efficiency, and product design.\nVICROUND has also committed to setting science-based emissions-reduction targets under the SBTi , the Science Based Targets initiative, framework and continues to advance greenhouse-gas management and reduction actions.",
+              "zh-Hant": "盈絲透過溫室氣體盤查與管理作業，掌握營運相關的排放狀況，並在材料選擇、製程效率與產品設計上尋找改善機會。\n盈絲亦已承諾在 SBTi（科學基礎減量目標倡議）架構下設定科學基礎減碳目標，並持續推動溫室氣體管理與減量行動。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Our sustainability approach",
+              "zh-Hant": "我們的永續作法"
+            }
+          },
+          {
+            "id": "q37",
+            "category": "esg",
+            "question": {
+              "en": "Does the EU Deforestation Regulation (EUDR) affect VICROUND products?",
+              "zh-Hant": "歐盟毀林法規（EUDR）會影響盈絲的產品嗎？"
+            },
+            "answer": {
+              "en": "EUDR covers natural rubber and certain related products. Applicability depends on the actual materials used, product classification, and the role of each party in the supply chain.\nVICROUND can evaluate natural-rubber or alternative-material solutions based on product and market requirements. If a project has EUDR related requirements, please raise them at an early stage so that applicability and relevant supply-chain information can be confirmed based on the actual material and product conditions.",
+              "zh-Hant": "EUDR 涵蓋天然橡膠及部分相關產品。是否適用，取決於實際使用的材料、產品分類，以及各方在供應鏈中的角色。\n盈絲可依產品與市場需求，評估天然橡膠或替代材料的方案。若專案有 EUDR 相關要求，請於早期階段提出，以便依實際材料與產品條件確認適用性與相關供應鏈資訊。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Our sustainability approach",
+              "zh-Hant": "我們的永續作法"
+            }
+          },
+          {
+            "id": "q38",
+            "category": "esg",
+            "question": {
+              "en": "How does VICROUND manage social responsibility in its supply chain?",
+              "zh-Hant": "盈絲如何管理供應鏈的社會責任？"
+            },
+            "answer": {
+              "en": "VICROUND uses social-responsibility and supply chain management mechanisms such as BSCI and Sedex, with relevant management and audit activities applied according to operating site and customer requirements. Areas of focus include labor rights, working conditions, and occupational safety.\nIf a customer has specific supplier social-responsibility or audit requirements, please raise them at the beginning of the project. We will confirm the information available based on the applicable site and current audit status.",
+              "zh-Hant": "盈絲採用 BSCI、Sedex 等社會責任與供應鏈管理機制，並依營運據點與客戶要求執行相關管理與稽核作業，關注範圍包括勞工權益、工作條件與職業安全。\n若客戶對供應商社會責任或稽核有特定要求，請在專案初期提出。我們會依適用的據點與現行稽核狀態，確認可提供的資訊。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Our sustainability approach",
+              "zh-Hant": "我們的永續作法"
+            }
+          },
+          {
+            "id": "q39",
+            "category": "esg",
+            "question": {
+              "en": "Does VICROUND use recycled materials in its products?",
+              "zh-Hant": "盈絲的產品有使用回收材料嗎？"
+            },
+            "answer": {
+              "en": "Yes. Depending on product specifications and project requirements, some VICROUND products can use recycled materials such as rPET (recycled polyester), including certain acoustic and textile-related products.\nIf a customer requires GRS certification or recycled-material traceability, please raise the requirement at the beginning of the project. We will confirm the applicable certification and documentation based on the actual product, material source, and supply-chain certification status.",
+              "zh-Hant": "有。依產品規格與專案需求，部分盈絲產品可採用 rPET（再生聚酯）等回收材料，包括特定的聲學與紡織相關產品。\n若客戶需要 GRS 認證或回收材料的可追溯性，請在專案初期提出需求。我們會依實際產品、材料來源與供應鏈的認證狀態，確認適用的認證與文件。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Our sustainability approach",
+              "zh-Hant": "我們的永續作法"
+            }
+          },
+          {
+            "id": "q40",
+            "category": "compliance",
+            "question": {
+              "en": "What major certifications, audits, and product compliance programs does VICROUND work with?",
+              "zh-Hant": "盈絲有哪些主要的認證、稽核與產品合規作業？"
+            },
+            "answer": {
+              "en": "Depending on the operating site, product, and supply chain requirements, VICROUND maintains or works with relevant certifications, memberships, or audit programs such as ISO 9001, ISO 14001, GRS, Sedex, and BSCI. Product compliance requirements such as REACH and PFAS related requirements can also be reviewed according to the applicable market and project.\nThe applicable legal entity, site, product, validity period, and scope may differ among certifications, audits, and compliance items. If you have specific requirements, please contact us at the beginning of the project to confirm the relevant documentation.",
+              "zh-Hant": "依營運據點、產品與供應鏈需求，盈絲維持或配合 ISO 9001、ISO 14001、GRS、Sedex 與 BSCI 等相關認證、會員資格或稽核計畫。REACH、PFAS 等產品合規要求，亦可依適用市場與專案進行檢視。\n各項認證、稽核與合規項目所適用的法人、據點、產品、有效期間與範圍可能不同。若您有特定需求，請於專案初期與我們聯繫，以確認相關文件。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Certifications and standards",
+              "zh-Hant": "認證與標準"
+            }
+          },
+          {
+            "id": "q41",
+            "category": "compliance",
+            "question": {
+              "en": "What does ISO 14001 environmental management certification mean for customers?",
+              "zh-Hant": "ISO 14001 環境管理認證對客戶而言代表什麼？"
+            },
+            "answer": {
+              "en": "ISO 14001 is an international environmental management system standard used to establish and continually improve an organization's environmental management framework. Relevant VICROUND operating or production sites implement ISO 14001 requirements within their actual certification scope.\nIf a customer has supply chain environmental management or certification requirements, VICROUND can confirm the applicable site, certificate validity, and certification scope and provide relevant certification information based on project needs.",
+              "zh-Hant": "ISO 14001 是國際環境管理系統標準，用於建立並持續改善組織的環境管理架構。盈絲相關的營運或生產據點，在其實際認證範圍內落實 ISO 14001 的要求。\n若客戶有供應鏈環境管理或認證方面的要求，盈絲可確認適用的據點、證書效期與認證範圍，並依專案需求提供相關認證資訊。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Certifications and standards",
+              "zh-Hant": "認證與標準"
+            }
+          },
+          {
+            "id": "q42",
+            "category": "compliance",
+            "question": {
+              "en": "How can customers verify ISO 22196 test results for VICROUND antibacterial products?",
+              "zh-Hant": "客戶如何查驗盈絲抗菌產品的 ISO 22196 測試結果？"
+            },
+            "answer": {
+              "en": "ISO 22196 is an international test method for evaluating antibacterial activity on plastics and other non-porous surfaces. Some VICROUND antibacterial products have undergone third party laboratory testing in accordance with ISO 22196. Actual antibacterial performance depends on the product, test organism, and test conditions. If you require a test report, please contact us during the inquiry stage to confirm the applicable product and available test information.",
+              "zh-Hant": "ISO 22196 是評估塑膠及其他非多孔性表面抗菌活性的國際測試方法。部分盈絲抗菌產品已依 ISO 22196 完成第三方實驗室測試。實際抗菌表現取決於產品、測試菌種與測試條件。若您需要測試報告，請於詢價階段與我們聯繫，以確認適用的產品與可提供的測試資料。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Certifications and standards",
+              "zh-Hant": "認證與標準"
+            }
+          },
+          {
+            "id": "q43",
+            "category": "compliance",
+            "question": {
+              "en": "What is GRS (Global Recycled Standard), and how can customers confirm certification information when purchasing?",
+              "zh-Hant": "什麼是 GRS（全球回收標準）？採購時如何確認認證資訊？"
+            },
+            "answer": {
+              "en": "GRS (Global Recycled Standard) is an international standard developed by Textile Exchange for verifying recycled materials and supply-chain traceability.\nVICROUND can evaluate the use of recycled materials that meet GRS requirements based on product needs. If GRS certification or a Transaction Certificate (TC) is required, please raise the requirement during the inquiry or at the beginning of the project. We will confirm the documentation available based on the actual product, materials, and supply-chain certification status.",
+              "zh-Hant": "GRS（全球回收標準）是由 Textile Exchange 制定的國際標準，用於驗證回收材料與供應鏈的可追溯性。\n盈絲可依產品需求，評估採用符合 GRS 要求的回收材料。若需要 GRS 認證或交易證明（TC），請於詢價或專案初期提出需求。我們會依實際產品、材料與供應鏈的認證狀態，確認可提供的文件。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Certifications and standards",
+              "zh-Hant": "認證與標準"
+            }
+          },
+          {
+            "id": "q44",
+            "category": "compliance",
+            "question": {
+              "en": "How can customers confirm the validity and latest status of VICROUND certifications?",
+              "zh-Hant": "客戶如何確認盈絲各項認證的效期與最新狀態？"
+            },
+            "answer": {
+              "en": "VICROUND manages certifications according to their applicable scope and validity period. Because different certifications may apply to different legal entities, operating sites, products, or supply chains, customers who need to verify a specific certification's validity or scope can contact us for the relevant information.\nFor Vendor Qualification requirements, relevant certifications and supporting information can also be provided based on the actual request.",
+              "zh-Hant": "盈絲依各項認證的適用範圍與有效期間進行管理。由於不同認證可能適用於不同的法人、營運據點、產品或供應鏈，若需查驗特定認證的效期或範圍，歡迎與我們聯繫取得相關資訊。\n若有供應商資格審查（Vendor Qualification）的需求，亦可依實際要求提供相關認證與佐證資料。"
+            },
+            "href": "/sustainability",
+            "linkLabel": {
+              "en": "Certifications and standards",
+              "zh-Hant": "認證與標準"
+            }
+          },
+          {
+            "id": "q45",
+            "category": "oem",
+            "question": {
+              "en": "What cooperation models does VICROUND offer (OEM / ODM / OBM)?",
+              "zh-Hant": "盈絲提供哪些合作模式（OEM／ODM／OBM）？"
+            },
+            "answer": {
+              "en": "VICROUND supports three main cooperation models: OEM, where the customer provides product specifications and VICROUND handles manufacturing; ODM, where VICROUND participates in product design and development for sale under the customer's brand; and OBM, involving VICROUND branded products. Most customers work with us through OEM or ODM programs, and we can recommend an appropriate cooperation structure based on project requirements.",
+              "zh-Hant": "盈絲支援三種主要的合作模式：OEM，由客戶提供產品規格、盈絲負責製造；ODM，由盈絲參與產品設計與開發，並以客戶品牌銷售；以及 OBM，即盈絲自有品牌產品。多數客戶以 OEM 或 ODM 專案與我們合作，我們也可依專案需求建議合適的合作架構。"
             },
             "href": "/partnership",
             "linkLabel": {
-              "en": "Distribution and purchasing",
-              "zh-Hant": "經銷與採購"
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q46",
+            "category": "oem",
+            "question": {
+              "en": "What is the typical OEM sampling process and lead time?",
+              "zh-Hant": "典型的 OEM 打樣流程與工期為何？"
+            },
+            "answer": {
+              "en": "A typical VICROUND OEM process includes: 1) requirement confirmation and quotation (about 3–5 working days), 2) sample production (about 10–20 working days depending on product complexity), 3) customer sample approval, and 4) mass-production scheduling (typically about 4–6 weeks depending on order volume).\nSpecial materials or newly developed products may require additional sampling time. Submit your requirements through our inquiry form and our team will confirm the project schedule in detail.",
+              "zh-Hant": "盈絲典型的 OEM 流程包含： 1）需求確認與報價（約 3～5 個工作天）， 2）樣品製作（依產品複雜度約 10～20 個工作天）， 3）客戶確認樣品，以及 4）量產排程（依訂單量通常約 4～6 週）。\n特殊材料或全新開發的產品，可能需要額外的打樣時間。歡迎透過詢價表單提出需求，我們的團隊會與您詳細確認專案時程。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q47",
+            "category": "oem",
+            "question": {
+              "en": "How is VICROUND's minimum order quantity (MOQ) determined?",
+              "zh-Hant": "盈絲的最低訂購量（MOQ）是如何決定的？"
+            },
+            "answer": {
+              "en": "MOQ depends on product category, specification complexity, and degree of customization. Standard products generally have lower MOQs than fully customized products. Customized printing or special material treatments may require higher MOQs because of production setup costs. VICROUND offers flexible cooperation options and will work to provide practical starting quantities for first orders where feasible. Contact us with your project requirements for confirmation.",
+              "zh-Hant": "MOQ 取決於產品類別、規格複雜度與客製化程度。標準品的 MOQ 通常低於全客製產品；客製印刷或特殊材料處理因涉及產線調機成本，MOQ 可能較高。盈絲提供彈性的合作方式，並會在可行的範圍內，為首批訂單提供實際可行的起訂量。歡迎提供您的專案需求與我們確認。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q48",
+            "category": "oem",
+            "question": {
+              "en": "Which industries does VICROUND primarily serve?",
+              "zh-Hant": "盈絲主要服務哪些產業？"
+            },
+            "answer": {
+              "en": "VICROUND serves B2B customers across multiple industries, including consumer electronics brands, automotive electronics, medical-equipment manufacturers, solar-energy companies, office and gaming peripheral brands, and architecture and interior-design applications requiring acoustic solutions. Our diverse material portfolio enables us to support customers across a range of functional-material applications.",
+              "zh-Hant": "盈絲服務跨產業的 B2B 客戶，包括消費性電子品牌、車用電子、醫療設備製造商、太陽能企業、辦公與電競周邊品牌，以及需要聲學解決方案的建築與室內設計應用。多元的材料組合，讓我們能在各種機能材料應用上支援客戶。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q49",
+            "category": "oem",
+            "question": {
+              "en": "How do I start a project with VICROUND?",
+              "zh-Hant": "要如何開始與盈絲合作一個專案？"
+            },
+            "answer": {
+              "en": "Start by contacting our sales team through the website inquiry form or by email and share your product requirements, application, and estimated order quantity. Our team will then review the request and arrange a technical discussion or online meeting as needed. Once the requirements are clarified, we can provide an initial quotation and sampling recommendation. VICROUND supports both English and Chinese communication and welcomes inquiries from brands worldwide.",
+              "zh-Hant": "可先透過網站詢價表單或電子郵件與業務團隊聯繫，並提供您的產品需求、應用場景與預估訂購數量。我們的團隊會先檢視需求，必要時安排技術討論或線上會議。需求釐清後，即可提供初步報價與打樣建議。盈絲支援中英文溝通，歡迎全球品牌洽詢。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q50",
+            "category": "oem",
+            "question": {
+              "en": "Can VICROUND provide different manufacturing and supply options based on customer requirements?",
+              "zh-Hant": "盈絲可以依客戶需求提供不同的生產與供應選項嗎？"
+            },
+            "answer": {
+              "en": "Yes. VICROUND integrates manufacturing and supply chain resources in Taiwan and Dongguan, China, and can evaluate suitable production and shipping configurations based on the product, specifications, order requirements, and supply-chain conditions.\nCustomers with specific requirements regarding manufacturing location, Country of Origin, or supply-chain configuration are encouraged to raise them at the beginning of the project. We will evaluate feasibility based on the product process, capacity, and actual supply conditions.\nProducts are currently shipped primarily from Taiwan and Dongguan, China. The actual manufacturing location and Country of Origin depend on the individual product and production configuration.",
+              "zh-Hant": "可以。盈絲整合台灣與中國東莞的生產與供應鏈資源，能依產品、規格、訂單需求與供應鏈條件，評估合適的生產與出貨配置。\n若客戶對生產地點、原產地（Country of Origin）或供應鏈配置有特定要求，建議在專案初期提出。我們會依產品製程、產能與實際供應條件評估可行性。\n目前產品主要自台灣與中國東莞出貨。實際的生產地點與原產地，仍視個別產品與生產配置而定。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q51",
+            "category": "oem",
+            "question": {
+              "en": "What export and delivery options does VICROUND offer?",
+              "zh-Hant": "盈絲提供哪些出口與交運選項？"
+            },
+            "answer": {
+              "en": "VICROUND has extensive experience serving international B2B customers, with products shipped to North America, Europe, Asia, and other global markets.\nDepending on order quantity, product size, lead time, and customer requirements, we can assist with international courier, air freight, and sea freight, and can also work with a customer's nominated freight forwarder.\nFrom sample shipments and pilot runs to mass production deliveries, the VICROUND team can assist with packaging, export documentation, and logistics arrangements. If you already have a nominated forwarder or specific shipping terms, please share them with us so we can confirm an appropriate delivery arrangement.",
+              "zh-Hant": "盈絲具備豐富的國際 B2B 客戶服務經驗，產品已出貨至北美、歐洲、亞洲及其他全球市場。\n可依訂單數量、產品體積、交期與客戶需求，協助安排國際快遞、空運與海運，亦可配合客戶指定的貨運承攬業者。\n從樣品寄送、試產到量產交貨，盈絲團隊皆可協助包裝、出口文件與物流安排。若您已有指定的貨代或特定貿易條件，歡迎提供給我們，以便確認合適的交運方式。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q52",
+            "category": "oem",
+            "question": {
+              "en": "What are VICROUND's main services?",
+              "zh-Hant": "盈絲的主要服務項目有哪些？"
+            },
+            "answer": {
+              "en": "VICROUND focuses on functional material development and product application integration, supporting customers from material selection and customized development through mass production.\nOur main services include:\nFunctional material development: optical films, functional textiles, foam materials, and acoustic materials.\nMaterial processing and integration: coating, lamination, composite processing, printing, and cutting to convert materials into product applications.\nCustomized product development (OEM / ODM): material selection, structural design, and product development based on specifications, functional requirements, and use scenarios.\nRequirement analysis and material recommendations: translating application needs, performance requirements, and product challenges into actionable material specifications and development directions.\nSample production and testing: standard or customized samples for product evaluation and validation.\nMass production and quality management: support from sample approval and process setup through mass production and quality inspection.\nFrom an initial material requirement or product challenge to a production-ready solution, VICROUND aims to be a long-term material-development partner.",
+              "zh-Hant": "盈絲專注於機能材料開發與產品應用整合，從材料選擇、客製開發到量產，全程支援客戶。\n我們的主要服務包括：\n機能材料開發：光學膜、機能性紡織、泡棉材料與聲學材料。\n材料加工與整合：塗佈、貼合、複合加工、印刷與裁切，將材料轉化為產品應用。\n客製產品開發（OEM／ODM）：依規格、機能需求與使用情境進行材料選擇、結構設計與產品開發。\n需求分析與材料建議：把應用需求、性能要求與產品難題，轉化為可執行的材料規格與開發方向。\n樣品製作與測試：提供標準或客製樣品，供產品評估與驗證。\n量產與品質管理：從樣品確認、製程建置到量產與品質檢驗的全程支援。\n從最初的材料需求或產品難題，到可進入量產的解決方案，盈絲期望成為客戶長期的材料開發夥伴。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q53",
+            "category": "oem",
+            "question": {
+              "en": "At which B2B trade shows can customers meet VICROUND?",
+              "zh-Hant": "客戶可以在哪些 B2B 商展與盈絲見面？"
+            },
+            "answer": {
+              "en": "VICROUND participates in B2B trade shows across different industries to connect directly with brands, product development teams, engineers, and procurement professionals.\nRecent exhibitions have included:\nCOMPUTEX TAIPEI – consumer electronics, computer peripherals, and innovative material applications\nIFA Berlin – consumer electronics, smart living, and innovative products\nGlobal Sources Consumer Electronics Shows (April and October): Consumer electronics, electronic accessories, and product development applications\nTouch Taiwan – display technologies, optical films, and functional materials\nTAIPEI AMPA / AUTOTRONICS TAIPEI – automotive electronics, automotive optical films, and functional materials\nCycle Show – bicycles, sports equipment, and optical materials such as anti-fog solutions\nBuilding Show – architecture, interiors, and acoustic materials\nThese events allow VICROUND to present new products and material technologies while learning directly about market needs and product-development challenges. Contact us before an exhibition to schedule a meeting, request samples, or discuss a new project.",
+              "zh-Hant": "盈絲參與跨產業的 B2B 商展，直接與品牌、產品開發團隊、工程師與採購專業人士交流。\n近期參與的展會包括：\nCOMPUTEX TAIPEI —— 消費性電子、電腦周邊與創新材料應用\nIFA Berlin —— 消費性電子、智慧生活與創新產品\nGlobal Sources 消費電子展（4 月與 10 月）：消費性電子、電子配件與產品開發應用\nTouch Taiwan —— 顯示技術、光學膜與機能材料\nTAIPEI AMPA／AUTOTRONICS TAIPEI —— 車用電子、車用光學膜與機能材料\nCycle Show —— 自行車、運動器材與防霧等光學材料\nBuilding Show —— 建築、室內裝修與聲學材料\n這些展會讓盈絲得以展示新產品與材料技術，同時直接了解市場需求與產品開發上的難題。歡迎在展前與我們聯繫，安排會面、索取樣品或討論新專案。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q54",
+            "category": "oem",
+            "question": {
+              "en": "How can I request material samples and sample testing from VICROUND?",
+              "zh-Hant": "要如何向盈絲索取材料樣品與樣品測試？"
+            },
+            "answer": {
+              "en": "VICROUND provides standard material samples and customized development samples to support evaluation before product adoption.\nContact us through the website and share your application, required specifications, dimensions, and the functions you want to validate. We will first understand the use case and test objectives, then recommend suitable standard samples from our optical film, functional textile, foam, and acoustic material portfolios.\nIf an existing material does not fully meet the requirement, we can discuss customized sampling and testing and adjust materials or specifications based on the results to support the next stage of development.\nFrom requirement review and material selection to sample testing and customization, VICROUND helps customers identify suitable material solutions before mass production.",
+              "zh-Hant": "盈絲提供標準材料樣品與客製開發樣品，協助客戶在導入產品前進行評估。\n歡迎透過網站與我們聯繫，並提供您的應用場景、所需規格、尺寸，以及希望驗證的功能。我們會先了解使用情境與測試目標，再從光學膜、機能性紡織、泡棉與聲學材料等產品線中，推薦合適的標準樣品。\n若現有材料無法完全滿足需求，我們可進一步討論客製打樣與測試，並依測試結果調整材料或規格，支援下一階段的開發。\n從需求檢視、材料選擇到樣品測試與客製化，盈絲協助客戶在量產前找到合適的材料方案。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q55",
+            "category": "oem",
+            "question": {
+              "en": "Does VICROUND support customized material development for special specifications and cross-industry applications?",
+              "zh-Hant": "盈絲是否支援特殊規格與跨產業應用的客製材料開發？"
+            },
+            "answer": {
+              "en": "Yes. VICROUND has long-term development experience in optical films, functional textiles, foam materials, acoustic materials, and coating, lamination, and composite processing technologies, supported by a portfolio of standard materials and products that can serve as a starting point for new development.\nThrough requirement discussions and application analysis, we work to understand the product's use conditions, performance requirements, and practical challenges and translate them into material specifications and development directions.\nFor special specifications or cross industry applications, VICROUND can build from existing materials and technologies through material selection, functional adjustment, composite processing, sampling, and testing. Where no off-the-shelf solution exists, we can work with the customer to evaluate feasibility and develop a customized material solution.",
+              "zh-Hant": "是的。盈絲在光學膜、機能性紡織、泡棉材料、聲學材料，以及塗佈、貼合與複合加工技術上具備長期開發經驗，並擁有可作為新開發起點的標準材料與產品組合。\n透過需求討論與應用分析，我們會設法了解產品的使用條件、性能要求與實務上的難題，並將其轉化為材料規格與開發方向。\n面對特殊規格或跨產業應用，盈絲可從既有材料與技術出發，透過材料選擇、機能調整、複合加工、打樣與測試逐步推進。若市面上沒有現成的方案，我們也可與客戶一同評估可行性，開發客製化的材料解決方案。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q56",
+            "category": "oem",
+            "question": {
+              "en": "How can VICROUND functional materials support more sustainable product design?",
+              "zh-Hant": "盈絲的機能材料如何協助打造更永續的產品設計？"
+            },
+            "answer": {
+              "en": "VICROUND develops functional materials with considerations including material efficiency, energy use, product durability, and recycled-material applications, giving brands and manufacturers more options when designing products and selecting materials.\nCurrent development areas include:\nSolar Enhancement Film – developed to improve the effective use of light by solar modules; actual performance depends on module design, material combination, and test conditions.\nUV-Cut film for outdoor displays – provides UV-blocking functionality for applications such as e-paper and outdoor displays; actual weathering performance and service life depend on product construction, operating environment, and validation conditions.\nPower-Saving Mouse Pad – surface materials and optical characteristics are designed to explore improved sensing and power-consumption performance with certain wireless optical mice; actual results depend on the mouse sensor, usage mode, and test conditions.\nRecycled-material applications – recycled PET and other materials can be evaluated based on product requirements. Where GRS certification or recycled-material claims are involved, applicability is confirmed according to the actual materials, supply chain, and certification requirements.\nVICROUND continues to provide functional-material options for material selection, product performance, and recycled-material applications. Whether a specific material supports a particular ESG, carbon-reduction, energy-saving, or other environmental objective should be evaluated based on the final product design, actual test results, and applicable certification or regulatory requirements.",
+              "zh-Hant": "盈絲在開發機能材料時，會納入材料效率、能源使用、產品耐用性與回收材料應用等考量，讓品牌與製造商在設計產品、選擇材料時有更多選項。\n目前的開發方向包括：\n太陽能增效膜 —— 為提升太陽能模組對光線的有效利用而開發；實際效果取決於模組設計、材料組合與測試條件。\n戶外顯示器用 UV-Cut 膜 —— 為電子紙與戶外顯示器等應用提供抗紫外線功能；實際的耐候表現與使用壽命，取決於產品結構、使用環境與驗證條件。\n省電滑鼠墊 —— 表面材質與光學特性的設計，用於探索在特定無線光學滑鼠上改善感測與耗電表現的可能；實際結果取決於滑鼠感測器、使用模式與測試條件。\n回收材料應用 —— 可依產品需求評估採用回收 PET 等材料。若涉及 GRS 認證或回收材料聲明，將依實際材料、供應鏈與認證要求確認其適用性。\n盈絲持續在材料選擇、產品性能與回收材料應用上提供機能材料的選項。至於特定材料是否有助於達成某項 ESG、減碳、節能或其他環境目標，仍應依最終產品設計、實際測試結果，以及適用的認證或法規要求評估。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
+            }
+          },
+          {
+            "id": "q57",
+            "category": "oem",
+            "question": {
+              "en": "Why does VICROUND develop optical films, textile & foam materials, and acoustic materials?",
+              "zh-Hant": "盈絲為什麼同時開發光學膜、紡織與泡棉材料，以及聲學材料？"
+            },
+            "answer": {
+              "en": "VICROUND focuses on the development, processing, and integration of functional materials. Our core capabilities span optical films, functional textiles, foam materials, acoustic materials, coating, lamination, and composite processing.\nOptical films are mainly used for displays, privacy, optical performance, and surface functions, while textile and foam materials extend into mouse pads, desk mats, and acoustic applications. Although these product categories differ, they are built on VICROUND's capabilities in material selection, functional design, and composite processing.\nWe start from real product requirements and develop functional-material solutions for optical performance, tactile feel, anti-slip performance, cushioning, and acoustics.",
+              "zh-Hant": "盈絲專注於機能材料的開發、加工與整合，核心能力涵蓋光學膜、機能性紡織、泡棉材料、聲學材料，以及塗佈、貼合與複合加工。\n光學膜主要應用於顯示、防窺、光學性能與表面機能；紡織與泡棉材料則延伸至滑鼠墊、桌墊與聲學應用。這些產品類別雖然不同，但都建立在盈絲於材料選擇、機能設計與複合加工上的能力之上。\n我們從真實的產品需求出發，針對光學性能、觸感、防滑、緩衝與聲學等面向，開發機能材料解決方案。"
+            },
+            "href": "/partnership",
+            "linkLabel": {
+              "en": "How OEM/ODM works with us",
+              "zh-Hant": "OEM／ODM 合作方式"
             }
           }
         ]
