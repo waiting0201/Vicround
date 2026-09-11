@@ -342,8 +342,9 @@ apps/web/
    - 綁 `www.vicround.com`（DNS + SWA 自訂網域）
    - 把 repo 變數 `SITE_URL` 改成正式網域（robots 才會開放索引；現在 canonical
      與 `sitemap.xml` 仍指向 SWA 預設網域）
-   - 決定預覽網域 `vicround.4webdemo.com` 的索引策略：Cloudflare 的 managed robots.txt
-     目前是 `Allow: /`，但頁面 canonical 指向別的網域，兩者衝突
+   - 預覽網域 `vicround.4webdemo.com`（測試 DNS）：頁面已由 `lib/seo.ts` 強制
+     `noindex`（非正式站一律如此）。**但 Cloudflare 的 managed robots.txt 仍是
+     `Allow: /`**，蓋掉我們的 `Disallow: /` —— 要在 Cloudflare 關掉它才算兩道防線都在
    - 舊站 301 已在正式環境（實測 `/v1/redirects` 241 筆）✅
 6. ~~Account API 與會員專區~~ ✅ 2026-09-11（寄信待接）
 

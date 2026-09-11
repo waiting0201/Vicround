@@ -157,6 +157,9 @@ gh workflow run web.yml --ref master          # build-time 變數，必須重新
   `[email protected]` + `__cf_email__` 解碼腳本。爬蟲與無 JS 環境看到的就是那串佔位字。
 - **Managed robots.txt** 會蓋掉 `app/robots.ts` 產生的內容。這會與「非正式站整站
   `Disallow: /`」的策略直接衝突：Cloudflare 那份是 `Allow: /`。
+  → 因此 `lib/seo.ts` 在 `IS_PRODUCTION_SITE` 為 false 時**一律輸出 meta `noindex`**：
+  robots.txt 可能根本不是我們回的，但 meta 標籤在頁面裡，CDN 蓋不掉。判準綁在
+  `SITE_URL` 上，正式網域上線那天自己失效。
 - 兩者疊加時最危險的組合是：CDN 網域開放索引，但頁面的 canonical 仍指向
   `SITE_URL` 設定的另一個網域——等於把權重導向一個被 robots 封鎖的位址。
 

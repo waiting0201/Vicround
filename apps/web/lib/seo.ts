@@ -2,7 +2,7 @@ import 'server-only';
 import type { Metadata } from 'next';
 import { DEFAULT_LOCALE, OG_LOCALE, type Locale } from './locale';
 import { localesOf } from './hreflang';
-import { absoluteUrl, OG_IMAGE_DEFAULT, SITE_NAME, toAbsolute } from './site';
+import { absoluteUrl, IS_PRODUCTION_SITE, OG_IMAGE_DEFAULT, SITE_NAME, toAbsolute } from './site';
 
 /**
  * 每一頁的 metadata 產生器（docs/sitemap.md「Per-page SEO requirements」）。
@@ -37,7 +37,14 @@ export async function pageMetadata(input: PageMetaInput): Promise<Metadata> {
   const url = absoluteUrl(locale, path);
   const description = input.description ?? undefined;
 
-  if (input.noIndex) {
+  // 非正式站一律不可索引，與 `app/robots.ts` 同一個判準（`IS_PRODUCTION_SITE`）。
+  //
+  // robots.txt 只是「請不要抓」——被外部連結到時仍可能被索引，**noindex 才是真正的
+  // 攔截**。而且 robots.txt 可能根本不是我們回的：測試網域掛在 Cloudflare 後面時，
+  // 它的 managed robots.txt 會蓋掉這一份。meta 標籤在頁面裡，蓋不掉。
+  //
+  // 判準綁在 SITE_URL 上，所以正式網域上線那天這一條會自己消失，不必記得回來刪。
+  if (input.noIndex || !IS_PRODUCTION_SITE) {
     // 不可索引的頁面不宣告 canonical/hreflang —— 那是「請索引這一頁」的訊號，
     // 與 noindex 互相矛盾。
     return {
