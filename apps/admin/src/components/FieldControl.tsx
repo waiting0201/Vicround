@@ -1,9 +1,8 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
   Badge,
   Button,
   Checkbox,
-  Dialog,
   Field,
   Icon,
   Input,
@@ -13,7 +12,8 @@ import {
   cx,
 } from '@/ui';
 import { CULTURES } from '@/lib/enums';
-import { useList } from '@/lib/queries';
+import { uploadMedia } from '@/lib/api';
+import { useItem, useList } from '@/lib/queries';
 import { resourceOf, type FieldDef } from '@/lib/resources';
 import { formatBytes, isValidSlug, rowTitle, toSlug } from '@/lib/format';
 
@@ -34,9 +34,11 @@ export type FieldControlProps = {
   onChange: (value: unknown) => void;
   error?: string;
   disabled?: boolean;
+  /** 同一筆表單的其他欄位值。`media` 欄位用它決定上傳容器（下載項目看存取層級）。 */
+  values?: Record<string, unknown>;
 };
 
-export function FieldControl({ field, value, onChange, error, disabled }: FieldControlProps) {
+export function FieldControl({ field, value, onChange, error, disabled, values }: FieldControlProps) {
   const id = useId();
   const readOnly = disabled || field.readOnly;
   const text = value === null || value === undefined ? '' : String(value);
@@ -52,7 +54,7 @@ export function FieldControl({ field, value, onChange, error, disabled }: FieldC
       required={field.required}
       className={field.wide ? 'md:col-span-2' : undefined}
     >
-      {renderControl({ id, field, value, text, onChange, error: Boolean(error), readOnly })}
+      {renderControl({ id, field, value, text, onChange, error: Boolean(error), readOnly, values })}
     </Field>
   );
 }
@@ -76,9 +78,10 @@ type ControlArgs = {
   onChange: (value: unknown) => void;
   error: boolean;
   readOnly?: boolean;
+  values?: Record<string, unknown>;
 };
 
-function renderControl({ id, field, value, text, onChange, error, readOnly }: ControlArgs) {
+function renderControl({ id, field, value, text, onChange, error, readOnly, values }: ControlArgs) {
   switch (field.type) {
     case 'textarea':
     case 'html':
@@ -156,7 +159,19 @@ function renderControl({ id, field, value, text, onChange, error, readOnly }: Co
       );
 
     case 'media':
-      return <MediaControl id={id} value={text} onChange={onChange} readOnly={readOnly} />;
+      return (
+        <MediaControl
+          id={id}
+          field={field}
+          value={text}
+          onChange={onChange}
+          readOnly={readOnly}
+          values={values}
+        />
+      );
+
+    case 'mediaList':
+      return <MediaListControl field={field} value={value} onChange={onChange} readOnly={readOnly} values={values} />;
 
     case 'reference':
       return (
@@ -277,78 +292,269 @@ function SlugControl({
 }
 
 /** 媒體選擇：開一個對話框從媒體庫挑，而不是要編輯者手貼一串 URL。 */
+/**
+ * 檔案欄位。
+ *
+ * <p>
+ * **沒有媒體庫可以挑**——檔案就在用到它的欄位上直接上傳，傳完立刻綁在這一格。
+ * 編輯者不必先去別的畫面把檔案準備好，也不會在挑一張標章圖時看到一整櫃跟手邊
+ * 工作無關的檔案。
+ * </p>
+ *
+ * <p>
+ * 容器由欄位定義的 <c>container</c> 決定，<b>不在上傳時才問</b>：下載項目的檔案跟著
+ * 存取層級走，其餘一律公開容器。選錯的後果是把客戶的合規文件放上公開 CDN，
+ * 這種判斷不該每次上傳都重做一遍。
+ * </p>
+ */
 function MediaControl({
   id,
+  field,
   value,
   onChange,
   readOnly,
+  values,
 }: {
   id: string;
+  field: FieldDef;
   value: string;
   onChange: (value: unknown) => void;
   readOnly?: boolean;
+  values?: Record<string, unknown>;
 }) {
-  const [open, setOpen] = useState(false);
-  const { data, isLoading } = useList('media', { pageSize: 40 }, { enabled: open });
-  const selected = data?.items.find((item) => item.id === value);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  // 既有值只是一個 id，檔名與縮圖要跟後端要——編輯一筆舊資料時才看得出選的是哪個檔案。
+  const { data: asset, isLoading } = useItem('media', value || undefined);
+
+  const container =
+    typeof field.container === 'function' ? field.container(values ?? {}) : (field.container ?? 'public-media');
+  const isPrivate = container === 'member-documents';
+
+  async function upload(file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    setFailed(null);
+    try {
+      const row = await uploadMedia(file, container);
+      onChange(row.id);
+    } catch (error) {
+      setFailed((error as Error).message);
+    } finally {
+      setUploading(false);
+      // 清掉 input 的值，否則連續選同一個檔案不會觸發 change。
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  }
+
+  const url = typeof asset?.url === 'string' ? asset.url : undefined;
+  const fileName = typeof asset?.fileName === 'string' ? asset.fileName : undefined;
+  const isImage = String(asset?.type ?? '') === 'image';
 
   return (
-    <>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          id={id}
-          disabled={readOnly}
-          onClick={() => setOpen(true)}
-          className={cx(
-            'flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-1)]',
-            'bg-[var(--surface-card)] px-3 text-left text-sm text-[var(--fg-1)]',
-            'hover:bg-[var(--surface-card-alt)] disabled:cursor-not-allowed disabled:opacity-60',
-          )}
-        >
-          <Icon name="image" size={14} className="shrink-0 text-[var(--fg-3)]" />
-          <span className="truncate">
-            {value ? String(selected?.fileName ?? value) : '尚未選擇檔案'}
+    <div className="flex flex-col gap-2">
+      <input
+        ref={fileInput}
+        type="file"
+        id={id}
+        accept={field.accept}
+        className="sr-only"
+        disabled={readOnly || uploading}
+        onChange={(event) => void upload(event.target.files?.[0])}
+      />
+
+      <div className="flex items-center gap-3">
+        {value && (
+          <span
+            className={cx(
+              'flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden',
+              'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
+            )}
+          >
+            {isImage && url ? (
+              <img src={url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <Icon name={isImage ? 'image' : 'file-text'} size={18} className="text-[var(--fg-3)]" />
+            )}
           </span>
-        </button>
-        {value && !readOnly && (
+        )}
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm text-[var(--fg-1)]">
+            {uploading
+              ? '上傳中…'
+              : value
+                ? (fileName ?? (isLoading ? '載入中…' : value))
+                : '尚未上傳檔案'}
+          </p>
+          {value && !uploading && typeof asset?.fileSizeBytes === 'number' && (
+            <p className="text-xs text-[var(--fg-3)]">{formatBytes(asset.fileSizeBytes)}</p>
+          )}
+        </div>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={readOnly || uploading}
+          onClick={() => fileInput.current?.click()}
+        >
+          {value ? '更換檔案' : '選擇檔案'}
+        </Button>
+        {value && !readOnly && !uploading && (
           <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
             清除
           </Button>
         )}
       </div>
 
-      <Dialog open={open} onClose={() => setOpen(false)} title="選擇媒體" width="640px">
-        {isLoading ? (
-          <p className="py-6 text-center text-sm text-[var(--fg-2)]">載入中…</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-3 py-1 sm:grid-cols-4">
-            {data?.items.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  onChange(item.id);
-                  setOpen(false);
-                }}
-                className={cx(
-                  'flex flex-col gap-1 rounded-[var(--radius-sm)] border p-2 text-left text-xs',
-                  item.id === value
-                    ? 'border-[var(--brand)] bg-[var(--brand-soft)]'
-                    : 'border-[var(--border-1)] hover:bg-[var(--surface-card-alt)]',
-                )}
-              >
-                <span className="flex h-16 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-card-alt)] text-[var(--fg-3)]">
-                  <Icon name={String(item.type) === 'document' ? 'file-text' : 'image'} size={20} />
-                </span>
-                <span className="truncate text-[var(--fg-1)]">{String(item.fileName ?? item.id)}</span>
-                <span className="text-[var(--fg-3)]">{formatBytes(item.fileSizeBytes)}</span>
-              </button>
-            ))}
-          </div>
+      {failed && <p className="text-xs text-[var(--danger)]">上傳失敗：{failed}</p>}
+      {isPrivate && !failed && (
+        <p className="text-xs text-[var(--fg-3)]">
+          這個檔案會存進私有容器，公開端只能經 SAS 連結取得。
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 多檔案欄位（產品圖庫）。
+ *
+ * <p>
+ * 與 `MediaControl` 同一個原則：直接上傳，不從既有檔案裡挑。可一次選多個檔案，
+ * 順序就是上傳的順序，要換順序就移除再傳一次——圖庫通常只有幾張，為它做拖曳排序
+ * 不划算。
+ * </p>
+ */
+function MediaListControl({
+  field,
+  value,
+  onChange,
+  readOnly,
+  values,
+}: {
+  field: FieldDef;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  readOnly?: boolean;
+  values?: Record<string, unknown>;
+}) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  const ids = Array.isArray(value) ? (value as string[]) : [];
+  const container =
+    typeof field.container === 'function' ? field.container(values ?? {}) : (field.container ?? 'public-media');
+
+  async function upload(files: FileList | null) {
+    if (!files?.length) return;
+    setUploading(true);
+    setFailed(null);
+    try {
+      const added: string[] = [];
+      // 逐一上傳而不是並行：後端對每個檔案都要寫一列，並行只是把失敗變得更難解讀。
+      for (const file of Array.from(files)) {
+        const row = await uploadMedia(file, container);
+        added.push(row.id);
+      }
+      onChange([...ids, ...added]);
+    } catch (error) {
+      setFailed((error as Error).message);
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <input
+        ref={fileInput}
+        type="file"
+        multiple
+        accept={field.accept}
+        className="sr-only"
+        disabled={readOnly || uploading}
+        onChange={(event) => void upload(event.target.files)}
+      />
+
+      {ids.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {ids.map((assetId) => (
+            <MediaListItem
+              key={assetId}
+              id={assetId}
+              readOnly={readOnly}
+              onRemove={() => onChange(ids.filter((item) => item !== assetId))}
+            />
+          ))}
+        </ul>
+      )}
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={readOnly || uploading}
+          onClick={() => fileInput.current?.click()}
+        >
+          {uploading ? '上傳中…' : ids.length ? '再加檔案' : '選擇檔案'}
+        </Button>
+        {ids.length > 0 && <span className="text-xs text-[var(--fg-3)]">{ids.length} 個檔案</span>}
+      </div>
+
+      {failed && <p className="text-xs text-[var(--danger)]">上傳失敗：{failed}</p>}
+    </div>
+  );
+}
+
+/** 圖庫裡的一張。縮圖要靠 id 去把網址讀回來，所以獨立成一個元件各自查詢。 */
+function MediaListItem({
+  id,
+  onRemove,
+  readOnly,
+}: {
+  id: string;
+  onRemove: () => void;
+  readOnly?: boolean;
+}) {
+  const { data } = useItem('media', id);
+  const url = typeof data?.url === 'string' ? data.url : undefined;
+  const fileName = typeof data?.fileName === 'string' ? data.fileName : id;
+
+  return (
+    <li className="relative">
+      <span
+        className={cx(
+          'flex h-16 w-16 items-center justify-center overflow-hidden',
+          'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
         )}
-      </Dialog>
-    </>
+        title={fileName}
+      >
+        {url ? (
+          <img src={url} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <Icon name="image" size={18} className="text-[var(--fg-3)]" />
+        )}
+      </span>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`移除 ${fileName}`}
+          className={cx(
+            'absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full',
+            'border border-[var(--border-1)] bg-[var(--surface-card)] text-[var(--fg-2)]',
+            'hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]',
+          )}
+        >
+          <Icon name="x" size={11} />
+        </button>
+      )}
+    </li>
   );
 }
 

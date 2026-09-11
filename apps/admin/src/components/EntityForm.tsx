@@ -124,6 +124,7 @@ export function FieldGrid({
           key={field.name}
           field={field}
           value={values[field.name]}
+          values={values}
           error={errors[`${errorPrefix}.${field.name}`] || undefined}
           disabled={disabled}
           onChange={(value) => onChange(field.name, value)}

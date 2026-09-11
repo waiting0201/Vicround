@@ -11,7 +11,6 @@ import { EditorScreen } from '@/screens/EditorScreen';
 import { EntityEditor } from '@/screens/EntityEditor';
 import { InquiriesScreen } from '@/screens/InquiriesScreen';
 import { InquiryDetail } from '@/screens/InquiryDetail';
-import { MediaScreen } from '@/screens/MediaScreen';
 import { MemberDetail } from '@/screens/MemberDetail';
 import { MembersScreen } from '@/screens/MembersScreen';
 import { NavigationScreen } from '@/screens/NavigationScreen';
@@ -55,8 +54,6 @@ function listElement(resource: ResourceDef) {
       return <SampleRequestsScreen resource={resource} />;
     case 'inbox':
       return <InquiriesScreen resource={resource} />;
-    case 'media':
-      return <MediaScreen resource={resource} />;
     case 'settings':
       return <SettingsScreen resource={resource} />;
     case 'collection':

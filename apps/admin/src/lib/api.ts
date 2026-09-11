@@ -235,7 +235,7 @@ export async function uploadMedia(
   file: File,
   container: 'public-media' | 'member-documents' = 'public-media',
 ): Promise<AdminRow> {
-  if (MOCK_ENABLED) return mockUpload(file) as AdminRow;
+  if (MOCK_ENABLED) return mockUpload(file, container) as AdminRow;
 
   const form = new FormData();
   form.append('file', file);

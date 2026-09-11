@@ -358,17 +358,21 @@ function listOf(type: string, params: URLSearchParams) {
 let nextId = 1000;
 
 /** 假的上傳：不真的送檔案，只是把一筆 metadata 塞進媒體庫，讓畫面流程走得完。 */
-export function mockUpload(file: File): Record<string, unknown> {
+export function mockUpload(file: File, container = 'public-media'): Record<string, unknown> {
   const rows = ensure('media');
+  const isPrivate = container === 'member-documents';
   const row: Row = {
     id: `media-new-${nextId++}`,
     translations: {},
     fileName: file.name,
-    container: 'public-media',
+    container,
+    // 假的 blob: 網址，讓欄位上傳後在 mock 模式下也看得到縮圖（私有容器不給直連網址，
+    // 與正式行為一致）。
+    url: isPrivate ? null : URL.createObjectURL(file),
     mimeType: file.type || 'application/octet-stream',
     fileSizeBytes: file.size,
     type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document',
-    isPrivate: false,
+    isPrivate,
     isArchived: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

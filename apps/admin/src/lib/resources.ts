@@ -56,6 +56,7 @@ export type FieldType =
   | 'icon'
   | 'json'
   | 'media'
+  | 'mediaList'
   | 'reference'
   | 'multiReference';
 
@@ -81,7 +82,24 @@ export type FieldDef = {
    * 一次攤開五種連結方式的欄位，等於要編輯者自己判斷哪四個該留空。
    */
   visibleWhen?: (values: Record<string, unknown>) => boolean;
+  /**
+   * `media` 欄位上傳時要進哪個容器。預設 `public-media`。
+   *
+   * <p>
+   * 可以給一個函式，依同一筆資料的其他欄位決定——下載項目就是這樣：存取層級選了
+   * 限會員，檔案就必須進私有容器。**選錯的後果是把客戶的合規文件放上公開網際網路**，
+   * 所以這件事由欄位定義決定，不讓上傳的人每次自己挑。
+   * </p>
+   */
+  container?: MediaContainer | ((values: Record<string, unknown>) => MediaContainer);
+  /** `media` 欄位的 `accept`。限制在檔案選擇器就先擋掉，不必等後端回 415。 */
+  accept?: string;
 };
+
+export type MediaContainer = 'public-media' | 'member-documents';
+
+/** 圖片欄位共用的 `accept`（對齊後端 AdminMediaHandler 的 AllowedTypes）。 */
+export const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/svg+xml,image/avif,image/gif';
 
 export type ColumnDef = {
   name: string;
@@ -105,7 +123,6 @@ export type ScreenKind =
   | 'queue' // 審核佇列（會員）
   | 'board' // 看板（樣品申請）
   | 'inbox' // 收件匣（詢問單）
-  | 'media' // 媒體庫（格狀 + 上傳）
   | 'settings'; // 單一設定表單
 
 export type ResourceDef = {
@@ -166,7 +183,7 @@ const SEO_FIELDS: FieldDef[] = [
     wide: true,
   },
   { name: 'seoKeywords', label: 'SEO 關鍵字', type: 'text', scope: 'translation', maxLength: 400, wide: true },
-  { name: 'ogImageMediaAssetId', label: 'OG 分享圖', type: 'media', scope: 'translation' },
+  { name: 'ogImageMediaAssetId', label: 'OG 分享圖', type: 'media', scope: 'translation', accept: IMAGE_ACCEPT },
 ];
 
 const SLUG_FIELD: FieldDef = {
@@ -228,7 +245,7 @@ const categories: ResourceDef = {
     },
     { name: 'accentColorHex', label: '主色', type: 'color', scope: 'base', hint: 'CIS p.8 的產品色。' },
     { name: 'iconName', label: '圖示', type: 'icon', scope: 'base' },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -303,8 +320,8 @@ const products: ResourceDef = {
     { name: 'brand', label: '品牌', type: 'text', scope: 'base', maxLength: 80, placeholder: 'FlexCore™' },
     { name: 'isFeatured', label: '精選（首頁／熱銷）', type: 'boolean', scope: 'base' },
     { name: 'isNew', label: '標記 New', type: 'boolean', scope: 'base' },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
-    { name: 'gallery', label: '產品圖庫', type: 'multiReference', scope: 'base', refType: 'media', wide: true },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'gallery', label: '產品圖庫', type: 'mediaList', scope: 'base', wide: true, accept: IMAGE_ACCEPT },
     { name: 'solutionIds', label: '關聯產業', type: 'multiReference', scope: 'base', refType: 'solutions', wide: true },
     SORT_FIELD,
   ],
@@ -357,7 +374,7 @@ const solutions: ResourceDef = {
     SLUG_FIELD,
     { name: 'iconName', label: '圖示', type: 'icon', scope: 'base' },
     { name: 'isNew', label: '索引卡標記 New', type: 'boolean', scope: 'base' },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     { name: 'categoryIds', label: '相關產品線', type: 'multiReference', scope: 'base', refType: 'categories', wide: true },
     SORT_FIELD,
   ],
@@ -427,7 +444,7 @@ const articles: ResourceDef = {
       refType: 'exhibitions',
       hint: '類型為「展會」時，連到展會實體以帶出 Event 結構化資料。',
     },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     { name: 'readingMinutes', label: '閱讀分鐘數', type: 'number', scope: 'base' },
     { name: 'isFeatured', label: '資源中心置頂', type: 'boolean', scope: 'base' },
     {
@@ -487,7 +504,7 @@ const pages: ResourceDef = {
       readOnly: true,
       hint: '首頁、隱私權、聯絡等頁面不可刪除。',
     },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -512,7 +529,7 @@ const pages: ResourceDef = {
         { name: 'blockType', label: '版塊類型', type: 'select', scope: 'base', required: true, options: BLOCK_TYPE_OPTIONS },
         { name: 'anchor', label: '錨點', type: 'text', scope: 'base', maxLength: 64, hint: '同一頁內不可重複，例：esg。' },
         { name: 'tone', label: '底色', type: 'select', scope: 'base', options: BLOCK_TONE_OPTIONS },
-        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base' },
+        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
         { name: 'settingsJson', label: '查詢條件', type: 'json', scope: 'base', wide: true, hint: '僅參照版塊使用，且不得放任何要翻譯的文字。' },
         SORT_FIELD,
       ],
@@ -561,7 +578,7 @@ const exhibitions: ResourceDef = {
     { name: 'countryCode', label: '國別代碼', type: 'text', scope: 'base', maxLength: 2, placeholder: 'TW' },
     { name: 'websiteUrl', label: '官方網站', type: 'url', scope: 'base', maxLength: 512, wide: true },
     { name: 'meetingUrl', label: '預約洽談連結', type: 'url', scope: 'base', maxLength: 512, wide: true },
-    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base' },
+    { name: 'heroMediaAssetId', label: '主視覺', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -671,7 +688,17 @@ const downloads: ResourceDef = {
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'mediaAssetId', label: '檔案', type: 'media', scope: 'base', required: true },
+    {
+      name: 'mediaAssetId',
+      label: '檔案',
+      type: 'media',
+      scope: 'base',
+      required: true,
+      // 存取層級是同一張表單上的欄位，所以上傳時就能決定容器，不必事後搬檔案。
+      container: (values) => (values.accessLevel === 'public' ? 'public-media' : 'member-documents'),
+      accept: 'application/pdf,image/jpeg,image/png,image/webp',
+      hint: '限會員與詢問後提供的檔案會存進私有容器，公開端拿不到真實網址。',
+    },
     { name: 'kind', label: '文件類型', type: 'select', scope: 'base', required: true, options: DOWNLOAD_KIND_OPTIONS },
     {
       name: 'accessLevel',
@@ -686,7 +713,7 @@ const downloads: ResourceDef = {
     { name: 'documentDate', label: '文件日期', type: 'date', scope: 'base' },
     { name: 'validUntil', label: '有效至', type: 'date', scope: 'base', hint: '過期後自動不列出。' },
     { name: 'documentCulture', label: '檔案語言', type: 'select', scope: 'base', options: [] , hint: '留空表示語言中立。'},
-    { name: 'thumbnailMediaAssetId', label: '縮圖', type: 'media', scope: 'base' },
+    { name: 'thumbnailMediaAssetId', label: '縮圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     { name: 'productIds', label: '關聯產品', type: 'multiReference', scope: 'base', refType: 'products', wide: true },
     { name: 'categoryIds', label: '關聯產品線', type: 'multiReference', scope: 'base', refType: 'categories', wide: true },
     { name: 'solutionIds', label: '關聯解決方案', type: 'multiReference', scope: 'base', refType: 'solutions', wide: true },
@@ -751,7 +778,7 @@ const authors: ResourceDef = {
   baseFields: [
     SLUG_FIELD,
     { name: 'initials', label: '縮寫', type: 'text', scope: 'base', maxLength: 4 },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base' },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -802,7 +829,7 @@ const certifications: ResourceDef = {
       hint: '打開時前台顯示虛線的待補卡片，不會顯示假資料。',
     },
     { name: 'downloadId', label: '證書 PDF', type: 'reference', scope: 'base', refType: 'downloads' },
-    { name: 'logoMediaAssetId', label: '標章圖', type: 'media', scope: 'base' },
+    { name: 'logoMediaAssetId', label: '標章圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     { name: 'productIds', label: '涵蓋產品', type: 'multiReference', scope: 'base', refType: 'products', wide: true },
     { name: 'categoryIds', label: '涵蓋產品線', type: 'multiReference', scope: 'base', refType: 'categories', wide: true },
     SORT_FIELD,
@@ -850,7 +877,7 @@ const milestones: ResourceDef = {
   baseFields: [
     { name: 'year', label: '年份', type: 'number', scope: 'base', required: true },
     { name: 'month', label: '月份', type: 'number', scope: 'base' },
-    { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base' },
+    { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -887,7 +914,7 @@ const locations: ResourceDef = {
     { name: 'latitude', label: '緯度', type: 'number', scope: 'base' },
     { name: 'longitude', label: '經度', type: 'number', scope: 'base' },
     { name: 'mapUrl', label: '地圖連結', type: 'url', scope: 'base', maxLength: 512, wide: true },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base' },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -918,7 +945,7 @@ const testimonials: ResourceDef = {
   baseFields: [
     { name: 'partnerBrandId', label: '合作品牌', type: 'reference', scope: 'base', refType: 'partner-brands' },
     { name: 'solutionId', label: '關聯產業', type: 'reference', scope: 'base', refType: 'solutions' },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base' },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
     SORT_FIELD,
   ],
   translationFields: [
@@ -949,7 +976,7 @@ const partnerBrands: ResourceDef = {
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'logoMediaAssetId', label: 'Logo', type: 'media', scope: 'base', required: true },
+    { name: 'logoMediaAssetId', label: 'Logo', type: 'media', scope: 'base', required: true, accept: IMAGE_ACCEPT },
     { name: 'websiteUrl', label: '官方網站', type: 'url', scope: 'base', maxLength: 512, wide: true },
     { name: 'isLogoWallVisible', label: '顯示於 Logo 牆', type: 'boolean', scope: 'base' },
     SORT_FIELD,
@@ -1039,7 +1066,7 @@ const processFlows: ResourceDef = {
         { name: 'stepNumber', label: '步驟編號', type: 'number', scope: 'base', required: true },
         { name: 'iconName', label: '圖示', type: 'icon', scope: 'base' },
         { name: 'accentColorHex', label: '色條', type: 'color', scope: 'base' },
-        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base' },
+        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
         SORT_FIELD,
       ],
       translationFields: [
@@ -1303,13 +1330,26 @@ const siteSettings: ResourceDef = {
   translationFields: [{ name: 'value', label: '值', type: 'textarea', scope: 'translation', rows: 3, wide: true }],
 };
 
+/**
+ * 媒體檔案。
+ *
+ * <p>
+ * **沒有獨立的「媒體庫」畫面**——檔案一律從用到它的欄位直接上傳（見 `FieldControl`
+ * 的 `MediaControl`），上傳完就綁在那個欄位上。這裡保留資源定義，是因為欄位要靠
+ * `GET /admin/media/{id}` 把已選檔案的檔名與縮圖讀回來，列表與刪除端點也還在。
+ * </p>
+ *
+ * <p>
+ * 二進位檔案存 Blob Storage，資料庫只留位址；限會員文件存私有容器，只能靠 SAS 連結取得。
+ * </p>
+ */
 const media: ResourceDef = {
   type: 'media',
-  label: '媒體庫',
+  label: '媒體檔案',
   singular: '媒體',
-  screen: 'media',
+  screen: 'editor',
   titleField: 'fileName',
-  description: '二進位檔案存 Blob Storage，資料庫只留位址。限會員文件存私有容器，只能靠 SAS 連結取得。',
+  description: '從各欄位直接上傳；這裡不提供獨立的瀏覽畫面。',
   columns: [
     { name: 'url', label: '預覽', type: 'thumb', width: '5rem' },
     { name: 'fileName', label: '檔名' },

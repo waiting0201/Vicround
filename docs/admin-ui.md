@@ -115,7 +115,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 ## 3. 畫面型別
 
-27 個畫面（`apps/admin/src/lib/menu.ts` 的 `ALL_ITEMS`）收斂成 **8 種型別**。分類依據
+26 個畫面（`apps/admin/src/lib/menu.ts` 的 `ALL_ITEMS`）收斂成 **7 種型別**。分類依據
 兩個既有事實，不是憑感覺分：`menu.ts` 的 `hasDetail`（有沒有獨立 `/{type}/:id` 路由）
 與 `docs/database.md` 的表分類（Routable ／ Addressable ／ Embedded、有沒有
 `*Translations`）。
@@ -130,8 +130,13 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | **D. 排序清單（樹狀）** | 依 `Location` 分頁 + `ParentId` 樹狀縮排 + 抽屜編輯（含語系） | 唯一有 `ParentId` 自關聯又要跨分頁管理的實體 |
 | **E. 審核佇列** | 篩選表格（預設顯示待處理）+ 獨立詳情頁 + 狀態動作按鈕 | 有審核／處理狀態機的營運資料 |
 | **F. 看板** | 依狀態分欄的卡片牆 + 獨立詳情頁 | 有多階段履行流程（不只是「審核／不審核」二選一）的營運資料 |
-| **G. 媒體庫** | 縮圖網格 + 上傳 + 中繼資料抽屜 | 只有 `media` 這一種 |
-| **H. 單一設定表單** | 沒有列表，整頁就是分區表單 | 只有 `site-settings` 這一種（key-value 表，不是列表） |
+| **G. 單一設定表單** | 沒有列表，整頁就是分區表單 | 只有 `site-settings` 這一種（key-value 表，不是列表） |
+
+> **沒有「媒體庫」這種畫面。** 檔案一律從用到它的欄位直接上傳（`FieldControl` 的
+> `MediaControl`／`MediaListControl`），上傳完就綁在那一格。理由是編輯者要的從來
+> 不是「管理一櫃檔案」，而是「這個欄位要放這張圖」——先去別的畫面把檔案準備好、
+> 再回來挑，中間那一趟沒有產生任何價值。`media` 資源本身仍在（欄位要靠
+> `GET /admin/media/{id}` 讀回檔名與縮圖），只是不再有自己的入口。
 
 ### 3.2 27 個畫面對照表
 
@@ -161,11 +166,10 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 營運 | 企業網域規則 | `business-domains` | C | `Domain` / `Rule` / `Note`，無翻譯欄位 |
 | 站台 | 導覽選單 | `navigation` | D | 見 5.7 |
 | 站台 | 轉址（301） | `redirects` | C | `FromPath`／`ToPath`／`StatusCode`，見 5.8 的碰撞檢查提示 |
-| 站台 | 站台設定 | `site-settings` | H | `adminOnly` |
-| 站台 | 媒體庫 | `media` | G | |
+| 站台 | 站台設定 | `site-settings` | G | `adminOnly` |
 | 站台 | 後台使用者 | `users` | C | `adminOnly`；抽屜內是「角色勾選 + 帳號啟用開關」，不含密碼欄位（密碼由使用者自己在登入後修改，Admin 不代改密碼） |
 
-型別 A 共 10 個、型別 B 共 8 個、型別 C 共 3 個、型別 D／E／F／G／H 各 1–2 個，
+型別 A 共 10 個、型別 B 共 8 個、型別 C 共 3 個、型別 D／E／F／G 各 1–2 個，
 合計 27 個，與 `ALL_ITEMS.length` 一致。
 
 ---
@@ -430,10 +434,10 @@ Tabs: Header │ Footer │ FooterLegal │ Social │ SearchChip
 
 - **富文字編輯器**：目前一律用 `Textarea` 暫代（見各元件檔頭註解），TipTap 之後
   接上時直接替換掉用 `Textarea` 的欄位即可，`Field` 外層包裝不用動。
-- **媒體選擇器**（Hero 圖片、`RefDownloadId` 之類的關聯選擇）：型別 G「媒體庫」
-  本身是獨立畫面，但編輯頁裡「選一張已上傳的圖」需要一個小型的媒體選擇彈窗
-  （可以是 `Dialog` 內嵌一個簡化版的媒體庫網格），本次未實作，先用
-  `Input`（貼媒體 Id 或 URL）替代。
+- ~~**媒體選擇器**~~：已不需要。編輯頁的圖片欄位改成**直接上傳**
+  （`MediaControl`，多檔用 `MediaListControl`），不再有「從既有檔案裡挑一張」
+  這個動作，也就不需要媒體選擇彈窗。上傳容器由欄位定義的 `container` 決定
+  （下載項目跟著存取層級走），不在上傳當下詢問。
 - **關聯選擇器的搜尋型多選**（選項超過幾十筆時，例如 Article 關聯 Products）：
   5.4 提到的簡化方案（勾選清單）在選項數量大時會很長，需要一個「帶搜尋的多選
   清單」，本次沒有刻——可以用 `SearchInput` + `Checkbox` 清單組合出來，作為

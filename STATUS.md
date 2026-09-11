@@ -17,7 +17,7 @@
 扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
 19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址）；SEO 與 GEO 的基礎建設
 （metadata／hreflang／sitemap／robots／llms.txt／六種 JSON-LD）已就緒並實測通過。
-`apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 8 種畫面型別），
+`apps/admin` 的 **26 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
 開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
 
 **後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
@@ -202,7 +202,7 @@ apps/web/
 
 ## 五、後台 `apps/admin`
 
-介面規格見 [docs/admin-ui.md](docs/admin-ui.md)（設計原則、8 種畫面型別、狀態色彩對照、文案語氣）。
+介面規格見 [docs/admin-ui.md](docs/admin-ui.md)（設計原則、7 種畫面型別、狀態色彩對照、文案語氣）。
 
 | 項目 | 狀態 | 說明 |
 | --- | --- | --- |
@@ -226,7 +226,6 @@ apps/web/
 | 審核佇列 | members | `MembersScreen` + `MemberDetail`（列上直接核准／拒絕，拒絕須填理由） |
 | 收件匣 | contact-inquiries | `InquiriesScreen` + `InquiryDetail` |
 | 看板 | sample-requests | `SampleRequestsScreen` + `SampleRequestDetail`（只列合法的下一個狀態，不做拖曳） |
-| 媒體庫 | media | `MediaScreen`（縮圖網格 + 上傳，上傳前先選公開／私有容器） |
 | 轉址 | redirects | `RedirectsScreen`（存檔前先算轉址鏈與環，鏈會自動壓平成最終目標） |
 | 站台設定 | site-settings | `SettingsScreen`（依 key 前綴自動分區，分語系設定另有語系分頁） |
 
@@ -331,7 +330,7 @@ apps/web/
 3c. ~~前台改吃 API，刪掉 `apps/web/content/`~~ ✅ 2026-09-08
 4. ~~Admin API~~ ✅ 2026-09-08（後台開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端）
 4b. 後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除），並補上
-   `legacy-import/run` 與媒體庫的「找未被引用的檔案」
+   `legacy-import/run`
 5. ~~CI/CD 與 Azure 佈署~~ ✅ 2026-09-08
 5b. 上線前的收尾：
    - **版位素材進 `public-media` + 設 repo 變數 `MEDIA_BASE` + 重跑 `web.yml`**
