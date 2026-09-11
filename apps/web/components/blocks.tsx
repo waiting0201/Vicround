@@ -343,36 +343,27 @@ export function ProductComparisonTable({
   );
 }
 
-/** 圖片版位：CMS 還沒有指定圖時，維持 mockup 的虛線框與尺寸提示。 */
-export function MediaSlot({ url, label, ratio = '4 / 3' }: { url?: string | null; label: string; ratio?: string }) {
+/**
+ * 圖片版位。
+ *
+ * <p>
+ * CMS 還沒指定圖時保留 mockup 的虛線框（版型不會塌），但**不印尺寸提示**——
+ * 「Imagery placeholder · 1200×900」是設計稿上給設計師看的標記，出現在客戶的
+ * 正式頁面上只會被當成 bug。空框本身已經足夠說明「這裡之後會有一張圖」。
+ * </p>
+ */
+export function MediaSlot({ url, ratio = '4 / 3' }: { url?: string | null; ratio?: string }) {
   return (
     <div
+      aria-hidden={url ? undefined : true}
       style={{
         aspectRatio: ratio,
         borderRadius: 22,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        textAlign: 'center',
         ...(url
           ? { background: `#0a0a12 url('${url}') center center / cover no-repeat` }
           : { border: '1px dashed var(--page-border)' }),
       }}
-    >
-      {url ? null : (
-        <span
-          style={{
-            font: "500 12px/1.4 'IBM Plex Mono', monospace",
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--page-faint)',
-          }}
-        >
-          {label}
-        </span>
-      )}
-    </div>
+    />
   );
 }
 
@@ -448,12 +439,10 @@ export function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[];
 export function MediaTextSplitBlock({
   block,
   locale,
-  imageLabel,
   imageRight = true,
 }: {
   block: ContentBlock;
   locale: Locale;
-  imageLabel: string;
   imageRight?: boolean;
 }) {
   const copy = (
@@ -469,7 +458,7 @@ export function MediaTextSplitBlock({
     </div>
   );
 
-  const media = <MediaSlot url={block.items[0]?.linkUrl} label={imageLabel} />;
+  const media = <MediaSlot url={block.items[0]?.linkUrl} />;
 
   return (
     <div

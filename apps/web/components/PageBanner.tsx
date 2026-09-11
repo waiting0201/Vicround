@@ -2,8 +2,9 @@
  * 內頁頁首 —— 逐項對照 `mockup/Rounded Design/PageBanner.dc.html`。
  *
  * <p>
- * `image` 有值就鋪滿實圖，沒有就用 mockup 的預設漸層（`linear-gradient(150deg, #3a17a8…)`）
- * 並顯示尺寸提示標籤。banner 圖之後由 CMS 的 `MediaAssets` 供應。
+ * `image` 有值就鋪滿實圖，沒有就用 mockup 的預設漸層（`linear-gradient(150deg, #3a17a8…)`）。
+ * **不顯示尺寸提示標籤**——那是設計稿給設計師看的標記，印在客戶的正式頁面上會被當成
+ * bug。banner 圖由 CMS 的 `MediaAssets` 或 `lib/page-assets.ts` 的設計素材供應。
  * </p>
  */
 export function PageBanner({
@@ -11,14 +12,12 @@ export function PageBanner({
   title,
   description,
   image,
-  imageLabel = 'Banner imagery — 2560×480',
   tone = 'dark',
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   image?: string | null;
-  imageLabel?: string;
   tone?: 'dark' | 'light';
 }) {
   const light = tone === 'light';
@@ -41,22 +40,7 @@ export function PageBanner({
     <section
       style={{ fontFamily: "'Geologica', 'GenYoGothic TW', 'Noto Sans TC', system-ui, sans-serif" }}
     >
-      {image ? (
-        <div style={bannerStyle} role="img" aria-label={title} />
-      ) : (
-        <div style={bannerStyle}>
-          <span
-            style={{
-              font: "500 12px/1.4 'IBM Plex Mono', monospace",
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.45)',
-            }}
-          >
-            {imageLabel}
-          </span>
-        </div>
-      )}
+      <div style={bannerStyle} role={image ? 'img' : undefined} aria-label={image ? title : undefined} />
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(24px, 5vw, 80px)' }}>
         <div style={{ padding: 'clamp(32px, 4vw, 48px) 0 clamp(8px, 1vw, 16px)' }}>

@@ -67,7 +67,6 @@ export default async function AboutPage({ params }: Params) {
           <MediaTextSplitBlock
             block={block}
             locale={locale}
-            imageLabel={t('common.imagePlaceholder')}
             imageRight={false}
           />
         );

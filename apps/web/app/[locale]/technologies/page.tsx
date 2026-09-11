@@ -83,7 +83,7 @@ export default async function TechnologiesPage({ params }: Params) {
                   marginTop: 'clamp(36px, 4vw, 56px)',
                 }}
               >
-                <MediaSlot label={t('common.imagePlaceholder')} />
+                <MediaSlot />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <h3
                     style={{

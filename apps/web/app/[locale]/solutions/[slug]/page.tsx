@@ -176,7 +176,7 @@ export default async function SolutionPage({ params }: Params) {
                   <div className="vr-prose" dangerouslySetInnerHTML={{ __html: localizeHtml(locale, solution.challengeBody)! }} />
                 ) : null}
               </div>
-              <MediaSlot label={t('common.imagePlaceholder')} />
+              <MediaSlot />
             </Container>
           </section>
         ) : null}

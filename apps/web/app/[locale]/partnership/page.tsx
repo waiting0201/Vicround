@@ -74,7 +74,6 @@ export default async function PartnershipPage({ params }: Params) {
                 <MediaTextSplitBlock
                   block={block}
                   locale={locale}
-                  imageLabel={t('common.imagePlaceholder')}
                   imageRight={index % 2 === 1}
                 />
               ) : block.blockType === 'testimonialList' ? (
