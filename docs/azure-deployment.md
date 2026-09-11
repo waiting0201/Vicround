@@ -13,7 +13,12 @@
 | Application Insights | `ai-vicround-prod` | 隨用隨付 | Functions 遙測 |
 
 **尚未建立**（刻意）：Key Vault（密鑰放 Function App 應用程式設定）、staging 環境與部署插槽
-（Flex Consumption 沒有插槽）、Front Door / WAF、自訂網域。
+（Flex Consumption 沒有插槽）、Front Door / WAF。
+
+**自訂網域**：SWA 已綁預覽網域 `vicround.4webdemo.com`（2026-09-11，狀態 Ready），
+DNS 代管在 Cloudflare 且開啟 proxy——見下方「CDN 在 SWA 前面時」。正式網域
+`www.vicround.com` 尚未綁定，repo variable `SITE_URL` 也還停在 SWA 預設網域，
+因此 canonical 與 `sitemap.xml` 目前仍指向 `green-desert-…azurestaticapps.net`。
 
 **部署身分**：Entra 應用程式 `github-vicround-deploy` + GitHub OIDC 同盟認證，
 對 `VicRoundUS` 有 Contributor。GitHub 端只存 `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` /
@@ -109,6 +114,51 @@ markup is served.
 - Restrict SQL access via the firewall (allow Azure services + the Function App outbound IPs;
   private endpoint only once on a VNet-capable Functions plan). Connect with a least-privilege
   SQL login.
+
+## 前台的 build-time 變數（GitHub repo variables）
+
+`web.yml` 會把兩個 repo variable **內嵌進建置產物**，所以改了變數必須重跑 workflow 才生效。
+
+| Variable | 用途 | 沒設定時的行為 |
+| --- | --- | --- |
+| `SITE_URL` | canonical、`hreflang`、`sitemap.xml`、`llms.txt` 的絕對網址 | 退回 SWA 預設網域，且 `app/robots.ts` 判定為非正式站 → 整站 `Disallow: /` |
+| `MEDIA_BASE` | 版位素材（banner、產品照）的根位址 | 空字串 → 圖片輸出相對路徑 `/assets/...` |
+
+⚠️ **`MEDIA_BASE` 是三處綁在一起的開關**，只改一邊就是整站版位圖 404：
+
+1. [page-assets.ts](../apps/web/lib/page-assets.ts) 用它組出圖片網址（`{MEDIA_BASE}/assets/xxx.jpg`）；
+2. [pack-standalone.mjs](../apps/web/scripts/pack-standalone.mjs) 在它**有值**時把 `public/assets`
+   排除在產物外（250MB 額度不花在圖片上）；
+3. `apps/web/public/assets/` 本來就不進版控（客戶素材，見 `.gitignore`），
+   因此 CI 的 checkout **從來就沒有**這些檔案。
+
+→ 正式環境沒有「不設 `MEDIA_BASE`」這個選項：素材必須先進 `public-media` 的 `assets/`
+前綴，再設這個變數。兩者缺一，首頁 hero、22 個內頁 banner 與產品照全部 404
+（2026-09-11 實際踩到——變數從未設定，而檔案不在版控，兩邊同時落空）。
+
+```bash
+az storage blob upload-batch --account-name stvicroundprod --auth-mode login \
+  --destination public-media --destination-path assets \
+  --source apps/web/public/assets --pattern "*.jpg" \
+  --content-cache-control "public, max-age=31536000, immutable" --overwrite
+
+gh variable set MEDIA_BASE --body "https://stvicroundprod.blob.core.windows.net/public-media"
+gh workflow run web.yml --ref master          # build-time 變數，必須重新 build
+```
+
+驗證：`curl -o /dev/null -w '%{http_code}' https://<站台>/assets/banner-brand.jpg` 應為 200。
+回 404 而 `/brand/*.png`、`/fonts/*.woff2` 正常，就是這一節描述的故障。
+
+## CDN 在 SWA 前面時（Cloudflare）
+
+自訂網域若代管在 Cloudflare 並開啟 proxy，**有些回應不再由本站決定**，排查時要先排除：
+
+- **Scrape Shield → Email Address Obfuscation** 會把頁面裡的 email 改寫成
+  `[email protected]` + `__cf_email__` 解碼腳本。爬蟲與無 JS 環境看到的就是那串佔位字。
+- **Managed robots.txt** 會蓋掉 `app/robots.ts` 產生的內容。這會與「非正式站整站
+  `Disallow: /`」的策略直接衝突：Cloudflare 那份是 `Allow: /`。
+- 兩者疊加時最危險的組合是：CDN 網域開放索引，但頁面的 canonical 仍指向
+  `SITE_URL` 設定的另一個網域——等於把權重導向一個被 robots 封鎖的位址。
 
 ## Scaling & resilience
 

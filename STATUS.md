@@ -37,6 +37,17 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
 推上 `master` 即自動部署。robots.txt 目前整站 Disallow —— 網域還沒換成 www.vicround.com。
 
+**⛔ 但正式站目前整站破圖**（2026-09-11 實測）：8 張版位素材全部 404 —— 首頁 hero、
+首頁三張產品照、22 個內頁的 banner 底圖。**版型與文案本身是對的**（25 頁逐頁文字比對，
+19 頁只差 1–4 筆，且都是 mockup 的 `{{ }}` 佔位或客戶後來改過的句子），破圖是唯一的大面積落差。
+成因與修法見 [docs/azure-deployment.md](docs/azure-deployment.md) 的
+「前台的 build-time 變數」——**repo variable `MEDIA_BASE` 從未設定，而 `public/assets` 不在版控**，
+兩邊同時落空。素材上傳 `public-media` 後設好變數、重跑 `web.yml` 即可解。
+
+**預覽網域已綁**：`vicround.4webdemo.com`（SWA 自訂網域，DNS 在 Cloudflare 且開 proxy）。
+因此該網域的 robots.txt 與頁面裡的 email 都被 Cloudflare 改寫過，不是本站輸出——
+排查前先看 [docs/azure-deployment.md](docs/azure-deployment.md) 的「CDN 在 SWA 前面時」。
+
 ---
 
 ## 圖例
@@ -63,7 +74,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
-| 媒體 / Blob | 🟡 | 212 張舊站圖已進 `public-media`（本機 Azurite）；正式 Azure Storage 未建 |
+| 媒體 / Blob | 🟡 | 正式 `stvicroundprod` 已建、`public-media` 為公開讀；**版位素材尚未上傳**（實測 404，見上方說明） |
 | CI | ✅ | `.github/workflows/api.yml`：建置、72 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
@@ -322,9 +333,15 @@ apps/web/
 4b. 後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除），並補上
    `legacy-import/run` 與媒體庫的「找未被引用的檔案」
 5. ~~CI/CD 與 Azure 佈署~~ ✅ 2026-09-08
-5b. 上線前的收尾：綁 `www.vicround.com`（DNS + SWA 自訂網域）、把 repo 變數 `SITE_URL`
-   改成正式網域（robots 才會開放索引）、把舊站 301（`import-legacy` 的 241 條）與
-   版位照片灌進正式環境
+5b. 上線前的收尾：
+   - **版位素材進 `public-media` + 設 repo 變數 `MEDIA_BASE` + 重跑 `web.yml`**
+     —— 目前整站破圖，這三步缺一不可（作法見 [docs/azure-deployment.md](docs/azure-deployment.md)）
+   - 綁 `www.vicround.com`（DNS + SWA 自訂網域）
+   - 把 repo 變數 `SITE_URL` 改成正式網域（robots 才會開放索引；現在 canonical
+     與 `sitemap.xml` 仍指向 SWA 預設網域）
+   - 決定預覽網域 `vicround.4webdemo.com` 的索引策略：Cloudflare 的 managed robots.txt
+     目前是 `Allow: /`，但頁面 canonical 指向別的網域，兩者衝突
+   - 舊站 301 已在正式環境（實測 `/v1/redirects` 241 筆）✅
 6. Account API 與會員專區（需先補設計稿）
 
 ---
