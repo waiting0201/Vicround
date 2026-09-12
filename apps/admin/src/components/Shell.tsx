@@ -5,6 +5,7 @@ import { logout } from '@/lib/api';
 import { MOCK_ENABLED } from '@/lib/mock';
 import { useCurrentUser } from '@/lib/queries';
 import { MENU, type MenuItem } from '@/lib/menu';
+import { BrandMark } from './BrandMark';
 
 /**
  * 後台外框：側欄 + 頂欄 + 內容區。
@@ -45,17 +46,19 @@ export function Shell() {
   return (
     <div className="flex min-h-screen">
       <aside
-        className={cx(
-          'hidden shrink-0 flex-col border-r border-[var(--border-1)] bg-[var(--surface-card)] md:flex',
-          collapsed ? 'w-16' : 'w-64',
-        )}
+        style={{ width: collapsed ? 'var(--admin-sidebar-w-collapsed)' : 'var(--admin-sidebar-w)' }}
+        className="admin-transition-slow hidden shrink-0 flex-col overflow-hidden border-r border-[var(--border-1)] bg-[var(--surface-card)] transition-[width] md:flex"
       >
-        <div className="flex items-center justify-between gap-2 px-3 py-4">
-          {!collapsed && (
-            <Link to="/" className="truncate px-1 font-semibold text-[var(--fg-1)]">
-              VicRound CMS
-            </Link>
-          )}
+        <div
+          style={{ height: 'var(--admin-topbar-h)' }}
+          className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--border-1)] px-3"
+        >
+          <Link to="/" className={cx('flex min-w-0 items-center', collapsed ? 'mx-auto' : 'px-0.5')}>
+            <BrandMark size="sm" wordmark={!collapsed} />
+          </Link>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">{nav}</div>
+        <div className={cx('flex shrink-0 border-t border-[var(--border-1)] p-2', collapsed ? 'justify-center' : 'justify-start')}>
           <IconButton
             icon="panel-left"
             label={collapsed ? '展開側欄' : '收合側欄'}
@@ -63,11 +66,13 @@ export function Shell() {
             onClick={() => setCollapsed((value) => !value)}
           />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">{nav}</div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-[var(--border-1)] bg-[var(--surface-card)] px-4 py-2.5 md:px-6">
+        <header
+          style={{ height: 'var(--admin-topbar-h)' }}
+          className="flex shrink-0 items-center gap-3 border-b border-[var(--border-1)] bg-[var(--surface-card)] px-4 md:px-6"
+        >
           <IconButton icon="menu" label="開啟選單" className="md:hidden" onClick={() => setMobileOpen(true)} />
 
           {/* 測試環境要一眼看得出來 —— 不然有人會在這裡按「發布」以為是正式站 */}
@@ -78,7 +83,7 @@ export function Shell() {
               href="/en"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1.5 text-sm text-[var(--fg-2)] hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]"
+              className="admin-transition flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 py-1.5 text-sm text-[var(--fg-2)] transition-colors hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]"
             >
               <Icon name="external-link" size={14} />
               檢視公開站
@@ -88,17 +93,22 @@ export function Shell() {
               <button
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
-                className="flex items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm text-[var(--fg-1)] hover:bg-[var(--surface-card-alt)]"
+                aria-expanded={menuOpen}
+                className="admin-transition flex items-center gap-2 rounded-[var(--radius-sm)] py-1.5 pl-1.5 pr-2 text-sm text-[var(--fg-1)] transition-colors hover:bg-[var(--surface-card-alt)]"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-soft)] text-xs font-medium text-[var(--brand-strong)]">
                   {(me.data?.displayName ?? '？').slice(0, 1)}
                 </span>
                 <span className="hidden sm:inline">{me.data?.displayName ?? '載入中…'}</span>
-                <Icon name="chevron-down" size={13} className="text-[var(--fg-3)]" />
+                <Icon
+                  name="chevron-down"
+                  size={13}
+                  className={cx('admin-transition text-[var(--fg-3)] transition-transform', menuOpen && 'rotate-180')}
+                />
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 top-11 z-40 w-56 rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-card)] p-1 shadow-[var(--shadow-md)]">
+                <div className="admin-pop-in absolute right-0 top-11 z-40 w-56 origin-top-right rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-card)] p-1 shadow-[var(--shadow-md)]">
                   <div className="border-b border-[var(--border-1)] px-3 py-2">
                     <p className="truncate text-sm text-[var(--fg-1)]">{me.data?.username ?? '—'}</p>
                     <p className="mt-0.5 text-xs text-[var(--fg-3)]">{me.data?.roles?.join('、') ?? ''}</p>
@@ -106,7 +116,7 @@ export function Shell() {
                   <button
                     type="button"
                     onClick={signOut}
-                    className="flex w-full items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-left text-sm text-[var(--fg-1)] hover:bg-[var(--surface-card-alt)]"
+                    className="admin-transition flex w-full items-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-left text-sm text-[var(--fg-1)] transition-colors hover:bg-[var(--surface-card-alt)]"
                   >
                     <Icon name="log-out" size={14} />
                     登出
@@ -161,10 +171,12 @@ function Nav({
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cx(
-                    'flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm transition-colors',
+                    'admin-transition flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm transition-colors',
                     collapsed && 'justify-center',
                     isActive
-                      ? 'bg-[var(--brand-soft)] font-medium text-[var(--brand-strong)]'
+                      ? // 底色 + 左側 2px 品牌色貼邊：收合成純圖示時底色範圍很小，
+                        // 多一道貼著側欄邊緣的色條，掃過去更快認出「現在在哪一頁」。
+                        'bg-[var(--brand-soft)] font-medium text-[var(--brand-strong)] shadow-[inset_2px_0_0_var(--brand)]'
                       : 'text-[var(--fg-2)] hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]',
                   )
                 }

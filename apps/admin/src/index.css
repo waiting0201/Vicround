@@ -40,3 +40,121 @@ body {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+ * 後台專屬的版面密度變數。
+ *
+ * 這些不放進 ds/：ds/tokens/* 是「品牌」層級的東西（色彩、字級、圓角、陰影），
+ * 前台跟後台共用同一份，值一改兩邊一起變。但「側欄多寬」「表格一列多高」是
+ * **後台這個應用程式的版面決定**，跟品牌無關——前台網站根本沒有側欄或資料表格
+ * 這種概念可以比照。這裡把它們寫成變數，理由不是「以後可能要換膚」，而是讓
+ * Shell.tsx／Table.tsx 的排版數字有一個查得到名字、寫得出理由的來源，不必回頭
+ * 翻 docs/admin-ui.md 才知道「這個 240px 是哪來的」。詳見 docs/admin-ui.md §2.3。
+ * ========================================================================== */
+:root {
+  /* 側欄展開／收合寬度。240px 而非 Tailwind 內建的 w-64（256px）——七個分區、
+     最長的中文標籤（「產業解決方案」5 字＋icon）在 240px 剛好不換行，多留的
+     16px 在密度優先的後台沒有用處。 */
+  --admin-sidebar-w: 240px;
+  --admin-sidebar-w-collapsed: 64px;
+
+  /* 頂欄固定高度，而不是讓 padding／內容自己撐出來——側欄與頂欄的分隔線在同一條
+     水平線上，視覺上才會覺得是「一個骨架」而不是兩塊各自對齊的區塊。 */
+  --admin-topbar-h: 56px;
+
+  /* 表格單一列的目標高度（docs/admin-ui.md §2.3：「py-3 + text-sm，約 44px」）。
+     寫成變數是為了在 Table.tsx 直接用 `h-[var(--admin-row-h)]` 鎖住，不必每次靠
+     padding 數字心算——換內容字級或多行文字時，列高不會因為算錯 padding 而跑掉。 */
+  --admin-row-h: 44px;
+
+  /* 後台的 hover／focus／收合這類「小」互動動畫，統一借用 ds 既有的
+     --duration-* 與 --ease-* 節奏（shadows.css 定義了但目前整個 admin 沒有任何地方
+     用到）。不用 Tailwind 預設的 transition 時間，是因為那是瀏覽器/框架的預設值
+     150ms、非品牌指定的曲線；既然客戶確認稿已經定義了「精準、技術感」的動畫節奏，
+     後台這些小動作也該走同一套，而不是兩套時間曲線混用讓介面感覺不像同一個系統。 */
+  --admin-motion-duration: var(--duration-fast); /* 120ms：hover、tab 切換、下拉選單 */
+  --admin-motion-duration-slow: var(--duration-standard); /* 200ms：側欄收合這種有位移的動作 */
+  --admin-motion-ease: var(--ease-standard);
+}
+
+/* 小動作的過場：hover 變色、tab 底線移動、下拉選單開合。用在互動元件的
+   transition-colors／transition-transform 旁邊，取代 Tailwind 預設節奏。 */
+.admin-transition {
+  transition-duration: var(--admin-motion-duration);
+  transition-timing-function: var(--admin-motion-ease);
+}
+
+/* 有明顯位移／尺寸變化的動作：側欄收合展開。稍微拉長到 200ms，太快的側欄動畫
+   在寬度變化時看起來像「跳」的，而不是「收」的。 */
+.admin-transition-slow {
+  transition-duration: var(--admin-motion-duration-slow);
+  transition-timing-function: var(--admin-motion-ease);
+}
+
+/* 下拉選單（使用者選單）與 Toast 的進場——兩者都是「突然出現在游標附近／畫面
+   角落」的元件，沒有一點緩入會顯得很生硬。只做 opacity + 小位移，不做彈跳或縮放，
+   呼應 ds/tokens/shadows.css 講的「精準、技術感，不是軟綿綿的」美學。 */
+@keyframes admin-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes admin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-pop-in {
+  animation: admin-pop-in var(--admin-motion-duration) var(--admin-motion-ease) both;
+}
+
+.admin-toast-in {
+  animation: admin-toast-in var(--admin-motion-duration-slow) var(--ease-out) both;
+}
+
+/* 尊重「減少動態效果」的作業系統設定——編輯者一天要看很多次這些小動畫，
+   對前庭功能敏感的使用者來說，滿版側欄收合、下拉選單位移都可能造成不適。 */
+@media (prefers-reduced-motion: reduce) {
+  .admin-pop-in,
+  .admin-toast-in {
+    animation: none;
+  }
+  .admin-transition,
+  .admin-transition-slow {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ============================================================================
+ * 登入頁背景裝飾。
+ *
+ * 只有登入頁用得到——這是使用者一天只會看到一次（或幾次）的畫面，跟「密度優先」
+ * 的表格頁面完全是不同的節奏，可以承載多一點品牌表情。做法是純 CSS 的極細網格
+ * ＋ 品牌紫的柔和光暈，呼應 ds/tokens/shadows.css 的「精準、技術感」與
+ * CIS 手冊裡「V」的幾何語彙，但不使用任何點陣圖或新套件。
+ * ========================================================================== */
+.admin-auth-backdrop {
+  background-image:
+    radial-gradient(560px circle at 18% 12%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 60%),
+    radial-gradient(480px circle at 82% 88%, color-mix(in srgb, var(--brand) 7%, transparent), transparent 55%),
+    linear-gradient(var(--border-1) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-1) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    40px 40px,
+    40px 40px;
+  background-color: var(--surface-sunken);
+}

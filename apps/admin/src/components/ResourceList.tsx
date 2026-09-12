@@ -8,7 +8,6 @@ import {
   Select,
   Table,
   Toolbar,
-  ToolbarSpacer,
   type TableColumn,
 } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
@@ -24,7 +23,9 @@ import { StatusBadge } from './StatusBadge';
  * <p>
  * 27 個畫面裡有 20 幾個是「一張表格加幾個篩選」。它們如果各寫一份，搜尋框的 debounce、
  * 分頁的邊界、空狀態的文案就會有 20 幾種版本。這裡把差異收斂成三個參數：
- * 要顯示哪些欄（`resource.columns`）、點一列要做什麼（`onOpen`）、右上角放什麼（`actions`）。
+ * 要顯示哪些欄（`resource.columns`）、點一列要做什麼（`onOpen`）、空狀態要給什麼出口
+ * （`actions`——**只用在空狀態**：「新增{實體}」的常駐位置是 `PageHeader` 的動作區，
+ * 工具列再放一顆會變成同一頁上下相隔 100px 的兩顆同名主要按鈕）。
  * </p>
  */
 
@@ -116,8 +117,6 @@ export function ResourceList({
           />
         )}
 
-        <ToolbarSpacer />
-        {actions}
       </Toolbar>
 
       <Table

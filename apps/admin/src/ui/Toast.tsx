@@ -63,7 +63,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key={item.id}
               role="status"
               className={cx(
-                'pointer-events-auto flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border-1)]',
+                'admin-toast-in pointer-events-auto flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--border-1)]',
                 'bg-[var(--surface-card)] p-3.5 shadow-[var(--shadow-md)]',
               )}
             >

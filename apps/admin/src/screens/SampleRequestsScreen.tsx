@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Badge, Card, ConfirmDialog, Icon, PageHeader, Select, useToast } from '@/ui';
+import { Badge, Card, ConfirmDialog, Icon, LoadingBlock, PageHeader, Select, useToast } from '@/ui';
 import {
   SAMPLE_REQUEST_BOARD_COLUMNS,
   SAMPLE_REQUEST_STATUS_LABEL,
@@ -70,7 +70,7 @@ export function SampleRequestsScreen({ resource }: { resource: ResourceDef }) {
       />
 
       {query.isLoading ? (
-        <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+        <LoadingBlock />
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {columns.map((status) => (

@@ -1,4 +1,4 @@
-import { Button, Drawer, useToast } from '@/ui';
+import { Button, Drawer, LoadingBlock, useToast } from '@/ui';
 import type { Culture } from '@/lib/enums';
 import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
 import { useItem } from '@/lib/queries';
@@ -61,7 +61,7 @@ export function EntityDrawer({
       }
     >
       {!isNew && query.isLoading ? (
-        <p className="py-8 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+        <LoadingBlock className="py-8" />
       ) : (
         <EntityForm resource={resource} draft={draft} culture={culture} onCultureChange={onCultureChange} />
       )}

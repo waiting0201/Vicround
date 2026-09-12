@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router';
 import { ToastProvider } from '@/ui';
+import { AuthSplash } from '@/components/AuthSplash';
 import { Shell } from '@/components/Shell';
 import { Login } from '@/routes/Login';
 import { auth, refresh } from '@/lib/api';
@@ -135,7 +136,7 @@ function RequireAuth() {
   }, [state]);
 
   if (state === 'checking') {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-[var(--fg-2)]">載入中…</div>;
+    return <AuthSplash />;
   }
   return state === 'in' ? <Outlet /> : <Navigate to="/login" replace />;
 }

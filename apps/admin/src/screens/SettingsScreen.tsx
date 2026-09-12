@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, Field, Input, PageHeader, Switch, Tabs, Textarea, useToast } from '@/ui';
+import { Badge, Button, Card, Field, Input, LoadingBlock, PageHeader, Switch, Tabs, Textarea, useToast } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
 import { useList, useSaveItem, useSaveTranslation } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
@@ -85,7 +85,7 @@ export function SettingsScreen({ resource }: { resource: ResourceDef }) {
       />
 
       {query.isLoading ? (
-        <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+        <LoadingBlock />
       ) : (
         <div className="flex flex-col gap-5">
           {Object.entries(groups).map(([group, items]) => (

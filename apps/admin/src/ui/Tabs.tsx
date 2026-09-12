@@ -43,7 +43,7 @@ export function Tabs({ items, value, defaultValue, onValueChange, className }: T
             aria-selected={isActive}
             onClick={() => select(item.key)}
             className={cx(
-              '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+              'admin-transition -mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
               isActive
                 ? 'border-[var(--brand)] text-[var(--fg-1)]'
                 : 'border-transparent text-[var(--fg-2)] hover:text-[var(--fg-1)]',

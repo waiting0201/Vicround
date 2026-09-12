@@ -45,7 +45,7 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-[var(--radius-sm)] font-medium transition-colors',
+        'admin-transition inline-flex items-center justify-center gap-2 rounded-[var(--radius-sm)] font-medium transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-50',
         size === 'sm' ? 'h-8 px-3 text-xs' : 'h-9 px-4 text-sm',
         VARIANT_CLASS[variant],

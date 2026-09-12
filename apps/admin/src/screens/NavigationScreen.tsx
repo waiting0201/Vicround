@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, Icon, IconButton, PageHeader, Tabs, useToast } from '@/ui';
+import { Badge, Button, Card, Icon, IconButton, LoadingBlock, PageHeader, Tabs, useToast } from '@/ui';
 import {
   CULTURES,
   LINK_TARGET_TYPE_LABEL,
@@ -148,7 +148,7 @@ export function NavigationScreen({ resource }: { resource: ResourceDef }) {
 
       <Card padding={false}>
         {query.isLoading ? (
-          <p className="py-12 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+          <LoadingBlock className="py-12" />
         ) : roots.length === 0 ? (
           <p className="py-12 text-center text-sm text-[var(--fg-2)]">這個位置還沒有選單項目。</p>
         ) : (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useBlocker, useNavigate, useParams } from 'react-router';
-import { Button, ConfirmDialog, Icon, PageHeader, useToast } from '@/ui';
+import { Button, ConfirmDialog, Icon, LoadingBlock, PageHeader, useToast } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
 import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
 import { useItem } from '@/lib/queries';
@@ -69,7 +69,7 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
       />
 
       {!isNew && query.isLoading ? (
-        <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+        <LoadingBlock />
       ) : (
         <div className="flex flex-col gap-5">
           {slugChanged && (

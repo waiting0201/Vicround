@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Button, Card, ConfirmDialog, Dialog, Field, Icon, PageHeader, Textarea, useToast } from '@/ui';
+import { Button, Card, ConfirmDialog, Dialog, Field, Icon, LoadingBlock, PageHeader, Textarea, useToast } from '@/ui';
 import { MEMBER_JOB_ROLE_LABEL, MEMBER_STATUS_LABEL } from '@/lib/enums';
 import { useAction, useItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
@@ -38,7 +38,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
     }
   }
 
-  if (query.isLoading) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>;
+  if (query.isLoading) return <LoadingBlock />;
   if (!row) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">找不到這個會員。</p>;
 
   return (

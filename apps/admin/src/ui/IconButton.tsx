@@ -23,7 +23,7 @@ export function IconButton({ icon, label, size = 'md', variant = 'ghost', classN
       aria-label={label}
       title={label}
       className={cx(
-        'inline-flex shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--fg-2)] transition-colors',
+        'admin-transition inline-flex shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--fg-2)] transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-40',
         dim,
         variant === 'ghost'

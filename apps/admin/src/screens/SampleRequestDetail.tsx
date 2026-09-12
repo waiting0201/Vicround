@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Button, Card, Field, Icon, Input, PageHeader, Textarea, useToast } from '@/ui';
+import { Button, Card, Field, Icon, Input, LoadingBlock, PageHeader, Textarea, useToast } from '@/ui';
 import { SAMPLE_REQUEST_STATUS_LABEL, SAMPLE_REQUEST_TIMESTAMPS } from '@/lib/enums';
 import { useItem, useSaveItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
@@ -43,7 +43,7 @@ export function SampleRequestDetail({ resource }: { resource: ResourceDef }) {
     toast({ title: '已更新這張申請單', variant: 'success' });
   }
 
-  if (query.isLoading) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>;
+  if (query.isLoading) return <LoadingBlock />;
   if (!row) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">找不到這張申請單。</p>;
 
   const items = (Array.isArray(row.items) ? row.items : []) as Record<string, unknown>[];

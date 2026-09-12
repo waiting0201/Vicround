@@ -159,7 +159,10 @@ export function Table<T>({
                   }
                 }}
                 className={cx(
-                  'border-b border-[var(--border-1)] outline-none last:border-0',
+                  // --admin-row-h：docs/admin-ui.md §2.3 訂的「約 44px」列高，寫成變數鎖住，
+                  // 不必每次靠 padding 心算（見 index.css 的說明）。表格內容比目標列高長時
+                  // （多行文字、包裝內容）仍會自然撐開，這裡設的是下限不是上限。
+                  'h-[var(--admin-row-h)] admin-transition border-b border-[var(--border-1)] outline-none transition-colors last:border-0',
                   onRowClick &&
                     'cursor-pointer hover:bg-[var(--surface-card-alt)] focus-visible:bg-[var(--surface-card-alt)]',
                 )}

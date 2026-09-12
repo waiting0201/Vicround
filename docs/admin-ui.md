@@ -57,7 +57,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 │  產品         │   PageHeader（標題 + 麵包屑 + 動作區）        │
 │  ...          │───────────────────────────────────────────────│
 │──────────────│                                               │
-│ 資源          │   Toolbar（搜尋 / 篩選 / 新增）               │
+│ 資源          │   Toolbar（搜尋 / 篩選）                      │
 │  ...          │───────────────────────────────────────────────│
 │──────────────│                                               │
 │ 永續 / 公司 / │   Table 或該畫面型別對應的主體                │
@@ -73,14 +73,21 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 - **環境標示**：非正式環境（`VITE_ADMIN_API_BASE` 指向非正式 API，或有
   `VITE_ADMIN_MOCK=1` 之類的旗標）在頂欄最左端放一顆 `Badge tone="warning"`
-  文字「測試環境」，避免編輯者在測試環境按了「發布」以為是正式站。
+  文字「測試環境」，避免編輯者在測試環境按了「發布」以為是正式站。**登入頁
+  （`routes/Login.tsx`）也要顯示同一顆 Badge**——編輯者對「這是哪個環境」的
+  第一印象在登入頁就形成了，等進了 Shell 才提示已經晚了一步。
 - **麵包屑**：不放頂欄，放進每個畫面的 `PageHeader`（見 3.2、5.2）——原因是麵包屑
   的內容依畫面而定（清單頁只有一層，編輯頁要有「← 回列表」),放頂欄會變成要嘛太空
   要嘛擠。
 - **使用者選單**：把現有「登出」文字按鈕換成一顆頭像／姓名縮寫的 `IconButton`
   或簡易下拉，內容含「顯示登入者 Email」「登出」。`adminOnly` 選單項目
   （`site-settings`、`users`）在 Editor 角色登入時於側欄整條隱藏，不是顯示但
-  disabled——不存在的選單比看得到按不動更少困惑。
+  disabled——不存在的選單比看得到按不動更少困惑。下拉選單開啟時套用
+  `admin-pop-in`（見 2.6）微幅淡入位移，避免選單「憑空跳出」。
+- **側欄收合鈕移到側欄底部**（原本跟品牌字並排在頂端）：收合後品牌區只剩一顆
+  識別色塊（見 2.6 `BrandMark`），旁邊擠一顆收合鈕視覺上會打架；移到側欄最下方、
+  全寬一列，收合／展開兩種狀態下都有明確、不擁擠的落點，也是多數同類後台
+  （GitHub、Linear…）的慣例位置，使用者不用重新學一個新位置。
 
 ### 2.3 內容區最大寬度與間距節奏
 
@@ -94,7 +101,18 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
   `gap-2`(8px)／`gap-3`(12px)／`gap-4`(16px) 是表單與工具列的主力，`p-5`(20px) 是
   卡片與抽屜的標準內距。`--space-16` 以上、`--container-pad`、`--section-pad-y`
   這些前台行銷頁用的大尺度**後台不用**。
-- **表格列高**：`py-3` + `text-sm`（約 44px 列高）。不做前台那種大圖卡片式列表。
+- **表格列高**：`py-3` + `text-sm`（約 44px），已寫成 `index.css` 的
+  `--admin-row-h: 44px` 並在 `Table.tsx` 的 `<tr>` 直接用
+  `h-[var(--admin-row-h)]` 鎖住——這個變數跟側欄寬、頂欄高一起收在
+  `apps/admin/src/index.css`，不進 `ds/`（見下方說明）。不做前台那種大圖卡片式
+  列表。
+
+`--admin-sidebar-w`（240px）／`--admin-sidebar-w-collapsed`（64px）／
+`--admin-topbar-h`（56px）／`--admin-row-h`（44px）四個變數定義在
+`apps/admin/src/index.css`，**不放進 `ds/`**：`ds/tokens/*` 是品牌層級的色彩／
+字級／圓角／陰影，前台後台共用；但「側欄多寬」「一列多高」是後台這個應用程式
+自己的版面決定，前台網站沒有對應概念可以共用，寫成變數只是為了讓
+`Shell.tsx`／`Table.tsx` 的排版數字有名字、有理由可查，不是要拿去給前台用。
 
 ### 2.4 響應式（1280 / 1024 / 768）
 
@@ -103,13 +121,56 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 | 寬度 | 行為 |
 | --- | --- |
-| **≥ 1280px** | 標準版面：側欄固定 240px（現有 `w-64`）＋ 內容區。 |
-| **1024–1280px** | 側欄收合成 64px 只顯示 icon（每個 `MenuItem` 需要配一個 `IconName`，目前 `menu.ts` 沒有——**留給實作階段**在 `MenuItem` 加 `icon?: IconName` 欄位）。收合狀態存 `localStorage`，不是斷點自動切換，避免使用者手動展開後被視窗微調又收回去。 |
+| **≥ 1280px** | 標準版面：側欄固定 `--admin-sidebar-w`（240px，非 Tailwind 內建的
+  `w-64` 256px——見上方說明）＋ 內容區。展開／收合寬度變化套用
+  `admin-transition-slow`（200ms，見 2.6），不是瞬間跳動。 |
+| **1024–1280px** | 側欄收合成 `--admin-sidebar-w-collapsed`（64px）只顯示 icon（`MenuItem.icon` 欄位已在 `menu.ts` 落地，每一項都配好圖示）。收合狀態存 `localStorage`，不是斷點自動切換，避免使用者手動展開後被視窗微調又收回去。收合鈕位置見 2.2。 |
 | **< 768px** | 側欄改為預設隱藏，頂欄左側加一顆選單按鈕，點開時**直接重用 `ui/Drawer.tsx`**（`width="280px"`）把 `MENU` 內容滑出——不用另刻一套 mobile nav，Drawer 本來就是「側滑面板＋Esc關閉＋焦點鎖定」，語意完全符合。 |
 
 表格在窄螢幕一律 `overflow-x-auto`（`Table` 元件已內建），不做「窄螢幕改卡片式」的
 響應式表格——那對「掃描大量列」的密度優先原則是反效果，且後台幾乎不會有人用手機
 操作。
+
+### 2.6 品牌識別標記與動態節奏
+
+- **`BrandMark`**（`apps/admin/src/components/BrandMark.tsx`）：側欄品牌區與登入頁
+  共用的識別色塊——品牌紫底、`chamfer` 切角（`ds/tokens/radii.css` 既有的
+  `.chamfer` 工具類，之前只有按鈕在用）、置中一個「V」字。專案沒有正式 Logo
+  檔案（CIS 手冊只給色號字體規則，商標線稿不在後台授權範圍內），所以這**不是**
+  冒充官方 Logo，做法比照既有的使用者頭像（單字圓形色塊），只是角形換成
+  `chamfer` 呼應 CIS 手冊「V」的幾何語彙。等客戶提供正式 Logo 檔時直接換掉這個
+  元件的內容即可，`Shell`／`Login` 呼叫端不用改。
+  - `chamfer` **只用在 `BrandMark` 這一個地方**，不擴大套用到按鈕／卡片／表格。
+    密集表格裡的按鈕要的是「一眼認得出是按鈕」的乾淨矩形，每顆都秀切角只會把
+    真正的品牌識別淹沒在雜訊裡——這條界線刻意寫下來，避免下一個人看到
+    `.chamfer` 覺得「這裡好像也可以用」。
+  - 側欄收合成 64px 時 `BrandMark` 拿掉 `wordmark`，只留識別色塊置中——不是留白，
+    因為使用者看側欄的第一件事是「這是不是我要的系統」，收合狀態不該把整個
+    品牌識別藏起來。
+- **登入頁的品牌與環境表情**：`routes/Login.tsx` 用 `admin-auth-backdrop`
+  （`index.css`）鋪一層極細網格＋品牌紫柔光暈的純 CSS 背景，只有登入頁用——
+  這一頁使用者一天只看一次（或幾次），跟密度優先的 27 個工作畫面是完全不同的
+  節奏，可以承載多一點品牌表情；`Card` 也在這裡用 `elevation="md"`（見第 6 節
+  `Card` 的新 prop）而非 27 個工作畫面預設的 `xs`，因為它是畫面上唯一的焦點，
+  值得浮起來。
+- **`AuthSplash`**（`apps/admin/src/components/AuthSplash.tsx`）：重新整理後拿 refresh
+  cookie 換 token 的那一瞬間，鋪的是與登入頁同一張 `admin-auth-backdrop`——這一刻
+  使用者正要落到登入頁或後台，兩邊都是「進入」的畫面，不該先閃一片白底。品牌標記
+  延遲 250ms 才淡入，理由見 4.6。
+- **動態節奏**：`ds/tokens/shadows.css` 定義了 `--duration-*`／`--ease-*`，
+  但截至上一版視覺 pass 前，整個 admin 沒有任何地方用到——hover／focus／下拉
+  選單開合全部沿用 Tailwind 預設的 150ms。這次補上 `index.css` 的
+  `.admin-transition`（120ms，hover／tab 切換／下拉選單）、
+  `.admin-transition-slow`（200ms，側欄收合這種有位移的動作）、
+  `.admin-pop-in`（下拉選單開啟的淡入位移）、`.admin-toast-in`（Toast 進場），
+  統一借用 ds 既有的節奏，不再是兩套時間曲線混用。三者都包了
+  `prefers-reduced-motion: reduce` 的退場開關。
+  - **`Drawer`／`Dialog` 刻意沒有加開合動畫**——這兩個是編輯者一天要開關幾十次
+    的工作元件（進入編輯、跳確認框），密度優先原則下「快、沒有等待感」比
+    「開合順暢」更重要，且目前的條件渲染（`if (!open) return null`）沒有
+    退場動畫的掛勾，硬要做需要額外的卸載延遲狀態機，投入產出不成比例。
+    Toast 與下拉選單不受這條限制，因為它們出現頻率低很多，一點緩入不會累積
+    成「每次都要多等一下」的感覺。
 
 ---
 
@@ -180,9 +241,15 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 固定順序（由左至右）：`SearchInput` → 篩選 `Select`（依實體而定，例如 Products 的
 `Category` 篩選、Articles 的 `Type` 篩選）→ 「翻譯缺漏」篩選（見 4.5）→
-`ToolbarSpacer` → 批次動作（若有勾選列，見 4.6）→ 主要 `Button variant="primary"`
-（清單型別固定寫「新增{實體}」，例如「新增產品」，不要只寫「新增」——27 個畫面
-如果都寫「新增」，使用者用瀏覽器分頁切換時無法從標題快速確認自己在哪個畫面）。
+`ToolbarSpacer` → 批次動作（若有勾選列，見 4.6）。
+
+**「新增{實體}」不放工具列**，它的常駐位置是 `PageHeader` 的動作區（2026-09-12 修正：
+兩邊都放的話，同一頁上下相隔約 100px 會出現兩顆一模一樣的主要按鈕，使用者得停下來
+判斷它們是不是同一件事）。`ResourceList` 的 `actions` 因此只餵給 `Table` 的空狀態——
+清單是空的時候，出口要出現在使用者的視線落點上，而不是頁面頂端。
+
+按鈕文案固定寫「新增{實體}」，例如「新增產品」，不要只寫「新增」——27 個畫面如果都
+寫「新增」，使用者用瀏覽器分頁切換時無法從標題快速確認自己在哪個畫面。
 
 ### 4.2 表格欄位規則
 
@@ -232,6 +299,14 @@ UI 只負責提供這顆篩選器）。
 
 三態全部**內建在 `ui/Table.tsx`**，不需要每個畫面各自判斷，見第 6 節 `Table` 的
 props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節。
+
+沒有走 `Table` 的畫面（詳情頁、看板、設定頁、抽屜內容）一律用 `LoadingBlock`
+（`ui/Loading.tsx`），**不要各自寫一行置中的「載入中…」**——每頁自己決定留白與字級的
+結果，是切換畫面時載入狀態長得都不一樣，像是不同的系統在回應。
+
+重新整理後換 token 的那一刻（`App.tsx` 的 `RequireAuth`）用 `AuthSplash`：底色與登入頁
+同一張，品牌標記**延遲 250ms 才出現**。refresh 通常幾十毫秒就回來，立刻畫一個 logo
+只會變成一次閃爍；撐過 250ms 才是真的在等，這時才需要告訴使用者系統沒當掉。
 
 ---
 
@@ -425,8 +500,8 @@ Tabs: Header │ Footer │ FooterLegal │ Social │ SearchChip
 | `ToastProvider` / `useToast` | `Toast.tsx` | 一次性通知（存檔成功、發布完成…） | `toast({ title, description, variant, duration })` | `variant`: `default`/`success`/`danger`，5 秒自動消失，可手動關閉 |
 | `EmptyState` | `EmptyState.tsx` | 無資料畫面（`Table` 內建使用，也可獨立用） | `icon`、`title`、`description`、`action` | — |
 | `ErrorState` | `ErrorState.tsx` | 錯誤畫面（`Table` 內建使用） | `title`、`description`、`onRetry` | — |
-| `Spinner` / `Skeleton` | `Loading.tsx` | 局部載入中／骨架屏 | `Spinner`: `size`；`Skeleton`: `className`(自訂尺寸) | — |
-| `Card` | `Card.tsx` | 內容區塊容器 | `title`、`description`、`actions`、`padding` | — |
+| `Spinner` / `Skeleton` / `LoadingBlock` | `Loading.tsx` | 局部載入中／骨架屏／畫面層級的等資料狀態 | `Spinner`: `size`；`Skeleton`: `className`(自訂尺寸)；`LoadingBlock`: `label`、`className` | `LoadingBlock` 用在沒有 `Table` 三態可用的畫面（見 4.6） |
+| `Card` | `Card.tsx` | 內容區塊容器 | `title`、`description`、`actions`、`padding`、`elevation`('xs'\|'sm'\|'md'，預設 `xs`) | — |
 | `PageHeader` | `PageHeader.tsx` | 頁首（標題＋麵包屑＋動作區） | `title`、`breadcrumbs`(label/href)、`description`、`actions` | 麵包屑用 `react-router` `Link`，不是 `<a>`（見檔內註解） |
 | `Icon` | `Icon.tsx` | 內嵌 SVG 圖示 | `name`(IconName)、`size` | 目前收錄約 25 顆後台常用圖示，新增圖示直接加進 `PATHS` |
 
@@ -535,7 +610,7 @@ Testimonials/PartnerBrands/ContactChannels/NavigationItems 共用）
 ### 8.1 按鈕
 
 - 動詞開頭，帶受詞：「新增產品」不是「新增」、「刪除這筆詢問單」的按鈕本身可以
-  只寫「刪除」（因為此時使用者已經在該筆資料的情境裡），但清單頁工具列的新增鈕
+  只寫「刪除」（因為此時使用者已經在該筆資料的情境裡），但清單頁的新增鈕
   必須帶實體名稱（見 4.1）。
 - 危險動作不要用委婉語：「刪除」不要寫成「移除」再讓使用者猜這是不是真的刪掉；
   但也不要嚇人，「刪除」對應的其實是軟刪除／封存（`docs/database.md`
@@ -671,7 +746,8 @@ export function ProductsList() {
 
 1. **`App.tsx` 是否遷移到 data router**（見 5.9）——影響能否用 `useBlocker`
    做離開攔截。
-2. **`MenuItem` 是否加 `icon` 欄位**（見 2.4）——側欄收合成 icon-only 需要。
+2. ~~`MenuItem` 是否加 `icon` 欄位~~——已解決：`menu.ts` 的每個 `MenuItem` 都有
+   `icon: IconName`，見 2.4。
 3. **媒體選擇器、搜尋型多選、Reference block 參數表單**（見第 6 節「尚未涵蓋」）
    ——這三個是複合元件，需要先確定資料層（`queries`/API 回傳形狀）才能定介面。
 4. **富文字編輯器換裝時機**——`Textarea` 暫代方案何時換 TipTap，換裝時哪些欄位

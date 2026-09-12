@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Button, Card, Field, Icon, PageHeader, Select, Textarea, useToast } from '@/ui';
+import { Button, Card, Field, Icon, LoadingBlock, PageHeader, Select, Textarea, useToast } from '@/ui';
 import { INQUIRY_STATUS_OPTIONS, INQUIRY_TYPE_LABEL } from '@/lib/enums';
 import { useItem, useList, useSaveItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
@@ -42,7 +42,7 @@ export function InquiryDetail({ resource }: { resource: ResourceDef }) {
     toast({ title: '已更新這張詢問單', variant: 'success' });
   }
 
-  if (query.isLoading) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">載入中…</p>;
+  if (query.isLoading) return <LoadingBlock />;
   if (!row) return <p className="py-16 text-center text-sm text-[var(--fg-2)]">找不到這張詢問單。</p>;
 
   const dirty =

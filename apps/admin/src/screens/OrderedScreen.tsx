@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, Icon, IconButton, PageHeader, useToast } from '@/ui';
+import { Badge, Button, Card, Icon, IconButton, LoadingBlock, PageHeader, useToast } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
 import { useList, useReorder } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
@@ -69,7 +69,7 @@ export function OrderedScreen({ resource }: { resource: ResourceDef }) {
 
       <Card padding={false}>
         {query.isLoading ? (
-          <p className="py-12 text-center text-sm text-[var(--fg-2)]">載入中…</p>
+          <LoadingBlock className="py-12" />
         ) : order.length === 0 ? (
           <p className="py-12 text-center text-sm text-[var(--fg-2)]">還沒有{resource.label}。</p>
         ) : (
