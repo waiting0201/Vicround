@@ -44,4 +44,9 @@ public class PublicPathsTests
     [Fact]
     public void 需索取的文件導到詢問表單() =>
         Assert.Equal("/contact?download=tds-ag90", PublicPaths.DownloadRequest("tds-ag90"));
+
+    /// <summary>FAQ 與 Downloads 同樣是 Addressable；站內搜尋的結果也吃這一條。</summary>
+    [Fact]
+    public void 常見問題只有錨點() =>
+        Assert.Equal("/resources/faq#lead-time", PublicPaths.FaqItem("lead-time"));
 }

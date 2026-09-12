@@ -32,6 +32,7 @@ public sealed partial class AppRouter
             ("GET", ["v1", "faq"]) => true,
             ("GET", ["v1", "certifications"]) => true,
             ("GET", ["v1", "downloads"]) => true,
+            ("GET", ["v1", "search"]) => true,
             ("POST", ["v1", "contact"]) => true,
             _ => false,
         };
@@ -67,6 +68,8 @@ public sealed partial class AppRouter
             ("GET", ["v1", "faq"]) => Nullable(resources.ListFaqAsync(req)),
             ("GET", ["v1", "certifications"]) => Nullable(resources.ListCertificationsAsync(req)),
             ("GET", ["v1", "downloads"]) => Nullable(resources.ListDownloadsAsync(req)),
+
+            ("GET", ["v1", "search"]) => Nullable(search.SearchAsync(req)),
 
             ("POST", ["v1", "contact"]) => Nullable(contact.SubmitAsync(req)),
 

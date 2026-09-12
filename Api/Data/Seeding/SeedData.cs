@@ -151,6 +151,9 @@ internal static class SeedData
         new("seo.defaultOgImageUrl", SettingValueKind.Url, false, "", null),
         new("analytics.gtmId", SettingValueKind.Text, false, "", null),
         new("revalidate.webhookUrl", SettingValueKind.Url, false, "", null),
+        // 交易信裡的連結要絕對網址（Api/Services/ISiteUrlResolver.cs）。
+        // 留空 seed：正式網域還沒定案前寧可不寄，也不要寄出連到假網域的信。
+        new("site.baseUrl", SettingValueKind.Url, false, "", null),
         new("privacy.policyVersion", SettingValueKind.Text, false, "2026.1", null),
     ];
 

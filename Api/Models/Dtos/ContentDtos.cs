@@ -212,3 +212,23 @@ public sealed record RedirectRuleDto(string From, string To, short StatusCode, s
 
 /// <summary>`sitemap.xml` 的資料來源——只給路徑與 lastmod，XML 由 Next.js 產生。</summary>
 public sealed record SitemapEntryDto(string Path, DateTime LastModified, string[] Cultures);
+
+/// <summary>
+/// 一筆搜尋結果。<c>Kind</c> 是給前台分類標籤用的字串
+/// （<c>product</c> / <c>category</c> / <c>solution</c> / <c>page</c> /
+/// <c>article</c> / <c>download</c> / <c>faq</c>）。
+/// </summary>
+/// <param name="Path">已組好的公開路徑，不含語系前綴（同 <see cref="PageDetailDto.Path"/> 的約定）。</param>
+public sealed record SearchResultDto(
+    string Kind,
+    string Title,
+    string? Summary,
+    string Path,
+    bool HasRequestedCulture);
+
+/// <param name="HasMore">還有更多結果被 <c>limit</c> 截掉；前台據此提示縮小關鍵字。</param>
+public sealed record SearchResponseDto(
+    string Query,
+    int Total,
+    bool HasMore,
+    IReadOnlyList<SearchResultDto> Results);

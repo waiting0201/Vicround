@@ -22,6 +22,7 @@ public interface IContactInquiryService
 /// </summary>
 public sealed class ContactInquiryService(
     VicRoundDbContext db,
+    IInquiryNotifier notifier,
     ILogger<ContactInquiryService> logger) : IContactInquiryService
 {
     public async Task<string> SubmitAsync(ContactRequest request, string culture, CancellationToken cancellationToken)
@@ -42,12 +43,7 @@ public sealed class ContactInquiryService(
 
         var type = ResolveType(request, downloadId);
 
-        // 收件窗口依詢問類型指派；沒有對應窗口就留空，由後台自行分派。
-        var channelId = await db.ContactChannels
-            .Where(c => c.InquiryType == type && c.Status == ContentStatus.Published)
-            .OrderBy(c => c.SortOrder)
-            .Select(c => (int?)c.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        var channel = await ResolveChannelAsync(type, cancellationToken);
 
         var policyVersion = await db.SiteSettings
             .Where(s => s.Key == "privacy.policyVersion")
@@ -73,17 +69,49 @@ public sealed class ContactInquiryService(
             ConsentedAt = Clock.UtcNow,
             ConsentPolicyVersion = string.IsNullOrWhiteSpace(policyVersion) ? "unspecified" : policyVersion,
             Status = InquiryStatus.New,
-            AssignedChannelId = channelId,
+            AssignedChannelId = channel?.Id,
         };
 
         var referenceNumber = await SaveWithReferenceNumberAsync(inquiry, cancellationToken);
 
-        // TODO 通知信：等 Communication Services / SMTP 設定就緒後在此排入佇列。
-        // 單據已經落庫，後台的收件匣看得到，因此寄信失敗不該讓送出失敗。
         logger.LogInformation("詢問單已建立 {ReferenceNumber}（type={Type}）", referenceNumber, type);
+
+        // 單據已經落庫，後台的收件匣看得到，因此寄信失敗不該讓送出失敗——
+        // notifier 內部不丟例外，這裡也就不包 try（見 IInquiryNotifier 的說明）。
+        await notifier.NotifyAsync(inquiry, channel?.Email, request.CategorySlug, cancellationToken);
 
         return referenceNumber;
     }
+
+    /// <summary>
+    /// 收件窗口依詢問類型指派。<b>對不到就退回 <c>Sales</c></b>——確認稿只給了業務、工程、
+    /// 合作三個窗口，而表單預設送出的是 <c>General</c>，硬要精準對應的結果是最大宗的詢問
+    /// 沒有人收信。退回業務窗口既符合實務，也讓後台的「已指派」欄位不會整片空白。
+    /// <para>通知信寄給同一個窗口，所以連 Email 一起撈回來，不另跑一次查詢。</para>
+    /// </summary>
+    private async Task<ChannelTarget?> ResolveChannelAsync(InquiryType type, CancellationToken cancellationToken)
+    {
+        var published = db.ContactChannels.Where(c => c.Status == ContentStatus.Published);
+
+        var matched = await published
+            .Where(c => c.InquiryType == type)
+            .OrderBy(c => c.SortOrder)
+            .Select(c => new ChannelTarget(c.Id, c.Email))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (matched is not null)
+        {
+            return matched;
+        }
+
+        return await published
+            .Where(c => c.InquiryType == InquiryType.Sales)
+            .OrderBy(c => c.SortOrder)
+            .Select(c => new ChannelTarget(c.Id, c.Email))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private sealed record ChannelTarget(int Id, string Email);
 
     /// <summary>
     /// 單號是 <c>INQ-{年}-{6 位流水}</c>，年度內連號。

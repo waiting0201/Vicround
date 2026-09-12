@@ -116,8 +116,9 @@ public sealed class AccountAuthService(
         {
             if (existing.Status == MemberStatus.PendingEmailVerification)
             {
-                await IssueVerificationAsync(existing, cancellationToken);
+                var resent = IssueVerification(existing);
                 await db.SaveChangesAsync(cancellationToken);
+                await notifier.SendEmailVerificationAsync(existing, resent, cancellationToken);
             }
 
             return new RegisterResultDto(
@@ -150,10 +151,12 @@ public sealed class AccountAuthService(
         };
 
         db.Members.Add(member);
-        await IssueVerificationAsync(member, cancellationToken);
+        var verification = IssueVerification(member);
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("新會員註冊 {Email}（網域規則 {Rule}）。", member.Email, rule?.ToString() ?? "none");
+
+        await notifier.SendEmailVerificationAsync(member, verification, cancellationToken);
 
         return new RegisterResultDto(
             MemberEnumNames.Status(MemberStatus.PendingEmailVerification),
@@ -400,8 +403,9 @@ public sealed class AccountAuthService(
         // 查無此人也照樣回 204：不讓這支端點變成帳號探測器。
         if (member is { Status: MemberStatus.PendingEmailVerification })
         {
-            await IssueVerificationAsync(member, cancellationToken);
+            var raw = IssueVerification(member);
             await db.SaveChangesAsync(cancellationToken);
+            await notifier.SendEmailVerificationAsync(member, raw, cancellationToken);
         }
     }
 
@@ -456,20 +460,29 @@ public sealed class AccountAuthService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>建一顆一次性 token 並請 notifier 寄出。呼叫端負責 SaveChanges。</summary>
-    private async Task IssueVerificationAsync(Member member, CancellationToken cancellationToken)
+    /// <summary>
+    /// 建一顆一次性 token，回傳未雜湊的原文供寄信使用。<b>呼叫端負責 SaveChanges，而且必須先存檔再寄信</b>
+    /// ——信寄出去了但帳號沒存成，使用者手上就會有一條永遠點不開的連結。
+    ///
+    /// <para>
+    /// 關聯用導覽屬性而不是 <c>MemberId</c>：新註冊的 <c>Members.Id</c> 是 <c>NEWSEQUENTIALID()</c>
+    /// 由資料庫產生的，SaveChanges 之前 <c>member.Id</c> 還是 <c>Guid.Empty</c>，
+    /// 直接抄過去會踩到 <c>FK_MemberTokens_Members_MemberId</c>。
+    /// </para>
+    /// </summary>
+    private string IssueVerification(Member member)
     {
         var raw = NewToken();
 
         db.MemberTokens.Add(new MemberToken
         {
-            MemberId = member.Id,
+            Member = member,
             Purpose = MemberTokenPurpose.EmailVerification,
             TokenHash = HashToken(raw),
             ExpiresAt = Clock.UtcNow.Add(VerificationLifetime),
         });
 
-        await notifier.SendEmailVerificationAsync(member, raw, cancellationToken);
+        return raw;
     }
 
     /// <summary>驗證並「用掉」一顆一次性 token。過期、用過、不存在都是同一個錯誤。</summary>

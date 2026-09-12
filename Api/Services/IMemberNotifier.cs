@@ -7,13 +7,6 @@ namespace VicRound.Api.Services;
 /// 會員信件（驗證信、重設密碼信）。
 ///
 /// <para>
-/// ⚠️ <b>寄信管道尚未接上</b>——與 <see cref="ContactInquiryService"/> 的通知信是同一個待辦，
-/// 等 Communication Services / SMTP 設定就緒後一起補。在那之前
-/// <see cref="LoggingMemberNotifier"/> 只把連結寫進 log，讓註冊與重設密碼的流程
-/// <b>在本機與測試環境可以完整走完</b>。
-/// </para>
-///
-/// <para>
 /// 做成介面而不是直接在服務裡寄信，是因為「token 產生」與「怎麼把 token 送到人手上」
 /// 是兩件會分別改變的事：換寄信商不該動到狀態機。
 /// </para>
@@ -25,28 +18,118 @@ public interface IMemberNotifier
 }
 
 /// <summary>
-/// 暫時的實作：把連結寫進 Application Insights 的 trace。
+/// 把一次性 token 組成前台連結寄給會員。
 ///
 /// <para>
-/// <b>刻意用 Warning 等級</b>——這不是正常狀態，不該安靜地混在 Information 裡；
-/// 正式環境若真的走到這裡，我們希望它在遙測上顯眼。
+/// <b>連結一律帶 <c>PreferredCulture</c> 的語系前綴</b>——收信人按下連結會落在他註冊時用的語言，
+/// 而不是預設的英文（CLAUDE.md「Locale lives in the URL」）。前台對應的兩頁是
+/// <c>/{culture}/member/verify</c> 與 <c>/{culture}/member/reset</c>。
+/// </para>
+///
+/// <para>
+/// <b>站台網址取自 <c>SiteSettings["site.baseUrl"]</c></b>，設定檔的 <c>Site:BaseUrl</c> 是備援。
+/// 兩邊都沒有就<b>不寄</b>並把連結寫進遙測：寧可讓本機與未配置的環境退回舊行為，
+/// 也不要真的寄出一封連結是壞的信給客戶。
 /// </para>
 /// </summary>
-public sealed class LoggingMemberNotifier(ILogger<LoggingMemberNotifier> logger) : IMemberNotifier
+public sealed class EmailMemberNotifier(
+    IEmailSender email,
+    ISiteUrlResolver siteUrls,
+    ILogger<EmailMemberNotifier> logger) : IMemberNotifier
 {
-    public Task SendEmailVerificationAsync(Member member, string token, CancellationToken cancellationToken)
-    {
-        logger.LogWarning(
-            "寄信尚未接上：{Email} 的驗證連結為 /member/verify?token={Token}", member.Email, token);
+    public Task SendEmailVerificationAsync(Member member, string token, CancellationToken cancellationToken) =>
+        SendAsync(member, "member/verify", token, Verification, cancellationToken);
 
-        return Task.CompletedTask;
+    public Task SendPasswordResetAsync(Member member, string token, CancellationToken cancellationToken) =>
+        SendAsync(member, "member/reset", token, Reset, cancellationToken);
+
+    private async Task SendAsync(
+        Member member,
+        string path,
+        string token,
+        Func<Member, string, EmailMessage> compose,
+        CancellationToken cancellationToken)
+    {
+        var baseUrl = await siteUrls.BaseUrlAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            logger.LogWarning(
+                "未設定 site.baseUrl，未寄出 {Email} 的信；連結為 /{Culture}/{Path}?token={Token}",
+                member.Email, member.PreferredCulture, path, token);
+
+            return;
+        }
+
+        var link = $"{baseUrl}/{member.PreferredCulture}/{path}?token={Uri.EscapeDataString(token)}";
+
+        await email.SendAsync(compose(member, link), cancellationToken);
     }
 
-    public Task SendPasswordResetAsync(Member member, string token, CancellationToken cancellationToken)
+    private static EmailMessage Verification(Member member, string link)
     {
-        logger.LogWarning(
-            "寄信尚未接上：{Email} 的重設密碼連結為 /member/reset?token={Token}", member.Email, token);
+        var zh = EmailTemplates.IsChinese(member.PreferredCulture);
 
-        return Task.CompletedTask;
+        var subject = zh ? "請驗證你的 VicRound 帳號" : "Verify your VicRound account";
+        var heading = zh ? "只差一步就完成註冊" : "One step left";
+
+        var lines = zh
+            ? new[]
+            {
+                $"{member.FullName} 您好，感謝您註冊 VicRound 會員專區。",
+                "請點擊下方按鈕驗證這個信箱。驗證後，我們會在一個工作天內完成帳號審核並通知您。",
+                "這個連結 3 天後失效。若這不是您本人的操作，請忽略這封信。",
+            }
+            : new[]
+            {
+                $"Hello {member.FullName}, thank you for registering for the VicRound member area.",
+                "Please confirm this address with the button below. Once confirmed, we review your account within one business day and let you know.",
+                "This link expires in 3 days. If you did not create this account, you can ignore this message.",
+            };
+
+        var label = zh ? "驗證信箱" : "Verify email";
+
+        return Build(member, subject, heading, lines, label, link);
+    }
+
+    private static EmailMessage Reset(Member member, string link)
+    {
+        var zh = EmailTemplates.IsChinese(member.PreferredCulture);
+
+        var subject = zh ? "重設你的 VicRound 密碼" : "Reset your VicRound password";
+        var heading = zh ? "重設密碼" : "Reset your password";
+
+        var lines = zh
+            ? new[]
+            {
+                $"{member.FullName} 您好，我們收到重設 VicRound 帳號密碼的要求。",
+                "請點擊下方按鈕設定新密碼。完成後，其他裝置上已登入的工作階段都會被登出。",
+                "這個連結 2 小時後失效。若不是您本人提出的，請忽略這封信，密碼不會有任何變動。",
+            }
+            : new[]
+            {
+                $"Hello {member.FullName}, we received a request to reset the password for your VicRound account.",
+                "Use the button below to choose a new password. Any sessions signed in on other devices will be signed out.",
+                "This link expires in 2 hours. If you did not request it, ignore this message — your password stays unchanged.",
+            };
+
+        var label = zh ? "設定新密碼" : "Choose a new password";
+
+        return Build(member, subject, heading, lines, label, link);
+    }
+
+    private static EmailMessage Build(
+        Member member, string subject, string heading, IReadOnlyList<string> lines, string buttonLabel, string link)
+    {
+        var html = EmailTemplates.Layout(
+            heading,
+            string.Concat(lines.Select(EmailTemplates.Paragraph))
+            + EmailTemplates.Button(buttonLabel, link)
+            + EmailTemplates.FallbackLink(link, member.PreferredCulture),
+            member.PreferredCulture);
+
+        var text = string.Join("\n\n", lines) + "\n\n" + link;
+
+        return new EmailMessage(member.Email, member.FullName, subject, html, text);
     }
 }

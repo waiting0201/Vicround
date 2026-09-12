@@ -40,6 +40,9 @@ public static class PublicPaths
     /// <summary>Downloads 是 Addressable——只有清單頁的錨點，沒有自己的頁面。</summary>
     public static string Download(string slug) => $"/resources/downloads#{slug}";
 
+    /// <summary>FAQ 也是 Addressable——每一題只有清單頁上的錨點。</summary>
+    public static string FaqItem(string slug) => $"/resources/faq#{slug}";
+
     /// <summary><c>AccessLevel = OnRequest</c> 的文件走詢問表單索取（docs/cms-api.md）。</summary>
     public static string DownloadRequest(string slug) => $"/contact?download={slug}";
 }

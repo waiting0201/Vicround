@@ -87,6 +87,8 @@ services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 services.AddSingleton<IRateLimiter, InMemoryRateLimiter>();
 services.AddHttpClient();
 services.AddScoped<IAntiBotVerifier, TurnstileAntiBotVerifier>();
+// 寄信只讀設定、沒有 per-request 狀態；SmtpClient 每次寄信才建，不共用。
+services.AddSingleton<IEmailSender, SmtpEmailSender>();
 services.AddSingleton(new BlobServiceClient(
     configuration.GetConnectionString("BlobStorage")
     ?? configuration["VICROUND_BLOB_CONNECTION"]
@@ -107,11 +109,13 @@ services.AddScoped<IFaqReadService, FaqReadService>();
 services.AddScoped<ICertificationReadService, CertificationReadService>();
 services.AddScoped<IDownloadReadService, DownloadReadService>();
 services.AddScoped<ITechnologyReadService, TechnologyReadService>();
+services.AddScoped<ISearchReadService, SearchReadService>();
 services.AddScoped<IContactInquiryService, ContactInquiryService>();
 services.AddScoped<IAdminAuthService, AdminAuthService>();
 services.AddScoped<IAccountAuthService, AccountAuthService>();
-// 寄信管道尚未接上：暫時把連結寫進遙測（見 IMemberNotifier 的說明）。
-services.AddScoped<IMemberNotifier, LoggingMemberNotifier>();
+services.AddScoped<ISiteUrlResolver, SiteUrlResolver>();
+services.AddScoped<IMemberNotifier, EmailMemberNotifier>();
+services.AddScoped<IInquiryNotifier, InquiryNotifier>();
 services.AddScoped<IAdminCrudService, AdminCrudService>();
 services.AddScoped<IRevalidationService, RevalidationService>();
 services.AddScoped<HealthHandler>();
@@ -122,6 +126,7 @@ services.AddScoped<NavigationHandler>();
 services.AddScoped<ArticleHandler>();
 services.AddScoped<ResourceHandler>();
 services.AddScoped<TechnologyHandler>();
+services.AddScoped<SearchHandler>();
 services.AddScoped<ContactHandler>();
 services.AddScoped<AdminAuthHandler>();
 services.AddScoped<AdminContentHandler>();

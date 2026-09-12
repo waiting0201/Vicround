@@ -33,6 +33,7 @@ public sealed partial class AppRouter(
     ResourceHandler resources,
     TechnologyHandler technologies,
     ContactHandler contact,
+    SearchHandler search,
     AccountAuthHandler accountAuth,
     AccountDownloadsHandler accountDownloads,
     AccountSampleRequestsHandler accountSamples)
