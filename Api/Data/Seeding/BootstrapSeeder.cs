@@ -23,7 +23,7 @@ public sealed class BootstrapSeeder(
     public const string DefaultSuperAdminPassword = "Admin@123";
 
     /// <summary>超級管理員的登入帳號。<b>不是 Email</b>——後台一律以使用者名稱登入。</summary>
-    public const string SuperAdminUsername = "superadmin";
+    public const string SuperAdminUsername = "sa@system.local";
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
