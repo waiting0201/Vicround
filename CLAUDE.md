@@ -147,18 +147,26 @@ pnpm sync:tokens                             # 從 mockup 同步設計 token 進
 node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位混入中文
 ```
 
-## 前台頁面現況（2026-09-11）
+## 前台頁面現況（2026-09-12）
 
 **客戶確認稿的 25 個頁面已全數實作**（版型、色彩、字級、間距逐項對照
-`mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。**原本的 6 條鷹架也已全部接上
-API**——確認稿沒有這幾頁，所以版型沿用會員專區殼層既有的 Tailwind 語彙，不自創第二套視覺：
+`mockup/Rounded Design/`），對應 `apps/web` 的 19 條路由檔。另有 **12 條功能頁**路由——
+確認稿沒有這幾頁，所以版型沿用既有語彙（會員專區走殼層的 Tailwind、其餘走內頁的
+Container／卡片），不自創第二套視覺：
 
 - `/{locale}/products/{category}/{slug}` 產品詳情 —— 接 `GET /v1/products/{slug}`
-- `/{locale}/account/**`（5 條）會員專區 —— 接 Account API，**資料一律在瀏覽器端取**
-  （`no-store` + 會員 JWT，不得進 Data Cache）
+- `/{locale}/search?q=` 站內搜尋 —— 接 `GET /v1/search`，原生 GET form，`noindex`
+- `/{locale}/member/forgot`｜`/member/verify?token=`｜`/member/reset?token=` 信件流程三頁
+  —— **網址與 `EmailMemberNotifier` 組出的連結一致**，改一邊就要改另一邊
+- `/{locale}/account/**`（7 條，含變更密碼與新增樣品申請）會員專區 —— 接 Account API，
+  **資料一律在瀏覽器端取**（`no-store` + 會員 JWT，不得進 Data Cache）。例外是新增樣品申請
+  的產品選單：那是公開內容，在伺服器端用 `/v1/products` 取好再傳下去
 
-⚠️ 會員的**寄信管道尚未接上**：驗證信與重設密碼信目前只寫進遙測
-（`LoggingMemberNotifier`），因此完整的註冊 → 驗證 → 核准流程還沒辦法端到端跑完。
+**寄信管道已接上**（2026-09-12）：`SmtpEmailSender`（SMTP，一套涵蓋 ACS relay／SendGrid／
+M365／自架主機）+ `EmailMemberNotifier`（會員信）+ `InquiryNotifier`（詢問單的窗口通知與
+客戶回執）。信裡的連結需要 `SiteSettings.site.baseUrl`；**沒設定 `Mail:Host`/`Mail:From`
+或 base URL 時不寄、不擋、只記 Warning**，本機與未配置的環境照樣能把流程走完。
+設定鍵見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」。
 
 進度明細見 [STATUS.md](STATUS.md)。
 

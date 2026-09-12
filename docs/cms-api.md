@@ -93,8 +93,15 @@ POST /api/v1/contact             ✅ inquiry form (rate-limited, anti-bot)
 
 GET  /api/v1/sitemap             ✅ 已發佈網址 + lastmod + 真的有翻譯的語系（XML 由 Next.js 產）
 GET  /api/v1/redirects           ✅ 啟用中的轉址規則（前台 middleware 每 5 分鐘取整份）
-GET  /api/v1/search              # ?q=  ← Phase 待定，見 database.md §19.5
+GET  /api/v1/search              ✅ ?q=&limit=（預設 20，上限 50；q 少於 2 字一律回空）
 ```
+
+**搜尋**（`SearchReadService`）是 [database.md §19.5](database.md#195) 講的 Phase 1：
+SQL `LIKE` 掃七張翻譯表的標題與摘要（產品、產品線、產業、頁面、文章、下載、FAQ），
+UNION 後依「命中位置（標題開頭 > 標題內 > 摘要內）→ 類型權重」排序。
+回傳的 `path` 由 `PublicPaths` 組好（不含語系前綴），`kind` 供前台顯示分類標籤。
+FULLTEXT / Azure AI Search 都是新的基礎設施，內容量級變了再換——端點形狀不會變。
+使用者輸入的 `%` `_` `[` 會被跳脫，`\` 是跳脫字元。
 
 `milestones` / `locations` / `testimonials` / `partner-brands` / `contact-channels`
 **不給獨立 public 端點** —— 它們一律由 `/api/v1/pages/{slug}` 的 reference block 解析後一併回傳，
@@ -178,10 +185,12 @@ antiBotToken?, website? }`. Respond `202 Accepted` with
 > （`AccountAuthService` + `AccountAuthHandler` / `AccountDownloadsHandler` /
 > `AccountSampleRequestsHandler`），前台的 `/member` 與 `/account/**` 也已接上。
 >
-> ⚠️ **寄信管道尚未接上**——`verify-email`、`resend-verification`、`forgot-password`
-> 會正常產生一次性 token 並落庫，但信寄不出去（`LoggingMemberNotifier` 只把連結寫進
-> 遙測）。這與詢問單的通知信是同一個待辦，等 Communication Services / SMTP 就緒後
-> 換掉 `IMemberNotifier` 的實作即可，狀態機不用動。
+> **寄信已接上**（2026-09-12）：`SmtpEmailSender` + `EmailMemberNotifier`，
+> 驗證信與重設密碼信都會真的寄出，連結是
+> `{site.baseUrl}/{PreferredCulture}/member/verify|reset?token=…`，
+> 對應前台的 `/{locale}/member/verify`、`/{locale}/member/reset`、`/{locale}/member/forgot`
+> 三頁。設定鍵見 [azure-deployment.md](azure-deployment.md) 的「寄信」。
+> 沒設定 `Mail:Host` / `Mail:From` 時不寄、不擋、只記一筆 Warning，本機流程照樣走得完。
 >
 > refresh token 走 httpOnly cookie `vr_member_rt`（`Path=/api/v1/account`）。
 > **前台的同源代理必須原樣坐落在 `/api/v1/account/**`**，否則 cookie 的 Path 對不上，

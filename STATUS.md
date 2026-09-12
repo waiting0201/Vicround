@@ -5,7 +5,7 @@
 > 分工：本檔記錄**狀態**；[CLAUDE.md](CLAUDE.md) 記錄**慣例與檢索地圖**；
 > [docs/](docs/) 記錄各子系統的**設計**。三份不要互相抄，各司其職。
 
-**最後更新**：2026-09-08
+**最後更新**：2026-09-12
 
 ---
 
@@ -14,8 +14,9 @@
 **前台、後台與會員專區都已接上自己的 API；剩下的是上線收尾（素材、網域）。**
 
 **客戶確認稿的 25 個頁面已全數實作**（`mockup/Rounded Design/` 共 31 個 `.dc.html`，
-扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **25 條路由檔中的
-19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址）；SEO 與 GEO 的基礎建設
+扣掉 6 個共用元件），色彩、字級、間距、互動逐項對照。對應到 `apps/web` 是 **31 條路由檔中的
+19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址），其餘 12 條是確認稿沒有的
+功能頁（搜尋、會員信件流程、會員專區）；SEO 與 GEO 的基礎建設
 （metadata／hreflang／sitemap／robots／llms.txt／六種 JSON-LD）已就緒並實測通過。
 `apps/admin` 的 **26 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
 開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
@@ -23,17 +24,23 @@
 **後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
 [docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
 migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
-17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**53 項測試通過**。
+17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**96 項測試通過**。
 
 **內容已進資料庫且前台已切換過去**：確認稿的 1355 組雙語字串與舊站 `www.vicround.com`
 的可用資料都已匯入（見第六節），`apps/web/content/` 已刪除。確認稿本身以
 `Api/Data/Seeding/ContentImport/confirmed-copy.json` 進版控，新環境仍能用 `import-content`
 灌入同一份文案。
 
-**Content API 的公開端點已全數上線**（20 支，見第六節）；**Admin API 也已上線**
-（登入 + 27 個單元的 CRUD）。**Account API 也已上線**（16 支：註冊／登入／換發／驗證信／
-忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請）——⚠️ 但**寄信管道尚未接上**，
-驗證信與重設密碼信目前只寫進遙測（`LoggingMemberNotifier`，與詢問單的通知信是同一個待辦）。
+**Content API 的公開端點已全數上線**（21 支，見第六節，含新的 `GET /v1/search`）；
+**Admin API 也已上線**（登入 + 27 個單元的 CRUD）。**Account API 也已上線**
+（16 支：註冊／登入／換發／驗證信／忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請），
+**16 支全部有前台介面**。
+
+**寄信管道已接上**（2026-09-12）：`SmtpEmailSender` + `EmailMemberNotifier` + `InquiryNotifier`，
+驗證信、重設密碼信、詢問單的窗口通知與客戶回執都會真的寄出。本機以 SMTP 收件槽實測，
+**註冊 → 驗證 → 忘記密碼 → 重設 → 用新密碼登入整條流程已端到端跑通**。設定鍵見
+[docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」；沒設定時不寄、不擋、只記 Warning。
+⚠️ 正式環境仍待設定 SMTP 與 `SiteSettings.site.baseUrl`。
 
 **正式環境已經跑起來**（2026-09-08）：前台 `https://green-desert-0eeb2ce1e.3.azurestaticapps.net`、
 API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
@@ -71,13 +78,13 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | 後台 `apps/admin` | 🟡 | 27 個畫面全數實作；**Admin API 已上線**，開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端（27 個單元實跑通過），尚未在瀏覽器逐畫面驗收 |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
-| Content API（`fn-public`） | ✅ | **19 支端點已上線並實跑驗證**（含 contact 寫入與 reference block 解析）；只剩 `/search` 待定 Phase |
-| Account API（會員） | 🟡 | 16 支端點已實作並通過建置與測試；**寄信未接**、尚未在實際環境跑過完整註冊流程 |
+| Content API（`fn-public`） | ✅ | **21 支端點已上線並實跑驗證**（含 contact 寫入、reference block 解析與站內搜尋） |
+| Account API（會員） | ✅ | 16 支端點已上線，**前台介面全數補齊**；寄信已接，本機端到端跑過完整註冊與重設密碼流程 |
 | Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 正式 `stvicroundprod` 已建、`public-media` 為公開讀；**版位素材尚未上傳**（實測 404，見上方說明） |
-| CI | ✅ | `.github/workflows/api.yml`：建置、87 項測試、產物防呆、migration 同步檢查 |
+| CI | ✅ | `.github/workflows/api.yml`：建置、96 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
 ---
@@ -87,10 +94,9 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 依 [docs/sitemap.md](docs/sitemap.md) 的 URL 結構，對照 `mockup/Rounded Design/`
 （31 個 `.dc.html` ＝ 25 個頁面 ＋ 6 個共用元件）。
 
-**數字對照**：確認稿 25 頁 → 已全數實作；`app/[locale]` 底下共 25 條路由檔，
-其中 19 條有完稿版型、6 條仍是鷹架（下一節）。兩邊的「25」是巧合，不是同一個東西 ——
-`products/[category]` 一支服務 3 個產品線、`solutions/[slug]` 一支服務 7 個產業頁，
-而會員專區的 5 條路由在確認稿裡沒有對應頁。
+**數字對照**：確認稿 25 頁 → 已全數實作，對應 19 條路由檔（`products/[category]` 一支服務
+3 個產品線、`solutions/[slug]` 一支服務 7 個產業頁）。`app/[locale]` 底下另有 12 條**功能頁**
+路由（搜尋、會員信件流程、會員專區），確認稿裡沒有對應頁——合計 31 條路由檔。
 
 ### ✅ 已依確認稿實作，且全部改吃 Content API（確認稿 25 頁全部，對應 19 條路由檔）
 
@@ -135,17 +141,23 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 > 其餘皆為淺色（`#ffffff` / `#14141f`）。實作收斂成 `components/PageShell.tsx` 的 `data-tone`，
 > 版型元件一律讀 `var(--page-*)`。新增頁面前先確認 mockup 那一頁的最外層底色。
 
-### ✅ 原本的 6 條鷹架已全部接上 API（2026-09-11）
+### ✅ 確認稿以外的 12 條路由（功能頁，全部已接 API）
 
-確認稿沒有這幾頁，因此版型沿用會員專區殼層既有的 Tailwind 語彙，沒有自創第二套視覺。
+確認稿沒有這幾頁，因此版型沿用既有語彙——會員專區走殼層的 Tailwind、`/search` 與
+信件落地頁走其他內頁的 Container／卡片語彙，沒有自創第二套視覺。
 
-（這 6 條沒有接 API，因為還沒有設計稿；`/products/{category}/{slug}` 的資料端點
-`GET /v1/products/{slug}` 其實已經可用。）
+| 路由 | 現況 |
+| --- | --- |
+| `/products/{category}/{slug}` 產品詳情 | ✅ `GET /v1/products/{slug}`；**圖庫、認證與相關下載該端點還沒回** |
+| `/search?q=` 站內搜尋結果 | ✅ `GET /v1/search`；原生 GET form，無 JS 也能用，`noindex` |
+| `/member/forgot`、`/member/verify?token=`、`/member/reset?token=` | ✅ 信件流程三頁，網址與 `EmailMemberNotifier` 組出的連結一致，`noindex` |
+| `/account`、`/account/downloads`、`/account/profile`、`/account/sample-requests`、`/account/sample-requests/{no}` | ✅ Account API（瀏覽器端取資料，`noindex`） |
+| `/account/password` 變更密碼 | ✅ `POST /v1/account/change-password` |
+| `/account/sample-requests/new` 新增樣品申請 | ✅ `POST /v1/account/sample-requests`；產品選單在伺服器端用公開的 `/v1/products` 取好傳下去 |
 
-| 路由 | 現況 | 需要什麼才能做 |
-| --- | --- | --- |
-| `/products/{category}/{slug}` 產品詳情 | banner + 待接 API 提示框 | 設計稿（確認稿只做到產品線頁） |
-| `/account`、`/account/downloads`、`/account/profile`、`/account/sample-requests`、`/account/sample-requests/{no}` | ✅ 已接 Account API（瀏覽器端取資料，`noindex` 不變） | — |
+**Header 的兩個互動也已接上**（2026-09-12）：詢問 dialog 送出走 `/api/contact`
+（與 `/contact` 頁同一條路徑、同一組欄位，產品線送 slug 且來自 `/v1/categories`）；
+搜尋面板送出導向 `/{locale}/search?q=`。
 
 ---
 
@@ -161,7 +173,8 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 | `robots.txt`（非正式站整站 Disallow） | [app/robots.ts](apps/web/app/robots.ts) | 已含 `/admin`、`/{locale}/account`、`/*/preview` |
 | 語系前綴與舊網址 301 | [middleware.ts](apps/web/middleware.ts) | `/` → 307 `/en`；410 直接回 410 |
 | 發布後失效（`revalidateTag`） | [app/api/revalidate/route.ts](apps/web/app/api/revalidate/route.ts) | 無密鑰回 401 |
-| 詢問表單送出（同源代理） | [app/api/contact/route.ts](apps/web/app/api/contact/route.ts) | 實跑回 202 + 受理編號；蜜罐回 `BOT_CHECK_FAILED` |
+| 詢問表單送出（同源代理） | [app/api/contact/route.ts](apps/web/app/api/contact/route.ts) | 實跑回 202 + 受理編號；蜜罐回 `BOT_CHECK_FAILED`。`/contact` 頁與 Header 的 dialog 共用這一條 |
+| 會員 API 同源代理 | [app/api/v1/account/[...path]/route.ts](apps/web/app/api/v1/account/%5B...path%5D/route.ts) | 路徑必須原樣落在 `/api/v1/account`，否則 refresh cookie 的 Path 對不上 |
 | 內容取值（拆信封、帶 tag） | [lib/api.ts](apps/web/lib/api.ts)、[lib/content-api.ts](apps/web/lib/content-api.ts) | 失敗回 null；固定路由改丟例外（500）而不是 404 |
 
 ### ✅ GEO（AI 引擎）
@@ -188,11 +201,11 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 
 ```
 apps/web/
-├── app/[locale]/…      25 條路由
+├── app/[locale]/…      31 條路由（確認稿 19 + 功能頁 12）
 ├── app/ds/             客戶確認的設計 token（生成物，勿手改）
 ├── app/fonts.css       自架字型宣告（生成物，勿手改）
-├── components/         21 支：Header/Footer/PageBanner/PageCTA/FaqAccordion/ArticleBody…
-├── lib/                14 支：seo / schema / hreflang / api / content-api / format / html…
+├── components/         29 支：Header/Footer/PageBanner/PageCTA/FaqAccordion/MemberAuthForms…
+├── lib/                16 支：seo / schema / hreflang / api / content-api / account-client…
 ├── messages/           UI 字串（en / zh-Hant）
 └── public/fonts/       116 個 woff2
 ```
@@ -257,10 +270,10 @@ apps/web/
 | EF Core 模型 | ✅ | 14 個功能單元 → **77 張表**，schema 權威為 `Api/Data/Migrations/` |
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
-| **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
-| Account API `/api/v1/account/**` | 🟡 | 16 支端點實作完成（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store` |
+| **Content API** `/api/v1/**` | ✅ | **21 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`GET /v1/search` 是 §19.5 的 Phase 1（`LIKE` 掃七張翻譯表，跳脫萬用字元） |
+| Account API `/api/v1/account/**` | ✅ | 16 支端點上線（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store`。**寄信已接**，`IMemberNotifier` 走 SMTP |
 | **Admin API** `/api/admin/**` | ✅ | 登入（**帳號 `Username`，不是 Email**；access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／刪除寫 410（真刪，被參照時回 409）、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機。後台「使用者」單元可直接設定／重設密碼（新帳號必填，至少 12 字元） |
-| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、87 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
+| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、96 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
 | Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
 
@@ -315,7 +328,8 @@ apps/web/
 | ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
 | ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
 | 🟡 產品詳情頁設計 | 確認稿沒有這一頁 | 已接 `GET /v1/products/{slug}`，渲染簡介／說明／規格表；**圖庫、認證與相關下載該端點還沒回**，等補上再加版塊 |
-| ⛔ 寄信管道 | 等 Communication Services / SMTP | 驗證信、重設密碼信與詢問單通知信都卡在這裡 |
+| ⛔ 正式環境的 SMTP 設定 | 等客戶提供郵件主機／帳號 | 程式已就緒（本機實測通過），正式環境未設 `Mail:*` 之前信寄不出去，只會記 Warning |
+| ⛔ `SiteSettings.site.baseUrl` | 等正式網域定案 | 信裡的連結需要絕對網址；沒設就不寄信（寧可不寄，也不要寄出壞連結） |
 | ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
 | ⛔ 訓練型 AI 爬蟲政策 | 等客戶決策 | `app/robots.ts` 目前只放行檢索型，訓練型不列 |
 | ⛔ 後台 refresh token 的 cookie | 等後端 | 後台改為 SPA 之後，`fn-admin` 需以 `Set-Cookie` 回 httpOnly refresh token |
@@ -346,7 +360,10 @@ apps/web/
      `noindex`（非正式站一律如此）。**但 Cloudflare 的 managed robots.txt 仍是
      `Allow: /`**，蓋掉我們的 `Disallow: /` —— 要在 Cloudflare 關掉它才算兩道防線都在
    - 舊站 301 已在正式環境（實測 `/v1/redirects` 241 筆）✅
-6. ~~Account API 與會員專區~~ ✅ 2026-09-11（寄信待接）
+6. ~~Account API 與會員專區~~ ✅ 2026-09-11
+7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
+   （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
+   變更密碼與新增樣品申請、寄信管道（會員信 + 詢問單通知信與回執）
 
 ---
 

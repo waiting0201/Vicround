@@ -110,10 +110,37 @@ markup is served.
   profiles).
 - Per-environment settings: DB connection (Key Vault), **JWT signing key + issuer/audience**
   (Key Vault), allowed CORS origins (the Next.js site domain only), `Culture` defaults, Blob
-  base URL, App Insights key, and the **Next.js `revalidateTag` secret** shared by `fn-admin`.
+  base URL, App Insights key, the **Next.js `revalidateTag` secret** shared by `fn-admin`,
+  and the **SMTP 設定**（下一節）。
 - Restrict SQL access via the firewall (allow Azure services + the Function App outbound IPs;
   private endpoint only once on a VNet-capable Functions plan). Connect with a least-privilege
   SQL login.
+
+## 寄信（會員信與詢問單通知）
+
+驗證信、重設密碼信、詢問單的窗口通知與客戶回執都走 **SMTP**
+（`Api/Services/IEmailSender.cs`）。押在 SMTP 而不是 Communication Services 的 SDK，是因為
+ACS Email 本身就提供 SMTP relay，SendGrid、M365 與客戶自己的郵件主機也都是 SMTP ——
+一套實作涵蓋所有候選管道，也不必為了寄兩種信多背一個 Azure SDK 相依。
+
+| 設定鍵 | 說明 |
+| --- | --- |
+| `Mail:Host` | SMTP 主機。**與 `Mail:From` 兩者缺一就不寄信**（記一筆 Warning，不擋流程） |
+| `Mail:Port` | 預設 `587` |
+| `Mail:User` / `Mail:Password` | 留空則匿名寄送（內網 relay 的常見設定）。密碼放 Key Vault |
+| `Mail:From` / `Mail:FromName` | 寄件位址與顯示名稱（預設 `VicRound`） |
+| `Mail:UseStartTls` | 預設 `true`，設 `false` 才關掉 |
+
+另外需要 **`SiteSettings` 的 `site.baseUrl`**（後台可改，設定檔的 `Site:BaseUrl` 是備援）：
+信裡的連結是絕對網址，沒有它就**不寄**並把連結寫進遙測——寧可不寄，也不要寄出一封
+連結是壞的信。正式網域換成 `www.vicround.com` 那天，改這一列即可，不必重新部署。
+
+寄信失敗永不讓業務動作失敗：帳號已經建好、詢問單已經落庫，失敗只記 Error。
+
+**本機驗證**（不需要真的郵件主機）：起一個收件槽（任何 SMTP sink 皆可），在
+`Api/local.settings.json` 設 `Mail:Host=localhost`、`Mail:Port=1025`、`Mail:UseStartTls=false`、
+`Mail:From`、`Site:BaseUrl=http://localhost:3000`，就能把註冊 → 驗證 → 忘記密碼 → 重設
+整條流程走完。
 
 ## 前台的 build-time 變數（GitHub repo variables）
 

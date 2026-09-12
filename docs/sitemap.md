@@ -43,6 +43,10 @@ News 歸 Resources，Sustainability / Partnership 歸 About Us。
 /{locale}/contact                      Contact form        (Page)
 /{locale}/privacy                      Privacy & Legal     (Page)
 /{locale}/member                       會員登入／註冊      (Page)
+/{locale}/member/forgot                忘記密碼            noindex
+/{locale}/member/verify?token=         驗證信落地頁        noindex（信裡的連結）
+/{locale}/member/reset?token=          重設密碼落地頁      noindex（信裡的連結）
+/{locale}/search?q=                    站內搜尋結果        noindex
 /{locale}/account/**                   會員專區            noindex
 /admin/**                              後台 CMS            noindex
 ```
@@ -113,6 +117,10 @@ Disallow: /en/account
 Disallow: /zh-Hant/account
 Disallow: /*/preview
 ```
+
+搜尋結果與信件落地頁靠**每頁的 `noIndex`**（`pageMetadata({ noIndex: true })`）而不是
+`robots.txt`：前者是無限多個近乎重複的網址，後者的網址帶著一次性 token，兩種都只能靠
+meta 真正攔下來——`robots.txt` 擋的是抓取，不是索引。
 
 ## Per-page SEO requirements
 

@@ -1503,9 +1503,11 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
    `SampleRequests.ExternalOrderNumber` 已預留供未來 ERP 對接。
 4. **MemberOnly 文件的 private container + SAS** — SWA Free 的內建 CDN 無法對 origin 做認證，
    SAS URL 會繞過 CDN 直打 Blob。需確認可接受；或改用短效 CDN token（需 Front Door，屬後續升級）。
-5. **Header 全站搜尋** — 現有規劃文件完全未提及搜尋，但 Header 有搜尋列與 5 個 chip。建議
-   Phase 1 用 SQL `LIKE` / `CONTAINS` 搜翻譯表的 Title/Summary，或直接列為 Phase 2
-   （FULLTEXT / Azure AI Search 都是新的基礎設施）。
+5. ~~**Header 全站搜尋**~~ — **已定案並實作**（2026-09-12）：採建議的 Phase 1，
+   `GET /api/v1/search` 以 SQL `LIKE` 掃七張翻譯表的標題與摘要（產品、產品線、產業、頁面、
+   文章、下載、FAQ），結果頁是 `/{locale}/search?q=`（noindex）。FULLTEXT／Azure AI Search
+   留到內容量級變了再說——端點形狀不會變。見
+   `Api/Services/Dapper/SearchReadService.cs` 與 [cms-api.md](cms-api.md)。
 6. **zh-Hant 內容誰產出、缺翻譯時的 fallback 政策** — 建議值見 [0.2](#02-i18n-慣例)，需客戶拍板。
 7. **舊站 118 頁的 slug → 新 slug 對照表尚未產出** — 自動對照會產生錯誤 301，直接傷 SEO。建議先
    產出 CSV 給客戶確認再進 seeder。
