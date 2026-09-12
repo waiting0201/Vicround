@@ -2,7 +2,7 @@
 namespace VicRound.Api.Models.Entities;
 
 /// <summary>
-/// database.md §10。改 slug、封存內容、變更 <c>Articles.Type</c> 都必須在同一 transaction 內
+/// database.md §10。改 slug、刪除內容、變更 <c>Articles.Type</c> 都必須在同一 transaction 內
 /// 寫入本表。Application 層強制：<b>路徑 normalize、不得產生鏈、不得產生環</b>。
 /// 依 §0.7 不記錄命中次數。
 /// </summary>

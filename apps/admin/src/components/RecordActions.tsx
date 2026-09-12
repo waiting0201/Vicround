@@ -10,8 +10,8 @@ import type { ResourceDef } from '@/lib/resources';
  * <p>
  * 三個動作都會改到**公開站看得到的東西**，所以三個都要先問一次，而且問題要具體：
  * 「確定嗎？」沒有資訊量，「這會讓 /en/products/ag 立刻從網站上消失」才有。
- * 刪除是軟刪除（封存），後端會在同一個交易裡補上 301 或 410 —— 這件事也要寫在對話框裡，
- * 否則編輯者會以為封存等於網址消失。
+ * 刪除是**真的刪掉**（2026-09-12 起不再封存），救不回來，所以它是唯一一顆 `danger` 實心鈕，
+ * 對話框也要把「不可復原」與「舊網址會變成 410」講明白。
  * </p>
  */
 export function RecordActions({
@@ -35,7 +35,7 @@ export function RecordActions({
     try {
       if (confirming === 'delete') {
         await remove.mutateAsync(row.id);
-        toast({ title: `已封存這筆${resource.singular}`, description: '舊網址已寫入轉址，不會變成 404。', variant: 'success' });
+        toast({ title: `已刪除這筆${resource.singular}`, description: '舊網址已寫成 410，不會變成 404。', variant: 'success' });
         onDeleted?.();
       } else if (confirming) {
         await publish.mutateAsync({ id: row.id, next: confirming === 'publish' ? 'published' : 'draft' });
@@ -65,12 +65,11 @@ export function RecordActions({
       )}
 
       <Button
-        variant="ghost"
+        variant="danger"
         icon={<Icon name="trash-2" size={15} />}
-        className="text-[var(--danger-500)] hover:bg-[var(--danger-50)]"
         onClick={() => setConfirming('delete')}
       >
-        封存
+        刪除
       </Button>
 
       <ConfirmDialog
@@ -100,9 +99,9 @@ export function RecordActions({
         onConfirm={run}
         pending={remove.isPending}
         tone="danger"
-        title={`封存這筆${resource.singular}？`}
-        description="資料會保留但不再顯示於公開站；原本的網址會自動轉去上層頁面，不會留下 404。"
-        confirmLabel="封存"
+        title={`刪除這筆${resource.singular}？`}
+        description="資料會從資料庫永久移除，不能復原；原本的網址會寫成 410（永久移除），不會留下 404。若還有其他內容引用它，刪除會被擋下來。"
+        confirmLabel="刪除"
       />
     </>
   );

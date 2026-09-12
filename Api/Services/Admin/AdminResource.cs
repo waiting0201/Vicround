@@ -32,7 +32,7 @@ public sealed record AdminResource(
 
     public bool HasSlug => typeof(SluggedEntity).IsAssignableFrom(Entity);
 
-    /// <summary>有自己的公開網址 → 改 slug 或封存都必須寫轉址（database.md §0.5）。</summary>
+    /// <summary>有自己的公開網址 → 改 slug（301）或刪除（410）都必須寫轉址（database.md §0.5）。</summary>
     public bool IsRoutable => typeof(IRoutable).IsAssignableFrom(Entity);
 }
 

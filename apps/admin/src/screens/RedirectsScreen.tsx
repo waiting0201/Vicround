@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Badge,
   Button,
+  ConfirmDialog,
   Drawer,
   Field,
   Icon,
@@ -24,7 +25,7 @@ import { formatDateTime } from '@/lib/format';
  * 轉址表。
  *
  * <p>
- * 正常情況下 301 是**系統自動寫的**（改 slug、封存內容時同一個交易一起寫）。這一頁是給
+ * 正常情況下 301 是**系統自動寫的**（改 slug 時同一個交易一起寫；刪除內容則寫 410）。這一頁是給
  * 人工補登用的：舊站遷移、行銷用的短網址、客戶手上印出去的舊 DM。所以畫面上要說清楚
  * 這件事，否則會有人以為改 slug 之後還得手動來這裡補一筆。
  * </p>
@@ -76,6 +77,7 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
   const remove = useDeleteItem(resource.type);
 
   const [editing, setEditing] = useState<AdminRow | 'new' | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
 
@@ -226,14 +228,11 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
             <>
               {editing !== 'new' && (
                 <Button
-                  variant="ghost"
-                  className="mr-auto text-[var(--danger-500)]"
+                  variant="danger"
+                  className="mr-auto"
+                  icon={<Icon name="trash-2" size={15} />}
                   loading={remove.isPending}
-                  onClick={async () => {
-                    await remove.mutateAsync((editing as AdminRow).id);
-                    toast({ title: '轉址已刪除', variant: 'success' });
-                    setEditing(null);
-                  }}
+                  onClick={() => setConfirmingDelete(true)}
                 >
                   刪除
                 </Button>
@@ -310,6 +309,27 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
           </div>
         </Drawer>
       )}
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        pending={remove.isPending}
+        tone="danger"
+        title="刪除這筆轉址？"
+        description="轉址會從資料庫永久移除，不能復原。原本會被導走的舊網址，之後會直接變成 404。"
+        confirmLabel="刪除"
+        onConfirm={async () => {
+          try {
+            await remove.mutateAsync((editing as AdminRow).id);
+            toast({ title: '轉址已刪除', variant: 'success' });
+            setEditing(null);
+          } catch (error) {
+            toast({ title: '刪除沒有完成', description: (error as Error).message, variant: 'danger' });
+          } finally {
+            setConfirmingDelete(false);
+          }
+        }}
+      />
     </>
   );
 }

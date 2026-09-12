@@ -240,7 +240,7 @@ apps/web/
 | 雙語編輯與**翻譯缺漏標示**（分頁黃點、清單語系欄、「缺 zh-Hant」篩選） | `components/EntityForm.tsx`、`components/ResourceList.tsx`、`lib/format.ts` |
 | 改 slug 會寫 301 的提示 | `screens/EntityEditor.tsx` |
 | 未存變更離開攔截（站內導覽 + 關閉分頁） | `useBlocker` + `beforeunload`，見 `lib/draft.ts` |
-| 發布／取消發布／封存的具體後果寫在確認框裡 | `components/RecordActions.tsx` |
+| 發布／取消發布／刪除的具體後果寫在確認框裡（刪除是真刪，用實心 danger 鈕）| `components/RecordActions.tsx` |
 | Editor 角色看不到 `adminOnly` 項目 | `components/Shell.tsx` |
 | 測試環境標示 | `components/Shell.tsx`（假資料模式時顯示） |
 
@@ -259,7 +259,7 @@ apps/web/
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
 | Account API `/api/v1/account/**` | 🟡 | 16 支端點實作完成（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store` |
-| **Admin API** `/api/admin/**` | ✅ | 登入（**帳號 `Username`，不是 Email**；access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機。後台「使用者」單元可直接設定／重設密碼（新帳號必填，至少 12 字元） |
+| **Admin API** `/api/admin/**` | ✅ | 登入（**帳號 `Username`，不是 Email**；access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／刪除寫 410（真刪，被參照時回 409）、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機。後台「使用者」單元可直接設定／重設密碼（新帳號必填，至少 12 字元） |
 | CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、87 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
 | Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
@@ -304,7 +304,7 @@ apps/web/
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
 | 測試 | `tests/Api.Tests` **87 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
-| DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
+| DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**（刪除後亦然）、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
 

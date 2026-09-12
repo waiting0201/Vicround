@@ -1260,8 +1260,13 @@ CREATE UNIQUE INDEX UX_Products_Slug ON Products(Slug) WHERE Status <> 2;
 
 EF Core：`.HasIndex(p => p.Slug).IsUnique().HasFilter("[Status] <> 2")`
 
-**為什麼不是全域 unique**：軟刪除是我們的刪除方式，全域 unique 會讓「封存 `anti-fog-film` 後
-永遠不能再建同名產品」，編輯者只能改名為 `anti-fog-film-2`——這是把資料庫限制洩漏成 URL。
+**為什麼不是全域 unique**：`Status <> 2` 的 filter 原本是為了配合軟刪除——全域 unique 會讓
+「封存 `anti-fog-film` 後永遠不能再建同名產品」，編輯者只能改名為 `anti-fog-film-2`，
+這是把資料庫限制洩漏成 URL。
+
+> 2026-09-12 起後台的刪除改成**真刪**（列直接消失，slug 自然被釋出），`Archived` 不再由刪除
+> 產生。filter 保留不動：`ContentStatus.Archived` 仍在列舉裡，而全域 unique 在這裡沒有好處。
+> 下面三個配套裡提到「已封存」的地方，實務上要讀成「已刪除」。
 
 **三個配套，缺一不可**：
 

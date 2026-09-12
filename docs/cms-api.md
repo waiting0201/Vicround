@@ -252,7 +252,7 @@ GET    /api/admin/{type}                 ✅ ?search=&page=&pageSize=&missingCul
 POST   /api/admin/{type}                 ✅ 201 + 該筆資料
 GET    /api/admin/{type}/{id}            ✅ 含翻譯、關聯 id 陣列與子項
 PUT    /api/admin/{type}/{id}            ✅
-DELETE /api/admin/{type}/{id}            ✅ 封存（有 Status 的）或真刪；Routable 的同時寫 410
+DELETE /api/admin/{type}/{id}            ✅ 真刪（永久移除）；Routable 的同時寫 410
 
 PUT    /api/admin/{type}/{id}/translations/{culture}   ✅ upsert one culture's content
 POST   /api/admin/{type}/{id}/publish                  ✅ Draft -> Published（並打 revalidate webhook）
@@ -268,7 +268,9 @@ int / Guid / string 三種），enum 一律 camelCase 字串。
 **寫入的規矩**：
 - 關聯（`categoryIds`…）與子項（規格列、版塊、步驟）**整組換掉**，包在交易裡 ——
   「先刪後寫」中途失敗會真的刪掉既有資料。
-- 改 slug／封存在同一個交易內寫 301／410，並把既有規則壓平（不留鏈、不留環）。
+- 改 slug／刪除在同一個交易內寫 301／410，並把既有規則壓平（不留鏈、不留環）。
+- 刪除是**真的刪掉**，不是封存（2026-09-12 專案決定）。被其他內容以外鍵參照的列刪不掉，
+  回 `409 CONFLICT_STATE`，訊息請編輯者先解除引用。
 - 密碼雜湊、`SecurityStamp`、refresh token 雜湊**永遠不會出現在回應裡**。
 - 請求裡不在 EF 模型中的欄位一律忽略；欄位型別轉不過去回 `400`，不會靜默寫錯值。
 
@@ -317,7 +319,7 @@ re-renders fresh content immediately.
   內容寫入權。DTO 各自獨立，不共用。
 - **Publish revalidates.** Any publish/unpublish/slug change calls `revalidateTag` for the
   matching tags (both locales) and updates sitemap `lastmod`. Don't add write paths that skip this.
-- **URL 變更必寫 301。** 改 slug、封存內容、或變更 `Articles.Type`（`Type` 決定 URL 前綴）都必須在
+- **URL 變更必寫 301。** 改 slug、刪除內容（寫 410）、或變更 `Articles.Type`（`Type` 決定 URL 前綴）都必須在
   同一 transaction 內寫入 `Redirects`。見 [database.md §0.5](database.md#05-slug-是內容不是衍生值)。
 - **Validation lives in the Application layer** (FluentValidation or similar), shared shape
   enforced before EF writes. Controllers stay thin.

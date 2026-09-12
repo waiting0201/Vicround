@@ -236,8 +236,18 @@ public sealed class AdminCrudService(
     }
 
     /// <summary>
-    /// 刪除。有 <c>Status</c> 的一律**封存而不是真刪**（內容可能被別的頁面引用），
-    /// 沒有狀態的小表（關聯規則、轉址）才真的刪掉。
+    /// 刪除——**真的從資料庫刪掉**，不再改成 <c>Archived</c>（2026-09-12 專案決定）。
+    ///
+    /// <para>
+    /// 刪除前先把公開網址寫成一筆 410：列沒了，但這個網址曾被索引過，得給搜尋引擎一個
+    /// 「已永久移除」的交代，而不是留一個 404 讓它一直回訪（docs/sitemap.md）。轉址與刪除
+    /// 在同一次 <c>SaveChanges</c>，所以刪不成的時候轉址也不會留下。
+    /// </para>
+    ///
+    /// <para>
+    /// 被別的內容參照的列刪不掉——外鍵多數設成 <c>NoAction</c>，資料庫會擋。這裡把它翻成
+    /// 409，告訴編輯者「先解除引用」，而不是丟一個看起來像伺服器壞掉的 500。
+    /// </para>
     /// </summary>
     public async Task DeleteAsync(AdminResource resource, string id, CancellationToken ct)
     {
@@ -247,27 +257,49 @@ public sealed class AdminCrudService(
         var instance = await FindTrackedAsync(resource.Entity, key, ct)
             ?? throw AppException.NotFound($"{resource.Slug} {id}");
 
-        if (instance is ContentEntity content)
-        {
-            // 封存的內容不再有替代頁：寫 410 讓搜尋引擎下架，而不是留一個 404
-            // 讓它一直回訪（docs/sitemap.md）。
-            var path = await PublicPathAsync(resource, instance, ct);
+        // 先算路徑：列一旦被標成刪除，再去查它的公開網址就沒意義了。
+        var path = instance is ContentEntity ? await PublicPathAsync(resource, instance, ct) : null;
 
-            content.Status = ContentStatus.Archived;
+        // 子項與母體是一次存檔，刪除也得是一次——與 Create／Update 同一個理由。
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+
+            // 自己的子項（規格列、版塊、步驟）先清掉。它們的外鍵是 NoAction——本來就該
+            // 跟著母體走，卻會在資料庫層把刪除擋下來，讓「有規格列的產品刪不掉」。
+            foreach (var child in resource.ChildFields)
+            {
+                await DeleteWhereAsync(Meta(child.Entity), child.OwnerFk, key, ct);
+            }
+
+            db.Remove(instance);
 
             if (path is not null)
             {
                 await WriteRedirectAsync(path, path, 410, ct);
             }
-        }
-        else
-        {
-            db.Remove(instance);
-        }
 
-        await db.SaveChangesAsync(ct);
+            try
+            {
+                await db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException e) when (IsForeignKeyViolation(e))
+            {
+                throw new AppException(
+                    ErrorCodes.ConflictState,
+                    "這筆資料還被其他內容參照（導覽、版塊、詢問單、樣品申請…），請先解除引用再刪除。",
+                    409);
+            }
+
+            await transaction.CommitAsync(ct);
+        });
+
         await RevalidateAsync(resource, instance, ct);
     }
+
+    /// <summary>FK 擋下的刪除。547 同時涵蓋 CHECK，但刪除時只可能是外鍵。</summary>
+    private static bool IsForeignKeyViolation(DbUpdateException e) =>
+        e.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 547 };
 
     public async Task<Dictionary<string, object?>> SetStatusAsync(
         AdminResource resource, string id, ContentStatus status, CancellationToken ct)
@@ -446,7 +478,7 @@ public sealed class AdminCrudService(
                 ToPath = target,
                 StatusCode = statusCode,
                 IsEnabled = true,
-                Notes = statusCode == 410 ? "內容已封存" : "slug 變更",
+                Notes = statusCode == 410 ? "內容已刪除" : "slug 變更",
             });
         }
     }
