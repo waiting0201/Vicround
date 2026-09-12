@@ -1447,7 +1447,7 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
 **ProcessFlows（7 組）**：`core-processes`(4 步)、`co-development`(5 步)、`oem-odm`(3 步)、
 `inquiry-flow`(3 步)、`manufacturing-optical-film` / `-textile-foam` / `-acoustic`（各 4 步）
 
-**Locations（3）**：Taichung HQ / Suzhou Production / Bac Ninh Production
+**Locations（3）**：Taipei HQ / Suzhou Production / Bac Ninh Production
 **ContactChannels（3）**：`sales` / `engineering` / `partners`
 
 **BusinessDomainRules（`Block` 清單）**：`gmail.com`、`googlemail.com`、`yahoo.com`、

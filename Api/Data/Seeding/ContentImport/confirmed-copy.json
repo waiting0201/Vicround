@@ -1747,7 +1747,7 @@
                 "en": "Headquarters",
                 "zh-Hant": "總公司"
               },
-              "email": "+886 4 2359 0000",
+              "email": "+886 2 2511 0190",
               "note": {
                 "en": "Mon–Fri, 09:00–18:00 (GMT+8)",
                 "zh-Hant": "週一至週五 09:00–18:00（GMT+8）"
@@ -1781,8 +1781,8 @@
             "zh-Hant": "總部與研發在台灣，生產與業務支援則貼近客戶的組裝線。"
           },
           "mapLabel": {
-            "en": "Location map — Taiwan · China · Vietnam · 2000×625",
-            "zh-Hant": "據點地圖 —— 台灣 · 中國 · 越南 · 2000×625"
+            "en": "Headquarters — Taipei, Taiwan",
+            "zh-Hant": "總部 —— 台灣台北"
           },
           "openInMaps": {
             "en": "Open in Maps →",
@@ -1795,14 +1795,14 @@
                 "zh-Hant": "總部"
               },
               "city": {
-                "en": "Taichung, Taiwan",
-                "zh-Hant": "台灣台中"
+                "en": "Taipei, Taiwan",
+                "zh-Hant": "台灣台北"
               },
               "address": {
-                "en": "No. 000, Sec. 0, Taiwan Blvd., Xitun Dist., Taichung City 407, Taiwan",
-                "zh-Hant": "407 台中市西屯區台灣大道 0 段 000 號"
+                "en": "11F., No. 66, Sec. 2, Nanjing E. Rd., Zhongshan Dist., Taipei City 10491, Taiwan",
+                "zh-Hant": "10491 台北市中山區南京東路二段 66 號 11 樓"
               },
-              "phone": "+886 4 2359 0000"
+              "phone": "+886 2 2511 0190"
             },
             {
               "kind": {

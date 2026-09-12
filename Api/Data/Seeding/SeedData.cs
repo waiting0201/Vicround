@@ -12,7 +12,9 @@ internal sealed record SolutionSeed(string Slug, bool IsNew, Text Name, Text Men
 internal sealed record PageSeed(
     string Slug, PageTemplate Template, string? ParentSlug, Text Title, string? PathPrefix = null);
 
-internal sealed record LocationSeed(LocationType Type, string CountryCode, string City, string Phone, Text Name, Text AddressLine);
+internal sealed record LocationSeed(
+    LocationType Type, string CountryCode, string City, string Phone, Text Name, Text AddressLine,
+    string? Email = null, decimal? Latitude = null, decimal? Longitude = null, string? MapUrl = null);
 
 internal sealed record ContactChannelSeed(string Slug, string Email, InquiryType InquiryType, Text Label, Text Description);
 
@@ -86,12 +88,21 @@ internal static class SeedData
         new("news", PageTemplate.Standard, "resources", new Text("News & Exhibitions", "新聞與展會")),
     ];
 
-    /// <summary>地址與電話沿用確認稿的佔位值（含 <c>000</c>），待客戶提供後由編輯者於後台更正。</summary>
+    /// <summary>
+    /// 總部是實際資料 —— 地址、電話與座標都取自舊站 www.vicround.com/contact 的地圖與站台資料；
+    /// 兩個生產據點的地址與電話仍是確認稿的佔位值（含 <c>000</c>），待客戶提供後由編輯者於後台更正。
+    /// </summary>
     public static readonly LocationSeed[] Locations =
     [
-        new(LocationType.Headquarters, "TW", "Taichung", "+886 4 2359 0000",
-            new Text("Taichung, Taiwan", "台灣台中"),
-            new Text("No. 000, Sec. 0, Taiwan Blvd., Xitun Dist., Taichung City 407, Taiwan", "407 台中市西屯區台灣大道 0 段 000 號")),
+        new(LocationType.Headquarters, "TW", "Taipei", "+886 2 2511 0190",
+            new Text("Taipei, Taiwan", "台灣台北"),
+            new Text(
+                "11F., No. 66, Sec. 2, Nanjing E. Rd., Zhongshan Dist., Taipei City 10491, Taiwan",
+                "10491 台北市中山區南京東路二段 66 號 11 樓"),
+            Email: "vicround@vicround.com",
+            Latitude: 25.0517971m,
+            Longitude: 121.5304435m,
+            MapUrl: "https://www.google.com/maps/search/?api=1&query=25.0517971%2C121.5304435"),
         new(LocationType.Production, "CN", "Suzhou", "+86 512 0000 0000",
             new Text("Suzhou, China", "中國蘇州"),
             new Text("Coating and converting lines serving mainland China assembly partners.", "塗佈與加工產線，服務中國大陸的組裝夥伴。")),

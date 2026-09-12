@@ -4,6 +4,7 @@ import { BlockHeading, BlockSection, StepCards, cardStyle, sectionTitleStyle } f
 import { ContactForm } from '@/components/ContactForm';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
+import { LocationMap } from '@/components/LocationMap';
 import { PageBanner } from '@/components/PageBanner';
 import { PageShell } from '@/components/PageShell';
 import { Container, ImageSlot } from '@/components/sections';
@@ -13,7 +14,7 @@ import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
 import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
-import { breadcrumbSchema } from '@/lib/schema';
+import { breadcrumbSchema, organizationContactSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
 
 /**
@@ -55,9 +56,20 @@ export default async function ContactPage({ params }: Params) {
 
   const channels = channelsBlock?.reference?.contactChannels ?? [];
 
+  const locationList = locations?.reference?.locations ?? [];
+  const headquarters = locationList.find((l) => l.type === 'headquarters');
+
+  // 地圖只放總部（其餘據點的座標多半還沒填）；總部沒座標就找第一個有座標的據點。
+  const mappedLocation =
+    headquarters?.latitude != null && headquarters.longitude != null
+      ? headquarters
+      : locationList.find((l) => l.latitude != null && l.longitude != null);
+
   return (
     <>
       <JsonLd data={breadcrumbSchema(locale, [{ name: t('nav.contact'), path: ROUTES.contact }])} />
+      {/* 實體地址、座標與收件窗口 —— 本站唯一輸出這些事實的地方（docs/sitemap.md JSON-LD） */}
+      <JsonLd data={organizationContactSchema(locale, { location: headquarters, channels })} />
 
       <PageShell tone="light">
         <PageBanner
@@ -217,11 +229,16 @@ export default async function ContactPage({ params }: Params) {
             <BlockHeading block={locations} />
 
             <div style={{ marginTop: 32 }}>
-              <ImageSlot alt={t('common.mapPlaceholder')} label={t('common.mapPlaceholder')} ratio="16 / 5" />
+              {/* 地圖釘在總部；沒有座標時退回佔位框（見 LocationMap） */}
+              {mappedLocation ? (
+                <LocationMap locale={locale} location={mappedLocation} ratio="16 / 5" />
+              ) : (
+                <ImageSlot alt={t('common.mapPlaceholder')} label={t('common.mapPlaceholder')} ratio="16 / 5" />
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 24 }}>
-              {(locations.reference?.locations ?? []).map((location) => (
+              {locationList.map((location) => (
                 <div key={`${location.city}-${location.type}`} style={{ ...cardStyle, gap: 10 }}>
                   <span
                     style={{
@@ -261,7 +278,7 @@ export default async function ContactPage({ params }: Params) {
                       {location.phone}
                     </a>
                   ) : null}
-                  {/* 地圖連結要等客戶提供實際地址（Locations.MapUrl 尚未填） */}
+                  {/* 總部的 MapUrl 已填；兩個生產據點要等客戶提供地址後才有連結 */}
                   {location.mapUrl ? (
                     <a
                       href={location.mapUrl}

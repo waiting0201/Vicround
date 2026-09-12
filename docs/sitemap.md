@@ -126,7 +126,8 @@ Open Graph/Twitter tags. These values come from each entity's translation SEO fi
 
 | 型別 | 用於 | 資料來源 |
 | --- | --- | --- |
-| `Organization` | Homepage | `SiteSettings` + `Locations` |
+| `Organization` | Homepage | `SiteSettings` |
+| `Organization`（含 `address` / `geo` / `hasMap` / `contactPoint`） | `/contact` | 總部 `Locations` + `ContactChannels` |
 | `Product` | 產品頁 | `Products` + `SpecificationRows`（→ `additionalProperty`）+ `Certifications` |
 | `Article` | `/news/{slug}`、`/insights/{slug}`、`/blog/{slug}` | `Articles` + `Authors` |
 | `Event` | 展會 | `Exhibitions`（`startDate` / `endDate` / `location`） |

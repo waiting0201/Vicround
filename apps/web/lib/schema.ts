@@ -30,6 +30,76 @@ export function organizationSchema(locale: Locale, settings?: Json | null): Json
   };
 }
 
+export type OrganizationContactInput = {
+  /** 總部據點（`Locations`）。地址、電話、座標與地圖連結都從這裡來。 */
+  location?: {
+    countryCode: string;
+    city: string;
+    addressLine: string | null;
+    phone: string | null;
+    email: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    mapUrl: string | null;
+  } | null;
+  /** 收件窗口（`ContactChannels`）→ `contactPoint`。 */
+  channels?: { email: string; inquiryType: string; label: string | null }[];
+};
+
+/** 看起來像 email 才當 email 用 —— `ContactChannels.Email` 也被拿來放總機號碼。 */
+function isEmail(value: string): boolean {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+}
+
+/**
+ * Contact 頁的 Organization —— 首頁那一份加上實體地址。
+ *
+ * <p>
+ * 跨頁面的 JSON-LD 不會自動依 `@id` 合併，所以這裡輸出完整的 Organization
+ * 而不是只帶 `@id` 的補充節點；沒有據點資料時就退回首頁的那一份。
+ * </p>
+ */
+export function organizationContactSchema(locale: Locale, input: OrganizationContactInput): Json {
+  const { location, channels = [] } = input;
+
+  const points = channels
+    .filter((channel) => isEmail(channel.email))
+    .map((channel) => ({
+      '@type': 'ContactPoint',
+      email: channel.email,
+      contactType: channel.label ?? channel.inquiryType,
+      ...(location ? { areaServed: location.countryCode } : {}),
+      availableLanguage: ['en', 'zh-Hant'],
+    }));
+
+  return {
+    ...organizationSchema(locale),
+    ...(location
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            ...(location.addressLine ? { streetAddress: location.addressLine } : {}),
+            addressLocality: location.city,
+            addressCountry: location.countryCode,
+          },
+          ...(location.phone ? { telephone: location.phone } : {}),
+          ...(location.email && isEmail(location.email) ? { email: location.email } : {}),
+          ...(location.latitude != null && location.longitude != null
+            ? {
+                geo: {
+                  '@type': 'GeoCoordinates',
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                },
+              }
+            : {}),
+          ...(location.mapUrl ? { hasMap: location.mapUrl } : {}),
+        }
+      : {}),
+    ...(points.length ? { contactPoint: points } : {}),
+  };
+}
+
 export function webSiteSchema(locale: Locale): Json {
   return {
     '@context': 'https://schema.org',
