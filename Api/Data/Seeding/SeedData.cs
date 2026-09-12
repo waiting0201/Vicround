@@ -100,9 +100,11 @@ internal static class SeedData
                 "11F., No. 66, Sec. 2, Nanjing E. Rd., Zhongshan Dist., Taipei City 10491, Taiwan",
                 "10491 台北市中山區南京東路二段 66 號 11 樓"),
             Email: "vicround@vicround.com",
-            Latitude: 25.0517971m,
-            Longitude: 121.5304435m,
-            MapUrl: "https://www.google.com/maps/search/?api=1&query=25.0517971%2C121.5304435"),
+            // 舊站地圖的座標是 25.0517971 / 121.5304435，這裡先四捨五入到欄位的
+            // decimal(9,6)，免得程式裡的常數與資料庫存的值對不起來（差距約 1 公分）。
+            Latitude: 25.051797m,
+            Longitude: 121.530444m,
+            MapUrl: "https://www.google.com/maps/search/?api=1&query=25.051797%2C121.530444"),
         new(LocationType.Production, "CN", "Suzhou", "+86 512 0000 0000",
             new Text("Suzhou, China", "中國蘇州"),
             new Text("Coating and converting lines serving mainland China assembly partners.", "塗佈與加工產線，服務中國大陸的組裝夥伴。")),
