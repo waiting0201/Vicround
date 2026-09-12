@@ -38,6 +38,11 @@ type GetOptions = {
   tags?: string[];
   /** 查詢參數（`undefined` 的鍵會被略過）。 */
   query?: Record<string, string | number | boolean | undefined>;
+  /**
+   * 以秒數重新驗證，給**沒有 tag 可掛**的端點用（例如搜尋：每個關鍵字一份快取，
+   * 發布時無從指名失效）。有 tag 的內容一律用 tag，不要在這裡放短 TTL。
+   */
+  revalidate?: number;
 };
 
 /**
@@ -58,7 +63,7 @@ export async function apiGet<T>(path: string, options: GetOptions = {}): Promise
   try {
     const res = await fetch(url, {
       headers: { Accept: 'application/json' },
-      next: { tags: options.tags ?? [] },
+      next: { tags: options.tags ?? [], ...(options.revalidate === undefined ? {} : { revalidate: options.revalidate }) },
     });
     if (!res.ok) return null;
 

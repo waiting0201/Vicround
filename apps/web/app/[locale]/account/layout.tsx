@@ -37,6 +37,7 @@ export default async function AccountLayout({
     { key: 'downloads', href: `/${locale}${ROUTES.account}/downloads` },
     { key: 'sampleRequests', href: `/${locale}${ROUTES.account}/sample-requests` },
     { key: 'profile', href: `/${locale}${ROUTES.account}/profile` },
+    { key: 'password', href: `/${locale}${ROUTES.account}/password` },
   ] as const;
 
   return (

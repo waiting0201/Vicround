@@ -539,6 +539,38 @@ export function getCertifications(culture: Locale, category?: string) {
   });
 }
 
+/**
+ * 一筆搜尋結果。`kind` 決定結果卡上的分類標籤，字串與後端的
+ * <c>SearchResultDto</c> 一致（product / category / solution / page / article / download / faq）。
+ */
+export type SearchResult = {
+  kind: string;
+  title: string;
+  summary: string | null;
+  path: string;
+  hasRequestedCulture: boolean;
+};
+
+export type SearchResponse = {
+  query: string;
+  total: number;
+  /** 還有更多結果被 limit 截掉；結果頁據此提示縮小關鍵字。 */
+  hasMore: boolean;
+  results: SearchResult[];
+};
+
+/**
+ * 站內搜尋。**不帶 revalidate tag** —— 每個關鍵字都是獨立的一份快取，
+ * 發布時無從指名失效，所以改用短 TTL（見 `apiGet` 的 `revalidate`）。
+ */
+export function getSearch(culture: Locale, query: string, limit = 20) {
+  return apiGet<SearchResponse>('/search', {
+    culture,
+    query: { q: query, limit },
+    revalidate: 300,
+  });
+}
+
 export function getDownloads(
   culture: Locale,
   query: { kind?: string; product?: string; category?: string; solution?: string } = {},

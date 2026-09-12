@@ -376,6 +376,34 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/*
+ * 會員專區的表單欄位。確認稿沒有這幾頁，版型走 Tailwind，但 input/select 這種
+ * 原生控制項光靠 utility class 湊不出一致的外觀（各家瀏覽器的預設差太多），
+ * 所以留一個具名 class，讓專區裡每一個欄位長得一樣。
+ */
+.vr-input {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.4;
+  outline-color: #6436ef;
+  width: 100%;
+}
+.vr-input:focus-visible {
+  border-color: rgba(161, 132, 245, 0.7);
+}
+/* 多行備註欄用同一組樣式，只是高度由內容決定 */
+textarea.vr-input {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
 /* product-*.dc.html — 「Where it is used」的產業 chip 連結 */
 .vr-pill-link {
   border-radius: 999px;

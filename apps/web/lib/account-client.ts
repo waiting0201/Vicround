@@ -164,8 +164,37 @@ export async function register(payload: RegisterPayload): Promise<{ status: stri
   return post('/register', payload);
 }
 
-export async function forgotPassword(email: string): Promise<{ message?: string }> {
+export async function forgotPassword(email: string): Promise<null> {
   return post('/forgot-password', { email });
+}
+
+/**
+ * 用信裡的一次性 token 驗證信箱。回傳的 `status` 是驗證後的帳號狀態
+ * （網域規則是 AutoApprove 就直接 `approved`，否則 `pendingApproval`）。
+ */
+export async function verifyEmail(token: string): Promise<{ status: string; message: string }> {
+  return post('/verify-email', { token });
+}
+
+/** 重寄驗證信。<b>不論 Email 是否存在都回 202</b>，前端據此顯示同一句話。 */
+export async function resendVerification(email: string): Promise<null> {
+  return post('/resend-verification', { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<null> {
+  return post('/reset-password', { token, newPassword });
+}
+
+/**
+ * 已登入時改密碼。走 `accountFetch` 而不是 `post`——這一支需要 access token。
+ * 成功後後端會輪替 SecurityStamp 並撤銷其他裝置的 refresh token，
+ * 但**目前這個分頁的 access token 仍然有效**，不必重新登入。
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<null> {
+  return accountFetch<null>('/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
 }
 
 export async function getProfile(): Promise<MemberProfile> {
@@ -242,6 +271,41 @@ export type SampleRequestDetail = SampleRequestSummary & {
   };
   items: SampleRequestItem[];
 };
+
+/** 新增樣品申請的輸入。欄位名對齊後端的 `SampleRequestCreateRequest`。 */
+export type SampleRequestCreateInput = {
+  shipToName: string;
+  shipToCompany: string;
+  shipToAddressLine1: string;
+  shipToAddressLine2?: string;
+  shipToCity: string;
+  shipToState?: string;
+  shipToPostalCode: string;
+  shipToCountryCode: string;
+  shipToPhone: string;
+  projectName?: string;
+  targetApplication?: string;
+  memberNote?: string;
+  items: {
+    /** 留空代表「清單中沒有」——後端允許品項不綁產品，只填規格。 */
+    productSlug?: string;
+    gradeCode?: string;
+    requestedSpec?: string;
+    quantity: number;
+    unit?: string;
+  }[];
+};
+
+/**
+ * 送出一張新的樣品申請。**只有 `approved` 的會員送得出去**，其餘狀態後端回 403
+ * 並附上目前狀態（docs/cms-api.md）。
+ */
+export async function createSampleRequest(input: SampleRequestCreateInput): Promise<SampleRequestDetail> {
+  return accountFetch<SampleRequestDetail>('/sample-requests', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
 
 export async function listSampleRequests(): Promise<SampleRequestSummary[]> {
   return accountFetch<SampleRequestSummary[]>('/sample-requests');

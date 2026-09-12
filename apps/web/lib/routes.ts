@@ -25,6 +25,7 @@ export const ROUTES = {
   downloads: '/resources/downloads',
   news: '/news',
   contact: '/contact',
+  search: '/search',
   privacy: '/privacy',
   member: '/member',
   account: '/account',

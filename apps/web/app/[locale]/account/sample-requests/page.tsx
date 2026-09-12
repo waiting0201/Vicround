@@ -35,6 +35,7 @@ export default async function SampleRequestsPage({ params }: Params) {
         empty: t('account.samples.empty'),
         submitted: t('account.samples.submitted'),
         items: t('account.samples.items'),
+        create: t('account.newSampleRequest'),
       }}
     />
   );

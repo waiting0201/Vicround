@@ -1,5 +1,5 @@
 import { HeaderClient, type HeaderModel } from './HeaderClient';
-import { getNavigation } from '@/lib/content-api';
+import { getCategories, getNavigation } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import type { Locale } from '@/lib/locale';
 import { localeHref, navItems, searchChips } from '@/lib/nav';
@@ -18,7 +18,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
   // 導覽由 `NavigationItems` 供應（路徑已在後端由 Ref*Id 解析好）。
   // 後端取不到時退回 lib/nav 的靜態結構 —— 選單是每一頁的骨架，不該因為 API 抖動就整條消失。
-  const groups = await getNavigation(locale);
+  // 產品線下拉的選項與詢問單送出的 slug 都來自 Categories，不在前端寫死三個名字
+  // —— 產品線是編輯者維護的內容，第四條產品線上線時選單要自己長出來。
+  const [groups, categories] = await Promise.all([getNavigation(locale), getCategories(locale)]);
   const header = groups?.find((group) => group.location === 'header')?.items ?? [];
   const chips = groups?.find((group) => group.location === 'searchChip')?.items ?? [];
 
@@ -26,6 +28,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     locale,
     homeHref: `/${locale}`,
     contactHref: localeHref(locale, ROUTES.contact),
+    searchHref: localeHref(locale, ROUTES.search),
     memberHref: localeHref(locale, ROUTES.member),
     privacyHref: localeHref(locale, ROUTES.privacy),
     contactLabel: t('nav.contact'),
@@ -85,10 +88,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       emailPlaceholder: t('contactDialog.emailPlaceholder'),
       productLine: t('contactDialog.productLine'),
       productLines: [
-        t('mega.products.opticalFilm.label'),
-        t('mega.products.textileFoam.label'),
-        t('mega.products.acoustic.label'),
-        t('contactDialog.productLineOther'),
+        ...(categories ?? []).map((category) => ({
+          slug: category.slug,
+          label: category.shortName ?? category.name ?? category.slug,
+        })),
+        // 「其他」送空字串：後端對不到 slug 會回 400，所以不能送一個假的 slug 過去。
+        { slug: '', label: t('contactDialog.productLineOther') },
       ],
       application: t('contactDialog.application'),
       applicationPlaceholder: t('contactDialog.applicationPlaceholder'),
@@ -98,8 +103,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       consentLink: t('contactDialog.consentLink'),
       consentSuffix: t('contactDialog.consentSuffix'),
       submit: t('contactDialog.submit'),
+      sending: t('contactDialog.sending'),
       sentTitle: t('contactDialog.sentTitle'),
       sentBody: t('contactDialog.sentBody'),
+      reference: t('contactForm.reference'),
+      failed: t('contactForm.failed'),
       close: t('contactDialog.close'),
     },
   };

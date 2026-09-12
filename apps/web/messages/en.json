@@ -115,6 +115,22 @@
       "acousticMesh": "IP67 acoustic mesh",
       "isoCert": "ISO 14001 certificate",
       "specSheet": "Spec sheet download"
+    },
+    "pageTitle": "Search",
+    "pageDescription": "Search VicRound products, solutions, technical articles and documents.",
+    "resultsLabel": "results",
+    "emptyTitle": "No matches",
+    "emptyBody": "Try a broader keyword, or browse the product lines and solutions from the menu.",
+    "promptBody": "Type at least two characters to search products, solutions, articles and documents.",
+    "moreHint": "Only the first matches are shown. Add another word to narrow the search.",
+    "kinds": {
+      "product": "Product",
+      "category": "Product line",
+      "solution": "Solution",
+      "page": "Page",
+      "article": "Article",
+      "download": "Document",
+      "faq": "FAQ"
     }
   },
   "cta": {
@@ -144,7 +160,8 @@
     "sentTitle": "Thank you — we've received your message.",
     "sentBody": "Our team responds within two business days.",
     "close": "Close",
-    "consentSuffix": "."
+    "consentSuffix": ".",
+    "sending": "Sending…"
   },
   "common": {
     "skipToContent": "Skip to content",
@@ -250,6 +267,49 @@
       "rejected": "Rejected",
       "cancelled": "Cancelled",
       "unknown": "—"
+    },
+    "password": "Password",
+    "newSampleRequest": "New sample request",
+    "passwordScreen": {
+      "title": "Change password",
+      "lead": "Your new password must be at least 12 characters. Other devices stay signed in until their session expires.",
+      "current": "Current password",
+      "next": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update password",
+      "saved": "Password updated.",
+      "mismatch": "The two passwords do not match.",
+      "failed": "Could not update the password."
+    },
+    "newSample": {
+      "title": "New sample request",
+      "lead": "Tell us what to send and where. Requests are reviewed before shipping, usually within one business day.",
+      "projectTitle": "Project",
+      "projectName": "Project name",
+      "targetApplication": "Target application",
+      "memberNote": "Notes for our team",
+      "shipToTitle": "Shipping address",
+      "shipToName": "Recipient *",
+      "shipToCompany": "Company *",
+      "shipToAddress1": "Address *",
+      "shipToAddress2": "Address line 2",
+      "shipToCity": "City *",
+      "shipToState": "State / region",
+      "shipToPostalCode": "Postal code *",
+      "shipToCountry": "Country code *",
+      "shipToPhone": "Phone *",
+      "itemsTitle": "Items",
+      "product": "Product",
+      "productAny": "Not listed / to be advised",
+      "gradeCode": "Grade or code",
+      "requestedSpec": "Requested spec",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "addItem": "Add another item",
+      "removeItem": "Remove",
+      "submit": "Submit request",
+      "failed": "Could not submit the request.",
+      "prefill": "Prefilled from your profile."
     }
   },
   "certification": {
@@ -358,7 +418,41 @@
     },
     "footnoteBefore": "Not ready for an account? Public spec summaries and FAQs are open to everyone in ",
     "footnoteLink": "Resources",
-    "footnoteAfter": "."
+    "footnoteAfter": ".",
+    "forgot": {
+      "title": "Forgot your password?",
+      "lead": "Enter the business email you registered with. If an account exists, we will send a reset link.",
+      "email": "Business email",
+      "submit": "Send reset link",
+      "sent": "If that address is registered, a reset link is on its way. It is valid for two hours.",
+      "back": "Back to sign in",
+      "failed": "Could not send the email. Please try again."
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "lead": "Your new password must be at least 12 characters. Signing in on other devices will be required again.",
+      "password": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update password",
+      "done": "Your password has been updated. You can sign in with it now.",
+      "mismatch": "The two passwords do not match.",
+      "missingToken": "This link is incomplete. Request a new reset email below.",
+      "failed": "Could not update the password. The link may have expired.",
+      "signIn": "Go to sign in"
+    },
+    "verify": {
+      "title": "Email verification",
+      "working": "One moment while we confirm your address…",
+      "doneTitle": "Email confirmed",
+      "failedTitle": "This link no longer works",
+      "failedBody": "Verification links expire after three days and can only be used once. Enter your email to get a new one.",
+      "missingToken": "This link is incomplete. Check the address in the email, or request a new link below.",
+      "email": "Business email",
+      "resend": "Send a new link",
+      "resent": "If that address is waiting for verification, a new link is on its way.",
+      "resendFailed": "Could not send the email. Please try again.",
+      "toAccount": "Go to the member area"
+    }
   },
   "contactForm": {
     "title": "Send an inquiry",

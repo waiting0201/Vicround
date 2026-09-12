@@ -115,6 +115,22 @@
       "acousticMesh": "IP67 聲學網布",
       "isoCert": "ISO 14001 證書",
       "specSheet": "規格書下載"
+    },
+    "pageTitle": "搜尋",
+    "pageDescription": "搜尋盈絲實業的產品、解決方案、技術文章與文件。",
+    "resultsLabel": "筆結果",
+    "emptyTitle": "沒有符合的結果",
+    "emptyBody": "請換個較廣的關鍵字，或從選單瀏覽產品線與解決方案。",
+    "promptBody": "輸入至少兩個字，即可搜尋產品、解決方案、文章與文件。",
+    "moreHint": "僅顯示前面幾筆結果，請再加一個關鍵字縮小範圍。",
+    "kinds": {
+      "product": "產品",
+      "category": "產品線",
+      "solution": "解決方案",
+      "page": "頁面",
+      "article": "文章",
+      "download": "文件",
+      "faq": "常見問題"
     }
   },
   "cta": {
@@ -144,7 +160,8 @@
     "submit": "送出訊息",
     "sentTitle": "感謝您 —— 我們已收到您的訊息。",
     "sentBody": "團隊將於兩個工作天內回覆。",
-    "close": "關閉"
+    "close": "關閉",
+    "sending": "傳送中…"
   },
   "common": {
     "skipToContent": "跳至主要內容",
@@ -250,6 +267,49 @@
       "rejected": "未通過",
       "cancelled": "已取消",
       "unknown": "—"
+    },
+    "password": "變更密碼",
+    "newSampleRequest": "新增樣品申請",
+    "passwordScreen": {
+      "title": "變更密碼",
+      "lead": "新密碼至少 12 個字元。其他裝置會維持登入，直到該工作階段到期。",
+      "current": "目前密碼",
+      "next": "新密碼",
+      "confirm": "確認新密碼",
+      "submit": "更新密碼",
+      "saved": "密碼已更新。",
+      "mismatch": "兩次輸入的密碼不一致。",
+      "failed": "密碼更新失敗。"
+    },
+    "newSample": {
+      "title": "新增樣品申請",
+      "lead": "請說明需要哪些樣品與寄送地點。申請會先經審核再出貨，通常一個工作天內完成。",
+      "projectTitle": "專案資訊",
+      "projectName": "專案名稱",
+      "targetApplication": "目標應用",
+      "memberNote": "給團隊的備註",
+      "shipToTitle": "寄送地址",
+      "shipToName": "收件人 *",
+      "shipToCompany": "公司 *",
+      "shipToAddress1": "地址 *",
+      "shipToAddress2": "地址第二行",
+      "shipToCity": "城市 *",
+      "shipToState": "州／省／地區",
+      "shipToPostalCode": "郵遞區號 *",
+      "shipToCountry": "國家代碼 *",
+      "shipToPhone": "聯絡電話 *",
+      "itemsTitle": "申請品項",
+      "product": "產品",
+      "productAny": "清單中沒有／待討論",
+      "gradeCode": "等級或型號",
+      "requestedSpec": "需求規格",
+      "quantity": "數量",
+      "unit": "單位",
+      "addItem": "再加一個品項",
+      "removeItem": "移除",
+      "submit": "送出申請",
+      "failed": "申請送出失敗。",
+      "prefill": "已依您的個人資料預先填入。"
     }
   },
   "certification": {
@@ -358,7 +418,41 @@
     },
     "footnoteBefore": "還不想開帳號？公開的規格摘要與常見問題都在",
     "footnoteLink": "資源中心",
-    "footnoteAfter": "，開放給所有人。"
+    "footnoteAfter": "，開放給所有人。",
+    "forgot": {
+      "title": "忘記密碼？",
+      "lead": "請輸入註冊時使用的公司電子郵件。若該帳號存在，我們會寄出重設密碼的連結。",
+      "email": "公司電子郵件",
+      "submit": "寄出重設連結",
+      "sent": "若這個信箱已註冊，重設連結已寄出，有效時間兩小時。",
+      "back": "回到登入",
+      "failed": "寄送失敗，請稍後再試。"
+    },
+    "reset": {
+      "title": "設定新密碼",
+      "lead": "新密碼至少 12 個字元。完成後，其他裝置需要重新登入。",
+      "password": "新密碼",
+      "confirm": "確認新密碼",
+      "submit": "更新密碼",
+      "done": "密碼已更新，現在可以用新密碼登入。",
+      "mismatch": "兩次輸入的密碼不一致。",
+      "missingToken": "這個連結不完整，請在下方重新索取重設信。",
+      "failed": "密碼更新失敗，連結可能已過期。",
+      "signIn": "前往登入"
+    },
+    "verify": {
+      "title": "信箱驗證",
+      "working": "正在確認您的信箱，請稍候…",
+      "doneTitle": "信箱已驗證",
+      "failedTitle": "這個連結已失效",
+      "failedBody": "驗證連結三天後失效，且只能使用一次。請輸入信箱以重新索取。",
+      "missingToken": "這個連結不完整，請確認信件中的網址，或在下方重新索取。",
+      "email": "公司電子郵件",
+      "resend": "重寄驗證連結",
+      "resent": "若這個信箱正在等待驗證，新的連結已寄出。",
+      "resendFailed": "寄送失敗，請稍後再試。",
+      "toAccount": "前往會員專區"
+    }
   },
   "contactForm": {
     "title": "送出詢問",

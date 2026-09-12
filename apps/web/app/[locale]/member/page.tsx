@@ -73,6 +73,7 @@ export default async function MemberPage({ params }: Params) {
             <MemberForms
               locale={locale}
               accountHref={localeHref(locale, ROUTES.account)}
+              forgotHref={localeHref(locale, `${ROUTES.member}/forgot`)}
               roleValues={MEMBER_ROLE_VALUES}
               privacyHref={localeHref(locale, ROUTES.privacy)}
               labels={{

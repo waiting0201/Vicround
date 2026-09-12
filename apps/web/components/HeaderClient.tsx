@@ -44,7 +44,8 @@ export type HeaderModel = {
     email: string;
     emailPlaceholder: string;
     productLine: string;
-    productLines: string[];
+    /** 送出的是 slug（後端據此連到 Categories）；「其他」的 slug 為空字串。 */
+    productLines: { slug: string; label: string }[];
     application: string;
     applicationPlaceholder: string;
     targetSpec: string;
@@ -53,10 +54,14 @@ export type HeaderModel = {
     consentLink: string;
     consentSuffix: string;
     submit: string;
+    sending: string;
     sentTitle: string;
     sentBody: string;
+    reference: string;
+    failed: string;
     close: string;
   };
+  searchHref: string;
 };
 
 const MEGA_STYLE: React.CSSProperties = {
@@ -89,13 +94,11 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
   const [menu, setMenu] = useState<string | null>(null);
   const [search, setSearch] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [sent, setSent] = useState(false);
 
   // PageCTA / 其他區塊用 `vicround:contact` 事件叫出這個 dialog（同 mockup）
   useEffect(() => {
     const open = () => {
       setDialogOpen(true);
-      setSent(false);
     };
     window.addEventListener('vicround:contact', open);
     return () => window.removeEventListener('vicround:contact', open);
@@ -257,9 +260,26 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
           <div style={MEGA_STYLE}>
             <div style={PANEL_INNER}>
               <p style={{ ...EYEBROW, margin: '0 0 16px' }}>{model.searchLabel}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* 送出導向 /{locale}/search?q= —— 結果頁是可分享、可加書籤的網址，
+                  而不是只存在於這個面板裡的狀態。 */}
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const query = new FormData(event.currentTarget).get('q')?.toString().trim() ?? '';
+
+                  if (query.length === 0) {
+                    return;
+                  }
+
+                  setSearch(false);
+                  router.push(`${model.searchHref}?q=${encodeURIComponent(query)}`);
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+              >
                 <input
                   type="search"
+                  name="q"
+                  autoFocus
                   placeholder={model.search.placeholder}
                   style={{
                     flex: 1,
@@ -274,9 +294,8 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
                     borderRadius: 999,
                   }}
                 />
-                {/* TODO 站內搜尋端點（GET /api/v1/search）尚未定案，見 docs/database.md §19.5 */}
                 <button
-                  type="button"
+                  type="submit"
                   style={{
                     flex: '0 0 auto',
                     height: 52,
@@ -291,7 +310,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
                 >
                   {model.search.submit}
                 </button>
-              </div>
+              </form>
               <p
                 style={{
                   margin: '20px 0 10px',
@@ -359,14 +378,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
         )}
       </header>
 
-      {dialogOpen && (
-        <ContactDialog
-          model={model}
-          sent={sent}
-          onSent={() => setSent(true)}
-          onClose={() => setDialogOpen(false)}
-        />
-      )}
+      {dialogOpen && <ContactDialog model={model} onClose={() => setDialogOpen(false)} />}
     </>
   );
 }
@@ -394,22 +406,56 @@ const FIELD: React.CSSProperties = {
  * 聯絡表單 dialog（Header.dc.html 的下半段）。
  *
  * <p>
- * ⚠️ 目前只有版型與前端狀態；**送出還沒接** `POST /api/v1/contact`
- * （需要 anti-bot token 與 `sourceUrl` / `culture`，見 docs/cms-api.md）。
+ * 送出與 `/contact` 頁的表單走同一條路：同源的 `/api/contact` → Content API 的
+ * `POST /v1/contact`。兩邊送的欄位也一致（產品線送 slug、帶 `sourceUrl` 與 `culture`、
+ * 附蜜罐欄位），因此後端看到的是同一種詢問單，只是入口不同。
  * </p>
  */
-function ContactDialog({
-  model,
-  sent,
-  onSent,
-  onClose,
-}: {
-  model: HeaderModel;
-  sent: boolean;
-  onSent: () => void;
-  onClose: () => void;
-}) {
+function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => void }) {
   const d = model.dialog;
+  const [reference, setReference] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFailed(false);
+    setSending(true);
+
+    const form = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.get('name'),
+          company: form.get('company'),
+          email: form.get('email'),
+          categorySlug: form.get('categorySlug') || undefined,
+          application: form.get('application') || undefined,
+          targetSpec: form.get('targetSpec') || undefined,
+          sourceUrl: window.location.href,
+          culture: model.locale,
+          consent: form.get('consent') === 'on',
+          // 蜜罐：真人看不到這個欄位，有值就是機器人（後端會擋下）
+          website: form.get('website') || undefined,
+        }),
+      });
+
+      const body = (await response.json()) as { success: boolean; data?: { referenceNumber?: string } };
+
+      if (response.ok && body.success && body.data?.referenceNumber) {
+        setReference(body.data.referenceNumber);
+      } else {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div
@@ -466,7 +512,7 @@ function ContactDialog({
           </button>
         </div>
 
-        {sent ? (
+        {reference ? (
           <div
             style={{
               marginTop: 28,
@@ -494,9 +540,38 @@ function ContactDialog({
             >
               {d.sentBody}
             </p>
+            <p
+              style={{
+                margin: '18px 0 0',
+                font: "500 12px/1.2 'Geologica', sans-serif",
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.5)',
+              }}
+            >
+              {d.reference}
+            </p>
+            <p
+              style={{
+                margin: '6px 0 0',
+                font: "600 1.25rem/1.2 'IBM Plex Mono', monospace",
+                color: '#a184f5',
+              }}
+            >
+              {reference}
+            </p>
           </div>
         ) : (
-          <>
+          <form onSubmit={onSubmit}>
+            {/* 蜜罐：版面上看不見，真人不會填到（ContactForm 同一招） */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+            />
             <div
               style={{
                 marginTop: 24,
@@ -507,31 +582,33 @@ function ContactDialog({
             >
               <label style={LABEL}>
                 {d.name}
-                <input type="text" placeholder={d.namePlaceholder} style={FIELD} />
+                <input type="text" name="name" required placeholder={d.namePlaceholder} style={FIELD} />
               </label>
               <label style={LABEL}>
                 {d.company}
-                <input type="text" placeholder={d.companyPlaceholder} style={FIELD} />
+                <input type="text" name="company" required placeholder={d.companyPlaceholder} style={FIELD} />
               </label>
               <label style={LABEL}>
                 {d.email}
-                <input type="email" placeholder={d.emailPlaceholder} style={FIELD} />
+                <input type="email" name="email" required placeholder={d.emailPlaceholder} style={FIELD} />
               </label>
               <label style={LABEL}>
                 {d.productLine}
-                <select style={FIELD}>
+                <select name="categorySlug" style={FIELD} defaultValue="">
                   {d.productLines.map((line) => (
-                    <option key={line}>{line}</option>
+                    <option key={line.slug || 'other'} value={line.slug}>
+                      {line.label}
+                    </option>
                   ))}
                 </select>
               </label>
               <label style={LABEL}>
                 {d.application}
-                <input type="text" placeholder={d.applicationPlaceholder} style={FIELD} />
+                <input type="text" name="application" placeholder={d.applicationPlaceholder} style={FIELD} />
               </label>
               <label style={LABEL}>
                 {d.targetSpec}
-                <input type="text" placeholder={d.targetSpecPlaceholder} style={FIELD} />
+                <input type="text" name="targetSpec" placeholder={d.targetSpecPlaceholder} style={FIELD} />
               </label>
             </div>
 
@@ -547,6 +624,8 @@ function ContactDialog({
             >
               <input
                 type="checkbox"
+                name="consent"
+                required
                 style={{ marginTop: 3, accentColor: '#6436ef', width: 16, height: 16 }}
               />
               <span>
@@ -558,10 +637,23 @@ function ContactDialog({
               </span>
             </label>
 
+            {failed && (
+              <p
+                role="alert"
+                style={{
+                  margin: '16px 0 0',
+                  font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                  color: '#ff9a9a',
+                }}
+              >
+                {d.failed}
+              </p>
+            )}
+
             <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
               <button
-                type="button"
-                onClick={onSent}
+                type="submit"
+                disabled={sending}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -572,15 +664,16 @@ function ContactDialog({
                   color: '#ffffff',
                   font: "600 15px/1 Geologica, sans-serif",
                   border: 'none',
-                  cursor: 'pointer',
+                  cursor: sending ? 'progress' : 'pointer',
+                  opacity: sending ? 0.6 : 1,
                   borderRadius: 999,
                 }}
               >
-                {d.submit}
+                {sending ? d.sending : d.submit}
                 <span aria-hidden="true">→</span>
               </button>
             </div>
-          </>
+          </form>
         )}
       </div>
     </div>
