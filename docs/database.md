@@ -1371,8 +1371,8 @@ B 層**只補缺、不覆寫**——編輯者改過的內容不能被 seeder 蓋
 ```
 Roles:     Admin, Editor
 
-Users:     Username           = superadmin
-           UsernameNormalized = SUPERADMIN
+Users:     Username           = sa@system.local
+           UsernameNormalized = SA@SYSTEM.LOCAL
            Email              = NULL
            DisplayName        = System Administrator
            PasswordHash       = PBKDF2-HMAC-SHA256(i=600000, salt=16B CSPRNG) of "Admin@123"
@@ -1386,6 +1386,15 @@ UserRoles: (sa, Admin)
 
 **所有環境一律使用固定密碼 `Admin@123`，不強制首次登入改密碼**（專案決策）。可用環境變數
 `VICROUND_SA_INITIAL_PASSWORD` 覆寫；未設定即為 `Admin@123`。
+
+帳號寫在 `BootstrapSeeder.SuperAdminUsername`，**不走設定、也不能用環境變數覆寫**。它是唯一
+一個不套 §13 帳號字元集的帳號——`@` 不在允許字元裡，這裡刻意只把它當字串。因此**不要從後台的
+「使用者」單元編輯這一列**：儲存時會過 `Usernames.Require`，回 400 格式錯誤。改密碼請走
+`POST /api/admin/auth/change-password`。
+
+改這個常數只影響「將來 seed 時寫什麼」，不會改到已存在的列；既有資料庫由
+`20260912064518_RenameSuperAdminUsername` 從 `superadmin` 改名過來。若兩者不同步，升級上來的
+資料庫與全新 seed 的資料庫會是兩個不同帳號。
 
 > ⚠️ **上線前必須人工更改此密碼。** `Admin@123` 出現在本文件中，等同公開。`MustChangePassword`
 > 欄位已保留（`bit NOT NULL DEFAULT 0`），若日後要改為強制首登改密碼，作法是：access token 加

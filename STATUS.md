@@ -299,7 +299,7 @@ apps/web/
 | 時間戳 | `AuditingSaveChangesInterceptor`（不用 trigger —— 會與 EF 的 `OUTPUT` 衝突） |
 | 密碼 | `Pbkdf2PasswordHasher`：PHC 單欄位字串，支援逐使用者漸進升級（**刻意不跟 NTI 用 BCrypt**，理由見 database.md §14.2） |
 | 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
-| 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin（帳號 `superadmin`）、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
+| 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin（帳號 `sa@system.local`）、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
 | 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
