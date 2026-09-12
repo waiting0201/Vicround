@@ -19,6 +19,9 @@ public static class DbConventions
     public const int SlugMaxLength = 200;
     public const int CultureCodeMaxLength = 10;
     public const int EmailMaxLength = 320;
+
+    /// <summary>後台登入帳號的長度上限（<c>Users.Username</c>）。</summary>
+    public const int UsernameMaxLength = 64;
     public const int IconNameMaxLength = 64;
     public const int ColorHexMaxLength = 7;
     public const int UrlMaxLength = 512;

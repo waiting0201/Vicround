@@ -61,6 +61,7 @@ var connectionString =
 
 // ── EF Core（寫入 + schema 權威）
 services.AddSingleton<AuditingSaveChangesInterceptor>();
+services.AddSingleton<IdentityNormalizationInterceptor>();
 services.AddDbContext<VicRoundDbContext>((provider, options) =>
 {
     options.UseSqlServer(connectionString, sql =>
@@ -69,7 +70,9 @@ services.AddDbContext<VicRoundDbContext>((provider, options) =>
         sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     });
 
-    options.AddInterceptors(provider.GetRequiredService<AuditingSaveChangesInterceptor>());
+    options.AddInterceptors(
+        provider.GetRequiredService<AuditingSaveChangesInterceptor>(),
+        provider.GetRequiredService<IdentityNormalizationInterceptor>());
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 

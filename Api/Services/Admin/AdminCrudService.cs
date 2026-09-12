@@ -39,9 +39,13 @@ public interface IAdminCrudService
 public sealed class AdminCrudService(
     VicRoundDbContext db,
     IDbConnection connection,
-    IRevalidationService revalidation) : IAdminCrudService
+    IRevalidationService revalidation,
+    IPasswordHasher passwordHasher) : IAdminCrudService
 {
     private const int MaxPageSize = 200;
+
+    /// <summary>與 <c>AdminAuthService.ChangePasswordAsync</c> 同一個下限。</summary>
+    private const int MinPasswordLength = 12;
 
     // ── 讀 ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +127,7 @@ public sealed class AdminCrudService(
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
             AdminMapper.Apply(instance, entity, body);
+            ApplyIdentityRules(instance, body, isNew: true);
 
             db.Add(instance);
             await db.SaveChangesAsync(ct);
@@ -158,6 +163,7 @@ public sealed class AdminCrudService(
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
             AdminMapper.Apply(instance, entity, body);
+            ApplyIdentityRules(instance, body, isNew: false);
             await db.SaveChangesAsync(ct);
 
             await SaveLinksAndChildrenAsync(resource, key, body, ct);
@@ -316,6 +322,50 @@ public sealed class AdminCrudService(
     /// 之後的屬性變更才會被 <c>SaveChanges</c> 看見。
     /// </para>
     /// </summary>
+    /// <summary>
+    /// 後台帳號的兩件事，泛型對映做不到：帳號格式，以及<b>設定密碼</b>。
+    /// <para>
+    /// <c>PasswordHash</c> 永遠不接受從請求直接寫入（<c>AdminMapper</c> 的 read-only 清單），
+    /// 所以密碼只能從這裡進來——後台沒有寄信管道，新帳號的密碼就是由管理員當面給，
+    /// 沒有這條路徑，從後台開的帳號會是一個誰都登不進去的空殼。
+    /// </para>
+    /// </summary>
+    private void ApplyIdentityRules(object instance, JsonElement body, bool isNew)
+    {
+        if (instance is not User user)
+        {
+            return;
+        }
+
+        user.Username = Usernames.Require(user.Username);
+
+        var password = body.ValueKind == JsonValueKind.Object
+            && body.TryGetProperty("password", out var value)
+            && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+
+        if (!string.IsNullOrEmpty(password))
+        {
+            if (password.Length < MinPasswordLength)
+            {
+                throw AppException.BadRequest(
+                    ErrorCodes.ValidationFormat, $"密碼至少 {MinPasswordLength} 個字元。");
+            }
+
+            user.PasswordHash = passwordHasher.Hash(password);
+            user.PasswordChangedAt = Clock.UtcNow;
+
+            // 換密碼＝輪替 SecurityStamp：對方在別處的工作階段跟著失效，
+            // 「幫某人重設密碼」才真的把他登出，而不是多一組能用的密碼。
+            user.SecurityStamp = Guid.NewGuid();
+        }
+        else if (isNew)
+        {
+            throw AppException.BadRequest(ErrorCodes.ValidationRequired, "新帳號必須設定密碼。");
+        }
+    }
+
     private async Task<object?> FindTrackedAsync(Type type, object key, CancellationToken ct)
     {
         var instance = await db.FindAsync(type, [key], ct);

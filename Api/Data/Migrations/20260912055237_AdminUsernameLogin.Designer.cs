@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VicRound.Api.Data;
 
@@ -11,9 +12,11 @@ using VicRound.Api.Data;
 namespace VicRound.Api.Data.Migrations
 {
     [DbContext(typeof(VicRoundDbContext))]
-    partial class VicRoundDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912055237_AdminUsernameLogin")]
+    partial class AdminUsernameLogin
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

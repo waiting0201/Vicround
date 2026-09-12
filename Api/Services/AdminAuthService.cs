@@ -12,7 +12,7 @@ namespace VicRound.Api.Services;
 
 public interface IAdminAuthService
 {
-    Task<SignInResult> LoginAsync(string? email, string? password, CancellationToken cancellationToken);
+    Task<SignInResult> LoginAsync(string? username, string? password, CancellationToken cancellationToken);
     Task<SignInResult> RefreshAsync(string? refreshToken, CancellationToken cancellationToken);
     Task LogoutAsync(string? refreshToken, CancellationToken cancellationToken);
     Task<CurrentUserDto> GetCurrentAsync(ClaimsPrincipal principal, CancellationToken cancellationToken);
@@ -43,25 +43,27 @@ public sealed class AdminAuthService(
 
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
-    public async Task<SignInResult> LoginAsync(string? email, string? password, CancellationToken cancellationToken)
+    public async Task<SignInResult> LoginAsync(string? username, string? password, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            throw AppException.BadRequest(ErrorCodes.ValidationRequired, "請輸入 Email 與密碼。");
+            throw AppException.BadRequest(ErrorCodes.ValidationRequired, "請輸入帳號與密碼。");
         }
 
-        var normalized = email.Trim().ToUpperInvariant();
+        // 這裡只正規化、不驗格式：格式錯的帳號也要走完「帳號或密碼不正確」那條路，
+        // 否則錯誤訊息就成了「這個帳號長得像不像我們的帳號」的探測器。
+        var normalized = Usernames.Normalize(username);
 
         var user = await db.Users
             .AsTracking()
             .Include(u => u.UserRoles)
             .ThenInclude(r => r.Role)
-            .SingleOrDefaultAsync(u => u.EmailNormalized == normalized, cancellationToken);
+            .SingleOrDefaultAsync(u => u.UsernameNormalized == normalized, cancellationToken);
 
         // 帳號不存在與密碼錯誤回同一個錯誤碼：不讓登入頁變成帳號存在與否的探測器。
         if (user is null)
         {
-            throw new AppException(ErrorCodes.AuthInvalidCredentials, "Email 或密碼不正確。", 401);
+            throw new AppException(ErrorCodes.AuthInvalidCredentials, "帳號或密碼不正確。", 401);
         }
 
         if (!user.IsActive)
@@ -87,11 +89,11 @@ public sealed class AdminAuthService(
             {
                 user.LockoutEndsAt = Clock.UtcNow.Add(LockoutDuration);
                 user.FailedLoginCount = 0;
-                logger.LogWarning("帳號 {Email} 連續登入失敗，鎖定至 {Until}。", user.Email, user.LockoutEndsAt);
+                logger.LogWarning("帳號 {Username} 連續登入失敗，鎖定至 {Until}。", user.Username, user.LockoutEndsAt);
             }
 
             await db.SaveChangesAsync(cancellationToken);
-            throw new AppException(ErrorCodes.AuthInvalidCredentials, "Email 或密碼不正確。", 401);
+            throw new AppException(ErrorCodes.AuthInvalidCredentials, "帳號或密碼不正確。", 401);
         }
 
         // 參數升級：驗證成功時順手以新參數重算，使用者無感（database.md §14.2）。
@@ -183,7 +185,7 @@ public sealed class AdminAuthService(
 
         return new CurrentUserDto(
             user.Id.ToString(),
-            user.Email,
+            user.Username,
             user.DisplayName,
             user.UserRoles.Select(r => r.Role?.Name ?? string.Empty).Where(name => name.Length > 0).ToArray());
     }
@@ -228,7 +230,7 @@ public sealed class AdminAuthService(
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Name, user.Username),
             new("name", user.DisplayName),
             // SecurityStamp 進 token：日後要「立刻失效」時比對這一欄即可，不必查 DB 撤銷清單。
             new("security_stamp", user.SecurityStamp.ToString()),

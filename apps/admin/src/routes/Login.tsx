@@ -23,7 +23,7 @@ export function Login() {
     setError(null);
 
     try {
-      await login(String(form.get('email')), String(form.get('password')));
+      await login(String(form.get('username')), String(form.get('password')));
       navigate(`/${HOME_PATH}`, { replace: true });
     } catch (err) {
       // 不區分「帳號不存在」與「密碼錯誤」—— 那等於送出一份有效帳號清單
@@ -42,12 +42,14 @@ export function Login() {
         <h1 className="text-lg font-semibold">VicRound CMS</h1>
 
         <label className="flex flex-col gap-1 text-sm">
-          電子郵件
+          帳號
           <input
-            name="email"
-            type="email"
+            name="username"
+            type="text"
             required
             autoComplete="username"
+            spellCheck={false}
+            autoCapitalize="none"
             className="rounded border border-[var(--border-1)] px-3 py-2"
           />
         </label>

@@ -4,7 +4,9 @@ namespace VicRound.Api.Models.Dtos;
 
 public sealed class LoginRequest
 {
-    public string? Email { get; set; }
+    /// <summary>登入帳號（<c>Users.Username</c>），<b>不是 Email</b>。</summary>
+    public string? Username { get; set; }
+
     public string? Password { get; set; }
 }
 
@@ -14,7 +16,7 @@ public sealed class LoginRequest
 /// </summary>
 public sealed record AccessTokenDto(string AccessToken, int ExpiresInSeconds, bool MustChangePassword);
 
-public sealed record CurrentUserDto(string Id, string Email, string DisplayName, string[] Roles);
+public sealed record CurrentUserDto(string Id, string Username, string DisplayName, string[] Roles);
 
 public sealed class ChangePasswordRequest
 {

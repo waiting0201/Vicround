@@ -12,8 +12,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
 
-        builder.Property(u => u.Email).HasMaxLength(DbConventions.EmailMaxLength).IsRequired();
-        builder.Property(u => u.EmailNormalized).HasMaxLength(DbConventions.EmailMaxLength).IsRequired();
+        builder.Property(u => u.Username).HasMaxLength(DbConventions.UsernameMaxLength).IsRequired();
+        builder.Property(u => u.UsernameNormalized).HasMaxLength(DbConventions.UsernameMaxLength).IsRequired();
+        builder.Property(u => u.Email).HasMaxLength(DbConventions.EmailMaxLength);
         builder.Property(u => u.DisplayName).HasMaxLength(160).IsRequired();
         builder.Property(u => u.PasswordHash).HasMaxLength(256).IsRequired();
         builder.Property(u => u.PreferredCulture).HasMaxLength(DbConventions.CultureCodeMaxLength);
@@ -25,8 +26,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(u => u.PreferredCulture)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // unique 建在 normalized 欄位上，不是 Email（§0.4）。
-        builder.HasIndex(u => u.EmailNormalized, "UX_Users_EmailNormalized").IsUnique();
+        // unique 建在 normalized 欄位上，不是 Username（§0.4）。Email 是聯絡欄位，不建唯一索引。
+        builder.HasIndex(u => u.UsernameNormalized, "UX_Users_UsernameNormalized").IsUnique();
     }
 }
 

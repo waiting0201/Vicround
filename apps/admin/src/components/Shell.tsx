@@ -100,7 +100,7 @@ export function Shell() {
               {menuOpen && (
                 <div className="absolute right-0 top-11 z-40 w-56 rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-card)] p-1 shadow-[var(--shadow-md)]">
                   <div className="border-b border-[var(--border-1)] px-3 py-2">
-                    <p className="truncate text-sm text-[var(--fg-1)]">{me.data?.email ?? '—'}</p>
+                    <p className="truncate text-sm text-[var(--fg-1)]">{me.data?.username ?? '—'}</p>
                     <p className="mt-0.5 text-xs text-[var(--fg-3)]">{me.data?.roles?.join('、') ?? ''}</p>
                   </div>
                   <button

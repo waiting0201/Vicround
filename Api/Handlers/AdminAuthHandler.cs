@@ -23,7 +23,7 @@ public sealed class AdminAuthHandler(IAdminAuthService auth)
     public async Task<IActionResult> LoginAsync(HttpRequest req)
     {
         var request = await ReadAsync<LoginRequest>(req);
-        var result = await auth.LoginAsync(request.Email, request.Password, req.HttpContext.RequestAborted);
+        var result = await auth.LoginAsync(request.Username, request.Password, req.HttpContext.RequestAborted);
 
         WriteRefreshCookie(req.HttpContext.Response, result.RefreshToken, result.RefreshExpiresAt);
         return Ok(req, result.Token);

@@ -182,7 +182,7 @@ public static class AdminResources
             TranslationSearchColumns: ["AltText", "Caption"]),
 
         new("users", typeof(User), OrderBy: "DisplayName",
-            SearchColumns: ["Email", "DisplayName"]),
+            SearchColumns: ["Username", "DisplayName", "Email"]),
     ];
 
     private static readonly Dictionary<string, AdminResource> BySlug =

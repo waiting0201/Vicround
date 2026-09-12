@@ -9,10 +9,17 @@ public class User : IHasTimestamps
 {
     public Guid Id { get; set; }
 
-    public string Email { get; set; } = string.Empty;
+    /// <summary>
+    /// 登入帳號。<b>刻意不是 Email</b>：後台沒有寄信管道，帳號由管理員直接開、密碼也由管理員給，
+    /// 用信箱當帳號只會讓人以為有「忘記密碼」的信可收（2026-09-12 決定）。
+    /// </summary>
+    public string Username { get; set; } = string.Empty;
 
-    /// <summary><c>UPPER(TRIM(Email))</c>；unique index 建在這裡而非 <c>Email</c>。</summary>
-    public string EmailNormalized { get; set; } = string.Empty;
+    /// <summary><c>UPPER(TRIM(Username))</c>；unique index 建在這裡而非 <c>Username</c>。</summary>
+    public string UsernameNormalized { get; set; } = string.Empty;
+
+    /// <summary>選填的聯絡信箱，<b>不是帳號</b>：不唯一、不參與登入。</summary>
+    public string? Email { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
 

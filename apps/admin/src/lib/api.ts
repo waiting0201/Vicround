@@ -100,10 +100,10 @@ async function unwrap<T>(res: Response): Promise<T> {
   return envelope.data as T;
 }
 
-export async function login(email: string, password: string): Promise<void> {
+export async function login(username: string, password: string): Promise<void> {
   const data = await apiFetch<{ accessToken: string }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username, password }),
   });
   auth.set(data.accessToken);
 }
@@ -216,7 +216,7 @@ export function runAction(
   });
 }
 
-export type CurrentUser = { id: string; email: string; displayName: string; roles: string[] };
+export type CurrentUser = { id: string; username: string; displayName: string; roles: string[] };
 
 export function fetchMe() {
   return apiFetch<CurrentUser>('/auth/me');

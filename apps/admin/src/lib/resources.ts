@@ -51,6 +51,7 @@ export type FieldType =
   | 'date'
   | 'datetime'
   | 'email'
+  | 'password'
   | 'url'
   | 'color'
   | 'icon'
@@ -1384,17 +1385,40 @@ const users: ResourceDef = {
   screen: 'collection',
   titleField: 'displayName',
   adminOnly: true,
-  description: '後台帳號與前台會員完全隔離：不同表、不同簽章金鑰，拿對方的 token 一律被拒。',
+  description: '後台帳號與前台會員完全隔離：不同表、不同簽章金鑰，拿對方的 token 一律被拒。登入一律用帳號，不是信箱。',
   columns: [
+    { name: 'username', label: '帳號', width: '12rem' },
     { name: 'displayName', label: '名稱' },
-    { name: 'email', label: '電子郵件', width: '16rem' },
     { name: 'roles', label: '角色', type: 'badge', width: '10rem' },
     { name: 'isActive', label: '啟用', type: 'boolean', width: '5rem' },
     { name: 'lastLoginAt', label: '最後登入', type: 'datetime', width: '10rem' },
   ],
   baseFields: [
+    {
+      name: 'username',
+      label: '帳號',
+      type: 'text',
+      scope: 'base',
+      required: true,
+      maxLength: 64,
+      hint: '登入用。英文、數字與 . _ -，3–64 個字元。建立後可以改，改完對方要用新帳號登入。',
+    },
+    {
+      name: 'password',
+      label: '密碼',
+      type: 'password',
+      scope: 'base',
+      hint: '至少 12 個字元。新帳號必填；編輯時留空表示不變更，填了就等於替對方重設密碼並登出他所有裝置。',
+    },
     { name: 'displayName', label: '名稱', type: 'text', scope: 'base', required: true, maxLength: 160 },
-    { name: 'email', label: '電子郵件', type: 'email', scope: 'base', required: true, maxLength: 320 },
+    {
+      name: 'email',
+      label: '聯絡信箱',
+      type: 'email',
+      scope: 'base',
+      maxLength: 320,
+      hint: '選填，只是聯絡方式——後台不寄信，也不能拿它登入。',
+    },
     { name: 'roles', label: '角色', type: 'multiReference', scope: 'base', options: ROLE_OPTIONS, wide: true },
     { name: 'isActive', label: '啟用', type: 'boolean', scope: 'base' },
     {

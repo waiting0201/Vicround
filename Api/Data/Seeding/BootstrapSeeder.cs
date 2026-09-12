@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using VicRound.Api.Common;
 using VicRound.Api.Services;
 using VicRound.Api.Models.Entities;
 
 namespace VicRound.Api.Data.Seeding;
 
 /// <summary>
-/// database.md §18.1 的 <b>B 層</b> seeder：可重複執行，以自然鍵（Slug / EmailNormalized /
+/// database.md §18.1 的 <b>B 層</b> seeder：可重複執行，以自然鍵（Slug / UsernameNormalized /
 /// Key / Domain）判斷，<b>只 insert 缺的，絕不覆寫已存在的列</b>——編輯者改過的內容不能被蓋掉。
 /// <para>
 /// A 層（<c>Cultures</c>、<c>Roles</c>）由 migration 的 <c>HasData</c> 負責；
@@ -21,7 +22,8 @@ public sealed class BootstrapSeeder(
     /// <summary>未設定 <c>VICROUND_SA_INITIAL_PASSWORD</c> 時的初始密碼（§18.2 專案決策）。</summary>
     public const string DefaultSuperAdminPassword = "Admin@123";
 
-    public const string SuperAdminEmail = "sa@system.local";
+    /// <summary>超級管理員的登入帳號。<b>不是 Email</b>——後台一律以使用者名稱登入。</summary>
+    public const string SuperAdminUsername = "superadmin";
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -42,8 +44,8 @@ public sealed class BootstrapSeeder(
 
     private async Task<int> SeedSuperAdminAsync(CancellationToken cancellationToken)
     {
-        var normalized = SuperAdminEmail.ToUpperInvariant();
-        if (await db.Users.AnyAsync(u => u.EmailNormalized == normalized, cancellationToken))
+        var normalized = Usernames.Normalize(SuperAdminUsername);
+        if (await db.Users.AnyAsync(u => u.UsernameNormalized == normalized, cancellationToken))
         {
             return 0;
         }
@@ -53,8 +55,8 @@ public sealed class BootstrapSeeder(
 
         var user = new User
         {
-            Email = SuperAdminEmail,
-            EmailNormalized = normalized,
+            Username = SuperAdminUsername,
+            UsernameNormalized = normalized,
             DisplayName = "System Administrator",
             PasswordHash = passwordHasher.Hash(password),
             MustChangePassword = false,
@@ -74,8 +76,8 @@ public sealed class BootstrapSeeder(
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogWarning(
-            "已建立超級管理員 {Email}。**上線前必須人工更改此密碼**（database.md §18.2）。",
-            SuperAdminEmail);
+            "已建立超級管理員 {Username}。**上線前必須人工更改此密碼**（database.md §18.2）。",
+            SuperAdminUsername);
 
         return 1;
     }

@@ -93,8 +93,17 @@ const SEED_NAMES: Record<string, string[]> = {
     'Privacy:PolicyVersion',
   ],
   media: ['hero-optical-film.jpg', 'plant-taoyuan.jpg', 'iso-14001.pdf', 'acoustic-grade-chart.png'],
-  users: ['系統管理員', '內容編輯'],
 };
+
+/**
+ * 後台使用者沒有翻譯表，欄位全在 base 上，泛型的 `seedRow` 只會編出一堆空字串，
+ * 清單頁整片都是「—」。帳號與名稱是這一頁最該看見的兩欄，所以直接給種子。
+ */
+const USER_SEED = [
+  { username: 'superadmin', displayName: '系統管理員', roles: ['Admin'], isActive: true },
+  { username: 'vic.editor', displayName: '內容編輯', roles: ['Editor'], isActive: true },
+  { username: 'vic.marketing', displayName: '行銷企劃', roles: ['Editor'], isActive: false },
+];
 
 const MEMBER_SEED = [
   { fullName: 'Chen Wei-Ting', companyName: 'Foxlink Optics', email: 'weiting.chen@foxlink-optics.com', status: 'pendingApproval', jobRole: 'engineeringRnd' },
@@ -167,6 +176,9 @@ function seedValue(field: FieldDef, index: number, name: string): unknown {
       return daysAgo(30 - index);
     case 'email':
       return `contact${index + 1}@vicround.com`;
+    case 'password':
+      // 假資料不編密碼：真後台也永遠讀不回這一欄。
+      return '';
     case 'url':
       return 'https://example.com';
     case 'color':
@@ -299,6 +311,19 @@ function seedResource(resource: ResourceDef): Row[] {
     }));
   }
 
+  if (resource.type === 'users') {
+    return USER_SEED.map((user, index) => ({
+      id: `users-${index + 1}`,
+      translations: {},
+      ...user,
+      mustChangePassword: false,
+      lockoutEndsAt: null,
+      lastLoginAt: user.isActive ? daysAgo(index) : null,
+      createdAt: daysAgo(180 - index * 20),
+      updatedAt: daysAgo(index),
+    }));
+  }
+
   const names = SEED_NAMES[resource.type] ?? Array.from({ length: 6 }, (_, i) => `${resource.singular} ${i + 1}`);
   return names.map((name, index) => seedRow(resource, index, name));
 }
@@ -319,7 +344,7 @@ function ensure(type: string): Row[] {
 
 const ME = {
   id: 'user-1',
-  email: 'admin@vicround.com',
+  username: 'superadmin',
   displayName: '系統管理員（模擬）',
   roles: ['Admin', 'Editor'],
 };

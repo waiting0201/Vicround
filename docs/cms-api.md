@@ -223,7 +223,7 @@ entity then add per-culture translations.
 **Auth (self-built JWT):** ✅
 
 ```
-POST   /api/admin/auth/login             ✅ {email,password} -> {accessToken (~15m)} + refresh cookie
+POST   /api/admin/auth/login             ✅ {username,password} -> {accessToken (~15m)} + refresh cookie
 POST   /api/admin/auth/refresh           ✅ rotate refresh -> new access token
 POST   /api/admin/auth/logout            ✅ revoke refresh token
 POST   /api/admin/auth/change-password   ✅ 改密碼；輪替 SecurityStamp、撤銷全部 refresh token
@@ -234,6 +234,9 @@ GET    /api/admin/auth/me                ✅
 （`vr_admin_rt`，`Path=/api/admin/auth`，`SameSite=Strict`，本機 http 時 `Secure` 自動關閉）。
 已撤銷的 refresh token 再次出現視為重放，該使用者的 token 全部撤銷。
 連續登入失敗 5 次鎖 15 分鐘（狀態在 `Users`，不建 log 表）。
+**後台登入用帳號（`Username`）而不是 Email**（database.md §13）：後台沒有寄信管道，
+帳號與密碼都由管理員直接給。`users` 單元新增帳號時必填 `password`（至少 12 字元），
+編輯時留空表示不變更、填了就等於替對方重設密碼並輪替 `SecurityStamp`。
 
 **權限**：token 只帶角色，81 個權限碼在伺服器端展開（`Api/Common/AdminPermissions.cs`）——
 `Admin` 是超級使用者，`Editor` 除了 `users` / `site-settings` / `redirects` / `business-domains`

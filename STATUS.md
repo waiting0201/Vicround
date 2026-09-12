@@ -77,7 +77,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 正式 `stvicroundprod` 已建、`public-media` 為公開讀；**版位素材尚未上傳**（實測 404，見上方說明） |
-| CI | ✅ | `.github/workflows/api.yml`：建置、72 項測試、產物防呆、migration 同步檢查 |
+| CI | ✅ | `.github/workflows/api.yml`：建置、87 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
 ---
@@ -259,8 +259,8 @@ apps/web/
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **19 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`/search` 待定 Phase |
 | Account API `/api/v1/account/**` | 🟡 | 16 支端點實作完成（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store` |
-| **Admin API** `/api/admin/**` | ✅ | 登入（access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機 |
-| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、72 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
+| **Admin API** `/api/admin/**` | ✅ | 登入（**帳號 `Username`，不是 Email**；access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／封存寫 410、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機。後台「使用者」單元可直接設定／重設密碼（新帳號必填，至少 12 字元） |
+| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、87 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
 | Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
 
@@ -299,11 +299,11 @@ apps/web/
 | 時間戳 | `AuditingSaveChangesInterceptor`（不用 trigger —— 會與 EF 的 `OUTPUT` 衝突） |
 | 密碼 | `Pbkdf2PasswordHasher`：PHC 單欄位字串，支援逐使用者漸進升級（**刻意不跟 NTI 用 BCrypt**，理由見 database.md §14.2） |
 | 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
-| 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
+| 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin（帳號 `superadmin`）、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
 | 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
-| 測試 | `tests/Api.Tests` **72 項**：慣例守門（EF 模型）、密碼雜湊、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
+| 測試 | `tests/Api.Tests` **87 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
 | DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項

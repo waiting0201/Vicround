@@ -52,7 +52,7 @@ No Entra ID. `fn-admin` owns identity against `Users` / `Roles` / `RefreshTokens
 
 **Token model**
 
-- **Access token** — short-lived JWT (~15 min). Claims: `sub`, `email`, `role`
+- **Access token** — short-lived JWT (~15 min). Claims: `sub`, `name`（`Username`）, `role`
   (`Admin`|`Editor`), `iss`, `aud`, `exp`. Signed with a key from Key Vault (HS256 with a
   strong secret, or RS256 with a key pair).
 - **Refresh token** — opaque, long-lived, **stored hashed** in `RefreshTokens`; rotated on every
@@ -61,7 +61,7 @@ No Entra ID. `fn-admin` owns identity against `Users` / `Roles` / `RefreshTokens
 **Flow**
 
 ```
-login    POST /api/admin/auth/login    {email,password}
+login    POST /api/admin/auth/login    {username,password}   -- 帳號不是 Email，見 database.md §13
          → verify password hash (e.g. PBKDF2/Argon2) → issue access + refresh
          → access token 回在 response body（SPA 只放記憶體）；refresh token 由 fn-admin
            以 Set-Cookie 寫成 httpOnly, Secure, SameSite=Strict（Path=/api/admin/auth）

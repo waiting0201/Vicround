@@ -236,6 +236,8 @@ function inputType(field: FieldDef): string {
       return 'datetime-local';
     case 'email':
       return 'email';
+    case 'password':
+      return 'password';
     case 'url':
       return 'url';
     default:

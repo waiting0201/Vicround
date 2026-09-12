@@ -118,7 +118,10 @@ URL 顯示英文內容」的重複內容，傷 SEO。
   `Slug = LOWER(Slug) AND Slug NOT LIKE '%[^a-z0-9-]%'`。大小寫敏感可避免 `/Anti-Fog` 與
   `/anti-fog` 在 CI 定序下被視為同一列、卻在 URL 上是兩個頁面。
 - **Email**：另存 `EmailNormalized nvarchar(320)`（`UPPER(TRIM(Email))`），unique index 建在
-  `EmailNormalized` 上。
+  `EmailNormalized` 上（前台會員 `Members`；後台 `Users` 的帳號是 `Username`，見 §13）。
+- **後台帳號**：另存 `UsernameNormalized nvarchar(64)`（`UPPER(TRIM(Username))`），unique index
+  建在正規化欄位上。正規化由 `IdentityNormalizationInterceptor` 在 `SaveChanges` 時寫入——
+  後台 CRUD 是泛型對映，服務層各自記得要算一次的話遲早會漏。
 
 ### 0.5 Slug 是內容，不是衍生值
 
@@ -948,6 +951,14 @@ ContactInquiries
 
 與前台會員**完全隔離**：不同表、不同 token、不同 API surface。
 
+**登入帳號是 `Username`，不是 Email**（2026-09-12 決定）。理由：後台沒有寄信管道，
+帳號由管理員開、密碼也由管理員直接給（§18.2 的 super admin 之外，其餘從後台「使用者」
+單元新增，建立時必填密碼）。用信箱當帳號會讓人以為有「忘記密碼」的信可收，但那條路徑
+不存在。`Email` 保留為**選填的聯絡欄位**：不唯一、不參與登入。
+
+帳號格式：英數與 `. _ -`，3–64 字元（`Api/Common/Usernames.cs`）。字元集刻意窄，
+避免出現看起來一樣卻是不同列的帳號。
+
 ```
 Roles
   Id int PK, Name nvarchar(50) UNIQUE, Description nvarchar(200),
@@ -955,8 +966,9 @@ Roles
 
 Users
   Id                  uniqueidentifier PK DEFAULT NEWSEQUENTIALID()
-  Email               nvarchar(320)
-  EmailNormalized     nvarchar(320) UNIQUE
+  Username            nvarchar(64)         -- 登入帳號，不是 Email
+  UsernameNormalized  nvarchar(64) UNIQUE  -- UPPER(TRIM(Username))
+  Email               nvarchar(320) NULL   -- 選填聯絡方式，不唯一、不能登入
   DisplayName         nvarchar(160)
   PasswordHash        nvarchar(256)        -- PHC 字串，見 14.2
   PasswordChangedAt   datetime2(3) NULL
@@ -1294,7 +1306,7 @@ EF Core：`.HasIndex(p => p.Slug).IsUnique().HasFilter("[Status] <> 2")`
 | `Redirects` | `(FromPath) WHERE IsEnabled = 1 INCLUDE (ToPath, StatusCode, TargetCulture)` | covering filtered |
 | `MediaAssets` | `(Sha256) WHERE Sha256 IS NOT NULL` | 非唯一（去重提示） |
 | `MediaAssets` | `(Container, IsPrivate, IsArchived)` | 非叢集 |
-| `Users` | `(EmailNormalized)` | **UNIQUE** |
+| `Users` | `(UsernameNormalized)` | **UNIQUE** |
 | `RefreshTokens` | `(TokenHash)` | **UNIQUE** |
 | `RefreshTokens` | `(UserId, ExpiresAt)` | 非叢集 |
 | `Members` | `(EmailNormalized)` | **UNIQUE** |
@@ -1345,7 +1357,7 @@ Key Vault，**永不進版控**。
 | 層 | 機制 | 內容 | 冪等鍵 |
 | --- | --- | --- | --- |
 | **A. Migration `HasData`** | `modelBuilder.Entity<>().HasData()` | 只放**永不變且無隨機值**的參照資料：`Cultures`、`Roles` | 固定 Id |
-| **B. `BootstrapSeeder`** | 應用啟動時執行，可重複執行 | super admin、`Categories`(3)、`Solutions`(7)、`Pages`(11)、`NavigationItems`、`FaqCategories`(6)+`FaqItems`(13)、`Certifications`(9)、`ProcessFlows`+Steps、`Locations`(3)、`ContactChannels`(3)、`BusinessDomainRules`、`SiteSettings` | 自然鍵（`Slug` / `EmailNormalized` / `Key` / `Domain`），**只 insert 缺的，不覆寫已存在的** |
+| **B. `BootstrapSeeder`** | 應用啟動時執行，可重複執行 | super admin、`Categories`(3)、`Solutions`(7)、`Pages`(11)、`NavigationItems`、`FaqCategories`(6)+`FaqItems`(13)、`Certifications`(9)、`ProcessFlows`+Steps、`Locations`(3)、`ContactChannels`(3)、`BusinessDomainRules`、`SiteSettings` | 自然鍵（`Slug` / `UsernameNormalized` / `Key` / `Domain`），**只 insert 缺的，不覆寫已存在的** |
 | **C. `LegacyImportSeeder`** | 一次性 CLI（`dotnet run -- import-legacy`）或 Admin 觸發 | 舊站 ~118 頁內容、`blog_post.csv`、`url_redirects.csv`、`/store/*` 與 `*.html` 的 301、`官網圖片/` 上傳 Blob | `LegacySourceKey`（UNIQUE filtered index）與 `Redirects.FromPath` |
 
 B 層**只補缺、不覆寫**——編輯者改過的內容不能被 seeder 蓋掉。
@@ -1359,8 +1371,9 @@ B 層**只補缺、不覆寫**——編輯者改過的內容不能被 seeder 蓋
 ```
 Roles:     Admin, Editor
 
-Users:     Email              = sa@system.local
-           EmailNormalized    = SA@SYSTEM.LOCAL
+Users:     Username           = superadmin
+           UsernameNormalized = SUPERADMIN
+           Email              = NULL
            DisplayName        = System Administrator
            PasswordHash       = PBKDF2-HMAC-SHA256(i=600000, salt=16B CSPRNG) of "Admin@123"
                                 → $pbkdf2-sha256$i=600000$<base64(salt)>$<base64(hash)>

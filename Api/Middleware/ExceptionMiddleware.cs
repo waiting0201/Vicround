@@ -62,7 +62,7 @@ public sealed class ExceptionMiddleware(ILogger<ExceptionMiddleware> logger) : I
             var (code, message) = sql.Number switch
             {
                 UniqueViolation or UniqueIndexViolation =>
-                    (ErrorCodes.ConflictDuplicate, "資料重複，請檢查唯一欄位（如 slug、代號、Email）。"),
+                    (ErrorCodes.ConflictDuplicate, "資料重複，請檢查唯一欄位（如 slug、代號、帳號、Email）。"),
                 _ =>
                     (ErrorCodes.ConflictState, "資料關聯或值域檢查未通過，請確認 slug 格式與所選的關聯項目。"),
             };
