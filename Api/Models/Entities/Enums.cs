@@ -8,7 +8,9 @@ public enum ContentStatus : byte
 {
     Draft = 0,
     Published = 1,
-    Archived = 2,
+
+    // 2 = Archived — retired 2026-09-12。後台的刪除改成真刪之後就沒有東西會寫入這個值；
+    // 依本檔鐵則，數值保留不重用。
 }
 
 public enum CategoryType : byte

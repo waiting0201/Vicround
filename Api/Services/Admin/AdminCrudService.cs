@@ -236,7 +236,7 @@ public sealed class AdminCrudService(
     }
 
     /// <summary>
-    /// 刪除——**真的從資料庫刪掉**，不再改成 <c>Archived</c>（2026-09-12 專案決定）。
+    /// 刪除——**真的從資料庫刪掉**（2026-09-12 專案決定；<c>Archived</c> 狀態已隨之退役）。
     ///
     /// <para>
     /// 刪除前先把公開網址寫成一筆 410：列沒了，但這個網址曾被索引過，得給搜尋引擎一個
@@ -697,7 +697,6 @@ public sealed class AdminCrudService(
                  SELECT {Columns(childType)}
                  FROM {Table(childType)} e
                  WHERE e.[{ColumnOf(childType, child.OwnerFk)}] = @Id
-                   AND (e.[Status] IS NULL OR e.[Status] <> {(byte)ContentStatus.Archived})
                  ORDER BY {(HasColumn(childType, "SortOrder") ? "e.[SortOrder], " : string.Empty)}e.[{KeyColumn(childType)}]
                  """, new { Id = key }, cancellationToken: ct)))
                 .Cast<IDictionary<string, object?>>()

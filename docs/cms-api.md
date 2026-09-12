@@ -11,7 +11,7 @@ the public app physically has no admin trigger.
 | Auth | Anonymous | **Member JWT** | **Admin JWT**, roles `Admin`/`Editor` |
 | Access | Read-only | 只寫會員自身資料與單據 | Full CRUD + publish/media |
 | Caching | SSR output CDN-cached by tag | **`Cache-Control: no-store`**，不進 Data Cache | No cache |
-| Returns | Published content only | 該會員可見的資料 | All statuses (Draft/Published/Archived) |
+| Returns | Published content only | 該會員可見的資料 | All statuses (Draft/Published) |
 | Culture | `?culture={locale}` from the URL segment (default `en`) | 同左 | Per-translation, explicit |
 | JWT issuer / audience | — | `vicround-account` / `vicround-public-api` | `vicround-admin` / `vicround-admin-api` |
 

@@ -295,7 +295,7 @@ apps/web/
 | --- | --- |
 | 實體 | `Api/Models/Entities/`（24 檔）；Routable / Addressable / Embedded 三種基底類別 |
 | 組態 | `Api/Data/Configurations/`；`SluggedEntityConfiguration` 與 `TranslationConfiguration` 兩個基底吸收掉 70 幾張表的樣板 |
-| 已落實的慣例 | slug 用 `Latin1_General_100_CS_AS` + CHECK + 排除 Archived 的 filtered unique；翻譯表 PK `(擁有者Id, Culture)` 且 FK → `Cultures`；enum 存 `tinyint`；時間 `datetime2(3)` 預設 `SYSUTCDATETIME()`；owner triple 的「恰一非 NULL」CHECK；`Members.EmailDomain` 為 PERSISTED 計算欄位 |
+| 已落實的慣例 | slug 用 `Latin1_General_100_CS_AS` + CHECK + 全域 unique；翻譯表 PK `(擁有者Id, Culture)` 且 FK → `Cultures`；enum 存 `tinyint`；時間 `datetime2(3)` 預設 `SYSUTCDATETIME()`；owner triple 的「恰一非 NULL」CHECK；`Members.EmailDomain` 為 PERSISTED 計算欄位 |
 | 時間戳 | `AuditingSaveChangesInterceptor`（不用 trigger —— 會與 EF 的 `OUTPUT` 衝突） |
 | 密碼 | `Pbkdf2PasswordHasher`：PHC 單欄位字串，支援逐使用者漸進升級（**刻意不跟 NTI 用 BCrypt**，理由見 database.md §14.2） |
 | 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
@@ -304,7 +304,7 @@ apps/web/
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
 | 測試 | `tests/Api.Tests` **87 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
-| DB 層約束實測 | slug CHECK 擋大寫／底線、filtered unique 擋重複、**封存後 slug 可重用**（刪除後亦然）、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
+| DB 層約束實測 | slug CHECK 擋大寫／底線、unique 擋重複、**刪除後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
 

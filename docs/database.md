@@ -128,7 +128,7 @@ URL 顯示英文內容」的重複內容，傷 SEO。
 以下三種變更都會改變公開 URL，**必須在同一個 transaction 內寫入 `Redirects`(301)**：
 
 1. 任何 Routable 實體的 `Slug` 變更。
-2. `Status` 變成 `Archived`（見 [17.1](#171-archived-slug-重用) 的配套）。
+2. 刪除 Routable 實體——列會真的消失，改寫 `410`（見 [17.1](#171-slug-唯一性)）。
 3. `Articles.Type` 變更（`Type` 決定 URL 前綴，見 [05](#05-資源中心)）。
 
 這是 Application 層的 `SlugChangeGuard` 責任，不是資料庫層，但觸發條件必須明列於此。
@@ -213,7 +213,7 @@ privacy  member  sitemap.xml  robots.txt  en  zh-Hant
 實體查詢 → 找不到才查 Redirects → 都沒有才 404
 ```
 
-這是 [17.1](#171-archived-slug-重用) 的 filtered unique index 能安全成立的前提。
+這是 [17.1](#171-slug-唯一性) 的 slug 重用（刪除後新內容沿用舊網址）能安全成立的前提。
 
 ### 1.1 mockup 頁面 → 功能單元對照
 
@@ -861,7 +861,7 @@ Redirects
 1. `FromPath` 一律 normalize（小寫、去尾斜線、保留 query string 但排序參數）。
 2. **不得產生鏈**：新增 `A→B` 時若已存在 `B→C`，直接寫 `A→C`，並把既有指向 A 的列一併重寫。
 3. **不得產生環**：寫入前檢查 `ToPath` 不等於任一祖先的 `FromPath`。
-4. `StatusCode = 410` 表示「內容永久移除且無替代」（`Archived` 且無適當目標時）。
+4. `StatusCode = 410` 表示「內容永久移除且無替代」（內容被刪除時一律寫這個）。
 
 依 [0.7](#07-不留-log)：**不建 `RedirectHitCount`、不記錄命中次數。**
 
@@ -1206,7 +1206,7 @@ PK 一律為兩個外鍵的複合鍵；兩側各建索引（左鍵為 PK 前導�
 1. `Status`、`Type` 幾乎出現在每個查詢的 WHERE 與複合索引中。`tinyint` 1 byte vs `nvarchar(20)`
    最多 40 bytes，直接影響索引頁密度與掃描成本。
 2. 字串 enum 在 SQL 端受定序影響（`'Published'` vs `'published'`），且在 filtered index 的
-   `WHERE Status <> 'Archived'` 上容易與 migration 產生的字面量不一致。
+   `WHERE Status <> 'Draft'` 這類條件上容易與 migration 產生的字面量不一致。
 3. **可讀性用另一層解決**：所有 DTO 用 `JsonStringEnumConverter` + camelCase 序列化，API 對外一律
    是 `"published"`、`"opticalFilm"`。DB 數字、API 字串，兩者都拿到。
 
@@ -1218,7 +1218,7 @@ PK 一律為兩個外鍵的複合鍵；兩側各建索引（左鍵為 PK 前導�
 
 | Enum | 值 |
 | --- | --- |
-| `ContentStatus` | Draft=0, Published=1, Archived=2 |
+| `ContentStatus` | Draft=0, Published=1 *(2=Archived 已 retired，2026-09-12)* |
 | `CategoryType` | OpticalFilm=1, TextileFoam=2, Acoustic=3 |
 | `Culture` | *(字串)* `en`, `zh-Hant` |
 | `PageTemplate` | Standard=0, Home=1, About=2, Sustainability=3, Partnership=4, Technologies=5, Contact=6, Legal=7, ResourcesHub=8, ProductsHub=9, SolutionsHub=10, MemberGateway=11 |
@@ -1250,40 +1250,36 @@ PK 一律為兩個外鍵的複合鍵；兩側各建索引（左鍵為 PK 前導�
 
 ## 17 索引、唯一鍵與 Cascade
 
-### 17.1 Archived slug 重用
+### 17.1 Slug 唯一性
 
-採 **filtered unique index，排除 `Archived`**：
+**全域 unique index，沒有 filter**：
 
 ```sql
-CREATE UNIQUE INDEX UX_Products_Slug ON Products(Slug) WHERE Status <> 2;
+CREATE UNIQUE INDEX UX_Products_Slug ON Products(Slug);
 ```
 
-EF Core：`.HasIndex(p => p.Slug).IsUnique().HasFilter("[Status] <> 2")`
+EF Core：`.HasIndex(p => p.Slug).IsUnique()`
 
-**為什麼不是全域 unique**：`Status <> 2` 的 filter 原本是為了配合軟刪除——全域 unique 會讓
-「封存 `anti-fog-film` 後永遠不能再建同名產品」，編輯者只能改名為 `anti-fog-film-2`，
-這是把資料庫限制洩漏成 URL。
+> **2026-09-12 之前**這裡是 `WHERE Status <> 2` 的 filtered unique，外加一條非唯一全量索引
+> `IX_Products_Slug_All` 供 Admin 做「含 Archived 的碰撞檢查」。理由是軟刪除：全域 unique 會讓
+> 「封存 `anti-fog-film` 後永遠不能再建同名產品」，把資料庫限制洩漏成 URL。
+>
+> 後台的刪除改成**真刪**之後，列直接消失、slug 自然被釋出，filter 與那條全量索引都失去理由，
+> 由 `20260912082505_RetireArchivedStatus` 一併移除；`ContentStatus.Archived`（=2）同時退役
+> （數值保留不重用）。
 
-> 2026-09-12 起後台的刪除改成**真刪**（列直接消失，slug 自然被釋出），`Archived` 不再由刪除
-> 產生。filter 保留不動：`ContentStatus.Archived` 仍在列舉裡，而全域 unique 在這裡沒有好處。
-> 下面三個配套裡提到「已封存」的地方，實務上要讀成「已刪除」。
+**兩個配套**：
 
-**三個配套，缺一不可**：
-
-1. **路由解析順序寫死「實體 → Redirects → 404」**（[01](#01-路由地圖)）。已封存產品的舊路徑會有
-   一筆 Redirect；若 slug 被新實體重用，新實體會先被命中、Redirect 自然失效——這正是我們要的
+1. **路由解析順序寫死「實體 → Redirects → 404」**（[01](#01-路由地圖)）。被刪除內容的舊路徑會有
+   一筆 410 Redirect；若 slug 被新實體重用，新實體會先被命中、Redirect 自然失效——這正是我們要的
    行為（新內容取代舊內容）。
-2. **Archive 時必寫 Redirect**：目標為父層索引頁（產品 → 產品線頁）；無適當目標時寫 `410`。
-3. **Admin 建立／改名時做「含 Archived 的碰撞檢查」並警告（不阻擋）**，訊息：「此 slug 曾被已封存
-   的『Anti-Fog Film』使用，繼續會使其 301 失效」。搭配一條**非唯一**全量索引
-   `IX_Products_Slug_All ON Products(Slug)` 供此查詢。
+2. **刪除時必寫 Redirect**：內容已永久移除且沒有替代頁，一律寫 `410`。
 
 ### 17.2 索引清單
 
 | 表 | 索引 | 型別 |
 | --- | --- | --- |
-| 每個 Routable / Addressable base 表 | `(Slug) WHERE Status <> 2` | **UNIQUE filtered** |
-| 同上 | `(Slug)` | 非唯一（admin 碰撞檢查） |
+| 每個 Routable / Addressable base 表 | `(Slug)` | **UNIQUE**（全域，無 filter）|
 | 每個 `*Translations` | PK `({Entity}Id, Culture)` | 叢集 |
 | 每個 `*Translations` | `(Culture) INCLUDE (常用文字欄)` | 非叢集 |
 | `Cultures` | `(IsDefault) WHERE IsDefault = 1` | UNIQUE filtered |

@@ -26,12 +26,12 @@ export const DEFAULT_CULTURE: Culture = 'en';
 
 /* ---------------- 內容狀態 ---------------- */
 
-export type ContentStatus = 'draft' | 'published' | 'archived';
+// 'archived' 已退役（2026-09-12）：刪除改成真刪，沒有東西會再回傳這個狀態。
+export type ContentStatus = 'draft' | 'published';
 
 export const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
   draft: '草稿',
   published: '已發布',
-  archived: '已封存',
 };
 
 export const CONTENT_STATUS_OPTIONS = options(CONTENT_STATUS_LABEL);

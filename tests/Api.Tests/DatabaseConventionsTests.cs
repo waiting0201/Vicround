@@ -72,8 +72,13 @@ public class DatabaseConventionsTests
         Assert.Empty(offenders);
     }
 
+    /// <summary>
+    /// slug 是全域唯一，**沒有 filter**。2026-09-12 之前是 <c>[Status] &lt;&gt; 2</c> 的
+    /// filtered unique（讓封存過的 slug 可重用）＋一條非唯一全量索引；刪除改成真刪之後兩者都退役，
+    /// 這個測試守的是「不要有人把 filter 加回來」。
+    /// </summary>
     [Fact]
-    public void 有Slug的實體都有排除Archived的唯一索引與CHECK()
+    public void 有Slug的實體都有全域唯一索引與CHECK()
     {
         var offenders = new List<string>();
 
@@ -81,23 +86,20 @@ public class DatabaseConventionsTests
         {
             var table = entity.GetTableName();
 
-            var uniqueFiltered = entity.GetIndexes().Any(i =>
-                i.IsUnique &&
-                i.Properties.Count == 1 &&
-                i.Properties[0].Name == nameof(SluggedEntity.Slug) &&
-                i.GetFilter() == "[Status] <> 2");
+            var slugIndexes = entity.GetIndexes()
+                .Where(i => i.Properties.Count == 1 && i.Properties[0].Name == nameof(SluggedEntity.Slug))
+                .ToList();
 
-            // Admin 的「含 Archived 碰撞檢查」需要一條非唯一的全量索引。
-            var fullIndex = entity.GetIndexes().Any(i =>
-                !i.IsUnique &&
-                i.Properties.Count == 1 &&
-                i.Properties[0].Name == nameof(SluggedEntity.Slug));
+            var unique = slugIndexes.Any(i => i.IsUnique && i.GetFilter() is null);
+
+            // 退役的那條非唯一全量索引不該再出現：全域唯一索引已經服務同樣的查詢。
+            var noFullIndex = slugIndexes.All(i => i.IsUnique);
 
             var check = entity.GetCheckConstraints().Any(c => c.Name == $"CK_{table}_Slug");
 
-            if (!uniqueFiltered || !fullIndex || !check)
+            if (!unique || !noFullIndex || !check)
             {
-                offenders.Add($"{table}(unique={uniqueFiltered}, all={fullIndex}, check={check})");
+                offenders.Add($"{table}(unique={unique}, noAllIndex={noFullIndex}, check={check})");
             }
         }
 

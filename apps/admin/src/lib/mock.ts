@@ -206,7 +206,7 @@ function seedRow(resource: ResourceDef, index: number, name: string): Row {
     if (value !== undefined) row[field.name] = value;
   }
 
-  if (resource.hasStatus) row.status = index === 0 ? 'draft' : index % 5 === 4 ? 'archived' : 'published';
+  if (resource.hasStatus) row.status = index === 0 ? 'draft' : 'published';
   if (resource.hasSort) row.sortOrder = index * 10;
   row.createdAt = daysAgo(120 - index);
   row.updatedAt = daysAgo(index % 14);
@@ -514,8 +514,8 @@ export async function mockFetch(path: string, init: RequestInit): Promise<Respon
   }
 
   if (method === 'DELETE' && row) {
-    if (row.status) row.status = 'archived';
-    else rows.splice(index, 1);
+    // 真刪——與後端一致（2026-09-12 起不再封存）。
+    rows.splice(index, 1);
     return json(null, 204);
   }
 

@@ -29,7 +29,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
    但它管理的內容有 en / zh-Hant 兩份。翻譯缺漏（`docs/cms.md` 明訂的需求）用
    `Tabs` 的黃點標記在分頁列表就看得到，清單頁也要能篩選「缺 zh-Hant」——這是
    [docs/cms.md](cms.md#admin-ui-stack) 白紙黑字要的功能，不是加分項。
-4. **危險動作要有摩擦力，安全動作不要。** 刪除、封存、拒絕會員、停權——這些不可逆
+4. **危險動作要有摩擦力，安全動作不要。** 刪除、拒絕會員、停權——這些不可逆
    或影響他人的動作一律過 `ConfirmDialog`（`tone="danger"`）。但改 slug 這種「系統會
    自動處理好」的動作（`docs/database.md §0.5` 保證寫 301）只給提示文字，不擋一個
    確認框——擋不該擋的動作，摩擦力會被使用者訓練成「看到框就狂點確定」，反而讓
@@ -529,7 +529,7 @@ tone」的權威對照表，實作各畫面時直接查表，不要重新判斷�
 
 | tone | token | 使用時機 |
 | --- | --- | --- |
-| `neutral` | `--surface-card-alt` / `--fg-2` | 不需要跳出來的狀態：草稿、已封存、已結案、中止 |
+| `neutral` | `--surface-card-alt` / `--fg-2` | 不需要跳出來的狀態：草稿、已結案、中止 |
 | `brand` | `--brand-soft` / `--brand-strong` | 品牌強調（非狀態語意），例如「精選」「New」這類行銷旗標的後台呈現 |
 | `info` | `--info-50` / `--info-500` | 進行中、尚未有結論的狀態 |
 | `success` | `--success-50` / `--success-500` | 正向、已完成的最終狀態 |
@@ -549,7 +549,8 @@ Testimonials/PartnerBrands/ContactChannels/NavigationItems 共用）
 | --- | --- | --- |
 | `Draft` | 草稿 | `neutral` |
 | `Published` | 已發布 | `success` |
-| `Archived` | 已封存 | `neutral` |
+
+> `Archived`（已封存）於 2026-09-12 退役——刪除改成真刪，沒有內容會停在這個狀態。
 
 ### 7.3 `MemberStatus`
 

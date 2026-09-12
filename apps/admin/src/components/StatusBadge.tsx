@@ -19,7 +19,7 @@ import {
  * 規則：**綠＝可以放著不管**（已發布、已核准、已送達、已結案）、
  * **黃＝在等人動作**（草稿、待審核、審核中、處理中）、
  * **紅＝出事或被擋下**（已拒絕、已停權、垃圾訊息）、
- * **灰＝已退場**（已封存、已取消）。
+ * **灰＝已退場**（已取消、已結案）。
  * </p>
  */
 
@@ -27,7 +27,6 @@ const TONES: Record<string, BadgeTone> = {
   // 內容狀態
   draft: 'warning',
   published: 'success',
-  archived: 'neutral',
   // 會員狀態
   pendingEmailVerification: 'neutral',
   pendingApproval: 'warning',

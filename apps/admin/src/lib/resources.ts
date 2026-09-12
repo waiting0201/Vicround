@@ -138,7 +138,7 @@ export type ResourceDef = {
   titleFromTranslation?: boolean;
   /** 有 Slug（Routable / Addressable）—— 改 slug 必寫 301。 */
   hasSlug?: boolean;
-  /** 有 Draft / Published / Archived 狀態與發布動作。 */
+  /** 有 Draft / Published 狀態與發布動作。 */
   hasStatus?: boolean;
   /** 有 SortOrder，可批次排序。 */
   hasSort?: boolean;

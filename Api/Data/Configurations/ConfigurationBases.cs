@@ -27,9 +27,6 @@ public static class DbConventions
     public const int UrlMaxLength = 512;
     public const int LegacySourceKeyMaxLength = 128;
 
-    /// <summary>Archived（=2）不參與唯一性，讓 slug 可被重用（§17.1）。</summary>
-    public const string NotArchivedFilter = "[Status] <> 2";
-
     /// <summary>Slug 只能是小寫英數與連字號（§0.4）。</summary>
     public const string SlugCheckSql = "[Slug] = LOWER([Slug]) AND [Slug] NOT LIKE '%[^a-z0-9-]%'";
 
@@ -64,8 +61,13 @@ public abstract class ContentEntityConfiguration<T> : IEntityTypeConfiguration<T
 }
 
 /// <summary>
-/// Routable / Addressable 實體：加上 slug 的長度、定序、CHECK 與兩條索引
-/// （filtered unique 供唯一性、非唯一全量供 Admin 的碰撞檢查，§17.1）。
+/// Routable / Addressable 實體：加上 slug 的長度、定序、CHECK 與一條全域唯一索引（§17.1）。
+///
+/// <para>
+/// 2026-09-12 之前這裡是 <c>WHERE [Status] &lt;&gt; 2</c> 的 filtered unique（讓被封存的 slug
+/// 可以重用），外加一條非唯一全量索引供 Admin 做「含 Archived 的碰撞檢查」。刪除改成真刪之後
+/// 沒有列會停在 Archived，兩者都失去理由：slug 由刪除本身釋出，唯一性就回到單純的全域唯一。
+/// </para>
 /// </summary>
 public abstract class SluggedEntityConfiguration<T> : ContentEntityConfiguration<T>
     where T : SluggedEntity
@@ -80,11 +82,7 @@ public abstract class SluggedEntityConfiguration<T> : ContentEntityConfiguration
             .UseCollation(DbConventions.SlugCollation)
             .IsRequired();
 
-        builder.HasIndex(e => e.Slug, $"UX_{TableName}_Slug")
-            .IsUnique()
-            .HasFilter(DbConventions.NotArchivedFilter);
-
-        builder.HasIndex(e => e.Slug, $"IX_{TableName}_Slug_All");
+        builder.HasIndex(e => e.Slug, $"UX_{TableName}_Slug").IsUnique();
     }
 }
 

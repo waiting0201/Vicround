@@ -54,8 +54,8 @@ Routing in Next.js App Router: `app/[locale]/(site)/...` with a typed segment pe
 culture. `generateStaticParams` may be used to warm common routes, but rendering is SSR.
 
 **路由解析順序（寫死，不可調換）**：`實體查詢 → 找不到才查 Redirects → 都沒有才 404`。這是
-`Slug` 的 filtered unique index（排除 `Archived`）能安全成立的前提 —— 見
-[database.md §17.1](database.md#171-archived-slug-重用)。
+被刪除內容的舊路徑留下 410、而 slug 又能被新內容重用的前提 —— 見
+[database.md §17.1](database.md#171-slug-唯一性)。
 
 Slug 只在自己的表內唯一，跨型別由固定前綴保證不衝突。保留字 slug 清單見
 [database.md §01](database.md#01-路由地圖)。
@@ -83,7 +83,7 @@ locale URLs are listed.
 [database.md §0.5](database.md#05-slug-是內容不是衍生值)）：
 
 1. 任何 Routable 實體的 `Slug` 變更
-2. `Status` 變成 `Archived`（無適當目標時寫 `410 Gone`）
+2. 刪除 Routable 實體（一律寫 `410 Gone`）
 3. **`Articles.Type` 變更** —— `Type` 決定 URL 前綴（`/news` vs `/insights` vs `/blog`）
 
 `Redirects` 不得產生鏈或環：新增 `A→B` 時若已存在 `B→C`，直接寫 `A→C` 並重寫既有指向 A 的列。
