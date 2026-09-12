@@ -23,7 +23,7 @@ public sealed class ContactHandler(
     public async Task<IActionResult> SubmitAsync(HttpRequest req)
     {
         var request = await ReadAsync(req);
-        var clientIp = ClientIp(req);
+        var clientIp = Common.ClientIp.Of(req);
 
         // 蜜罐先擋：真人看不到那個欄位，有值就不必再花一次 siteverify 的往返。
         if (!string.IsNullOrWhiteSpace(request.Website))
@@ -44,7 +44,8 @@ public sealed class ContactHandler(
         var culture = string.IsNullOrWhiteSpace(request.Culture) ? LangResolver.Resolve(req) : request.Culture;
         var referenceNumber = await inquiries.SubmitAsync(request, culture, req.HttpContext.RequestAborted);
 
-        // 表單送出永不快取；回 202 是因為通知信之後會非同步送出（docs/cms-api.md）。
+        // 表單送出永不快取。回 202 而不是 201：單據已經落庫，但「有人會回覆你」這件事
+        // 還沒發生——通知信寄不出去時我們也不會讓送出失敗（見 IInquiryNotifier）。
         CacheControl.NoStore(req.HttpContext.Response);
         return new ObjectResult(ApiResponse.Ok(new ContactAcceptedDto(referenceNumber))) { StatusCode = 202 };
     }
@@ -60,26 +61,5 @@ public sealed class ContactHandler(
         {
             throw AppException.BadRequest(ErrorCodes.ValidationFormat, "請求主體必須是合法的 JSON。");
         }
-    }
-
-    /// <summary>
-    /// 限流的鍵。Azure 前面有反向代理，<c>RemoteIpAddress</c> 會是代理本身，
-    /// 因此優先取 <c>X-Forwarded-For</c> 的第一段（最靠近使用者的那一跳）。
-    /// <b>這個值只用於記憶體內的限流，不落 DB</b>（database.md §12）。
-    /// </summary>
-    private static string ClientIp(HttpRequest req)
-    {
-        var forwarded = req.Headers["X-Forwarded-For"].ToString();
-
-        if (!string.IsNullOrWhiteSpace(forwarded))
-        {
-            var first = forwarded.Split(',')[0].Trim();
-
-            // Azure 的 X-Forwarded-For 會帶連接埠（1.2.3.4:5678），限流的鍵不需要它。
-            var colon = first.LastIndexOf(':');
-            return colon > 0 && !first.Contains("::", StringComparison.Ordinal) ? first[..colon] : first;
-        }
-
-        return req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 }

@@ -163,10 +163,15 @@ Container／卡片），不自創第二套視覺：
   的產品選單：那是公開內容，在伺服器端用 `/v1/products` 取好再傳下去
 
 **寄信管道已接上**（2026-09-12）：`SmtpEmailSender`（SMTP，一套涵蓋 ACS relay／SendGrid／
-M365／自架主機）+ `EmailMemberNotifier`（會員信）+ `InquiryNotifier`（詢問單的窗口通知與
-客戶回執）。信裡的連結需要 `SiteSettings.site.baseUrl`；**沒設定 `Mail:Host`/`Mail:From`
-或 base URL 時不寄、不擋、只記 Warning**，本機與未配置的環境照樣能把流程走完。
-設定鍵見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」。
+M365／自架主機）+ 三個 notifier —— `EmailMemberNotifier`（驗證、重設密碼、審核結果）、
+`InquiryNotifier`（詢問單）、`SampleRequestNotifier`（樣品申請的送出與狀態變動）。
+信裡的連結需要 `SiteSettings.site.baseUrl`；**沒設定 `Mail:Host`/`Mail:From` 或 base URL 時
+不寄、不擋、只記 Warning**，本機與未配置的環境照樣能把流程走完。10 封信的清單與設定鍵見
+[docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」。
+
+**會寄信的端點一定要限流**（`AccountAuthHandler.RequireQuota`）：以 IP 為鍵擋連打、
+以 **Email** 為鍵擋「拿別人的信箱來洗」，兩個鍵缺一不可——換 IP 就繞過前者。
+登入只以 IP 為鍵：以 Email 計數等於給攻擊者一個把人鎖在門外的開關。
 
 進度明細見 [STATUS.md](STATUS.md)。
 

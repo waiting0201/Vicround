@@ -15,6 +15,12 @@ public interface IMemberNotifier
 {
     Task SendEmailVerificationAsync(Member member, string token, CancellationToken cancellationToken);
     Task SendPasswordResetAsync(Member member, string token, CancellationToken cancellationToken);
+
+    /// <summary>審核通過。驗證信裡承諾過「審核完成會通知您」，這就是那一封。</summary>
+    Task SendApprovedAsync(Member member, CancellationToken cancellationToken);
+
+    /// <summary>審核未通過。<paramref name="reason"/> 是後台必填的理由，原樣轉達。</summary>
+    Task SendRejectedAsync(Member member, string? reason, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -42,6 +48,21 @@ public sealed class EmailMemberNotifier(
 
     public Task SendPasswordResetAsync(Member member, string token, CancellationToken cancellationToken) =>
         SendAsync(member, "member/reset", token, Reset, cancellationToken);
+
+    /// <summary>
+    /// 審核結果的兩封信沒有一次性 token，但仍然需要 base URL——核准信要把人帶進會員專區。
+    /// 拒絕信不帶連結（那裡沒有他能做的事），所以少了 base URL 也照寄。
+    /// </summary>
+    public async Task SendApprovedAsync(Member member, CancellationToken cancellationToken)
+    {
+        var baseUrl = await siteUrls.BaseUrlAsync(cancellationToken);
+        var link = baseUrl is null ? null : $"{baseUrl}/{member.PreferredCulture}/account";
+
+        await email.SendAsync(Approved(member, link), cancellationToken);
+    }
+
+    public Task SendRejectedAsync(Member member, string? reason, CancellationToken cancellationToken) =>
+        email.SendAsync(Rejected(member, reason), cancellationToken);
 
     private async Task SendAsync(
         Member member,
@@ -116,6 +137,77 @@ public sealed class EmailMemberNotifier(
         var label = zh ? "設定新密碼" : "Choose a new password";
 
         return Build(member, subject, heading, lines, label, link);
+    }
+
+    private static EmailMessage Approved(Member member, string? link)
+    {
+        var zh = EmailTemplates.IsChinese(member.PreferredCulture);
+
+        var subject = zh ? "你的 VicRound 會員帳號已開通" : "Your VicRound account is active";
+        var heading = zh ? "帳號已開通" : "Your account is active";
+
+        var lines = zh
+            ? new[]
+            {
+                $"{member.FullName} 您好，您的 VicRound 會員帳號已通過審核。",
+                "現在可以下載會員專屬的規格書與測試報告，也可以直接線上申請樣品。",
+            }
+            : new[]
+            {
+                $"Hello {member.FullName}, your VicRound member account has been approved.",
+                "You can now download member-only spec sheets and test reports, and request samples online.",
+            };
+
+        // 沒有 base URL 時就只有文字：與其放一條壞連結，不如讓他自己從網站登入。
+        var body = string.Concat(lines.Select(EmailTemplates.Paragraph))
+            + (link is null
+                ? string.Empty
+                : EmailTemplates.Button(zh ? "進入會員專區" : "Go to the member area", link));
+
+        return new EmailMessage(
+            member.Email,
+            member.FullName,
+            subject,
+            EmailTemplates.Layout(heading, body, member.PreferredCulture),
+            string.Join("\n\n", lines) + (link is null ? string.Empty : "\n\n" + link));
+    }
+
+    private static EmailMessage Rejected(Member member, string? reason)
+    {
+        var zh = EmailTemplates.IsChinese(member.PreferredCulture);
+
+        var subject = zh ? "關於你的 VicRound 會員申請" : "About your VicRound account application";
+        var heading = zh ? "會員申請結果" : "Your application";
+
+        var lines = new List<string>(zh
+            ? new[]
+            {
+                $"{member.FullName} 您好，感謝您申請 VicRound 會員專區。",
+                "很抱歉，這次的申請未能通過審核。",
+            }
+            : new[]
+            {
+                $"Hello {member.FullName}, thank you for applying for a VicRound member account.",
+                "Unfortunately we are not able to approve this application.",
+            });
+
+        if (!string.IsNullOrWhiteSpace(reason))
+        {
+            lines.Add((zh ? "原因：" : "Reason: ") + reason.Trim());
+        }
+
+        // 收尾一律給一條人的路徑：審核結果有誤判的時候，對方需要知道找誰。
+        lines.Add(zh
+            ? "若您認為這是誤判，或想補充公司資訊，歡迎透過網站的聯絡表單與我們聯繫。"
+            : "If you believe this is a mistake, or would like to add company details, please contact us through the website's contact form.");
+
+        return new EmailMessage(
+            member.Email,
+            member.FullName,
+            subject,
+            EmailTemplates.Layout(
+                heading, string.Concat(lines.Select(EmailTemplates.Paragraph)), member.PreferredCulture),
+            string.Join("\n\n", lines));
     }
 
     private static EmailMessage Build(

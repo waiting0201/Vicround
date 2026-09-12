@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using VicRound.Api.Common;
 using VicRound.Api.Data;
 using VicRound.Api.Models.Entities;
+using VicRound.Api.Services;
 using VicRound.Api.Services.Admin;
 
 namespace VicRound.Api.Handlers;
@@ -18,7 +19,11 @@ namespace VicRound.Api.Handlers;
 /// 但真正的把關必須在這裡——否則改一下請求就能把「已拒絕」變成「已核准」。
 /// </para>
 /// </summary>
-public sealed class AdminActionHandler(VicRoundDbContext db, IAdminCrudService crud)
+public sealed class AdminActionHandler(
+    VicRoundDbContext db,
+    IAdminCrudService crud,
+    IMemberNotifier members,
+    ISampleRequestNotifier samples)
 {
     /// <summary>樣品申請的合法轉移（database.md §14.4）。</summary>
     private static readonly Dictionary<SampleRequestStatus, SampleRequestStatus[]> SampleTransitions = new()
@@ -72,6 +77,20 @@ public sealed class AdminActionHandler(VicRoundDbContext db, IAdminCrudService c
         }
 
         await db.SaveChangesAsync(req.HttpContext.RequestAborted);
+
+        // 先存檔再寄信：信寄出去了但狀態沒存成，對方會收到一封與事實不符的通知。
+        // 停權與恢復刻意不寄信——那是業務關係的變動，該由窗口直接聯繫，系統信只會讓人一頭霧水。
+        switch (action)
+        {
+            case "approve":
+                await members.SendApprovedAsync(member, req.HttpContext.RequestAborted);
+                break;
+
+            case "reject":
+                await members.SendRejectedAsync(member, member.ReviewNote, req.HttpContext.RequestAborted);
+                break;
+        }
+
         return await RowAsync(req, "members", id);
     }
 
@@ -110,6 +129,17 @@ public sealed class AdminActionHandler(VicRoundDbContext db, IAdminCrudService c
         }
 
         await db.SaveChangesAsync(req.HttpContext.RequestAborted);
+
+        // 通知信要的是會員的 Email 與語系，而 FindAsync 只撈了單據本身。
+        // 多一次主鍵查詢換「哪些狀態該寄信」這件事只寫在 notifier 裡一處。
+        var member = await db.Members.FirstOrDefaultAsync(
+            m => m.Id == request.MemberId, req.HttpContext.RequestAborted);
+
+        if (member is not null)
+        {
+            await samples.NotifyStatusAsync(request, member, req.HttpContext.RequestAborted);
+        }
+
         return await RowAsync(req, "sample-requests", id);
     }
 

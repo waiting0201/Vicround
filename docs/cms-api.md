@@ -220,6 +220,18 @@ POST /api/v1/account/sample-requests/{requestNumber}/reorder
 
 Account 端點一律 `Cache-Control: no-store`，**不得**進 Next.js Data Cache，也不得帶 revalidate tag。
 
+**會寄信的端點有限流**（`register`、`resend-verification`、`forgot-password`）：
+以 **IP** 為鍵 10 次／15 分鐘，以 **Email** 為鍵 3 次／15 分鐘，兩個額度都計，任一超過回 `429`
+（`RATE_LIMITED`）。兩個鍵缺一不可——換 IP 就能繞過前者，但受害者的信箱要靠後者才保得住。
+`login` **只以 IP 為鍵**（20 次／15 分鐘）：以 Email 計數等於給攻擊者一個把人鎖在門外的開關，
+針對單一帳號的暴力破解由 `Members.FailedLoginCount` 擋（5 次鎖 15 分鐘）。
+回 `429` 不洩漏帳號是否存在——計數對所有 Email 一視同仁。
+
+**樣品申請送出後會寄兩封信**（窗口通知 + 會員回執），後台把狀態改成核准／出貨／拒絕時
+再寄一封給會員；其餘狀態不寄。會員審核的 `approve` / `reject` 也各寄一封
+（`suspend` / `reactivate` 不寄——那是業務關係的變動，該由窗口直接聯繫）。
+清單見 [azure-deployment.md](azure-deployment.md) 的「寄信」。
+
 ## Admin API (authenticated CRUD)
 
 Mirror the content types; operate on **all** translations and statuses. Editors create a base

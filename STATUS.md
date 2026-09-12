@@ -24,7 +24,7 @@
 **後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
 [docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
 migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
-17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**96 項測試通過**。
+17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**106 項測試通過**。
 
 **內容已進資料庫且前台已切換過去**：確認稿的 1355 組雙語字串與舊站 `www.vicround.com`
 的可用資料都已匯入（見第六節），`apps/web/content/` 已刪除。確認稿本身以
@@ -36,10 +36,12 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 （16 支：註冊／登入／換發／驗證信／忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請），
 **16 支全部有前台介面**。
 
-**寄信管道已接上**（2026-09-12）：`SmtpEmailSender` + `EmailMemberNotifier` + `InquiryNotifier`，
-驗證信、重設密碼信、詢問單的窗口通知與客戶回執都會真的寄出。本機以 SMTP 收件槽實測，
-**註冊 → 驗證 → 忘記密碼 → 重設 → 用新密碼登入整條流程已端到端跑通**。設定鍵見
-[docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」；沒設定時不寄、不擋、只記 Warning。
+**寄信管道已接上**（2026-09-12）：`SmtpEmailSender` + 三個 notifier，**共 10 封交易信**——
+驗證信、重設密碼信、會員審核結果、詢問單的窗口通知與客戶回執、樣品申請的窗口通知與
+會員回執、樣品申請核准／出貨／拒絕的通知。本機以 SMTP 收件槽逐封實測，
+**註冊 → 驗證 → 核准 → 申請樣品 → 出貨整條流程已端到端跑通**。會寄信的端點都有限流
+（IP 10 次／Email 3 次，每 15 分鐘）——信真的會寄出之後，沒有限流等於給人一個洗別人信箱的工具。
+設定鍵見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」；沒設定時不寄、不擋、只記 Warning。
 ⚠️ 正式環境仍待設定 SMTP 與 `SiteSettings.site.baseUrl`。
 
 **正式環境已經跑起來**（2026-09-08）：前台 `https://green-desert-0eeb2ce1e.3.azurestaticapps.net`、
@@ -84,7 +86,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | 🟡 | 正式 `stvicroundprod` 已建、`public-media` 為公開讀；**版位素材尚未上傳**（實測 404，見上方說明） |
-| CI | ✅ | `.github/workflows/api.yml`：建置、96 項測試、產物防呆、migration 同步檢查 |
+| CI | ✅ | `.github/workflows/api.yml`：建置、106 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
 ---
@@ -271,9 +273,9 @@ apps/web/
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **21 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`GET /v1/search` 是 §19.5 的 Phase 1（`LIKE` 掃七張翻譯表，跳脫萬用字元） |
-| Account API `/api/v1/account/**` | ✅ | 16 支端點上線（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store`。**寄信已接**，`IMemberNotifier` 走 SMTP |
+| Account API `/api/v1/account/**` | ✅ | 16 支端點上線（`AccountAuthService` + 三支 handler）；登入前的 8 支在 Router 白名單裡跳過 token 檢查，其餘一律驗 member token 並 `no-store`。**寄信已接**（`IMemberNotifier` / `ISampleRequestNotifier` 走 SMTP），會寄信的端點與登入都有限流 |
 | **Admin API** `/api/admin/**` | ✅ | 登入（**帳號 `Username`，不是 Email**；access 15 分鐘 + httpOnly refresh、重放偵測、鎖定）、27 個單元的 CRUD（登記表驅動）、改 slug 寫 301／刪除寫 410（真刪，被參照時回 409）、發布打 revalidate webhook、媒體上傳、會員與樣品申請的狀態機。後台「使用者」單元可直接設定／重設密碼（新帳號必填，至少 12 字元） |
-| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、96 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
+| CI | ✅ | `.github/workflows/api.yml`：建置（0 warning 閘）、106 項測試、publish、檢查產物不含 `local.settings.json`、檢查 migration 與模型同步 |
 | 部署 | ✅ | `api.yml`：建置→測試→套 migration（臨時放行 runner IP）→部署→實打 health；`web.yml`：後台 SPA 先建→自建 standalone（`pack-standalone` 壓平＋`check-size` 250MB 閘）→`skip_app_build` 上傳→實打 `/en`、樣式表與 `/admin/` |
 | Azure 資源 | ✅ | 見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「已建立的資源」 |
 
@@ -332,7 +334,6 @@ apps/web/
 | ⛔ `SiteSettings.site.baseUrl` | 等正式網域定案 | 信裡的連結需要絕對網址；沒設就不寄信（寧可不寄，也不要寄出壞連結） |
 | ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
 | ⛔ 訓練型 AI 爬蟲政策 | 等客戶決策 | `app/robots.ts` 目前只放行檢索型，訓練型不列 |
-| ⛔ 後台 refresh token 的 cookie | 等後端 | 後台改為 SPA 之後，`fn-admin` 需以 `Set-Cookie` 回 httpOnly refresh token |
 
 ---
 
@@ -364,6 +365,8 @@ apps/web/
 7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
    （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
    變更密碼與新增樣品申請、寄信管道（會員信 + 詢問單通知信與回執）
+8. ~~補完寄信的覆蓋範圍與濫用防線~~ ✅ 2026-09-12：會員審核結果通知、樣品申請的
+   送出／核准／出貨／拒絕通知、會寄信端點的限流（IP + Email 雙鍵）
 
 ---
 

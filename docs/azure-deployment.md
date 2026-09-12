@@ -118,10 +118,23 @@ markup is served.
 
 ## 寄信（會員信與詢問單通知）
 
-驗證信、重設密碼信、詢問單的窗口通知與客戶回執都走 **SMTP**
-（`Api/Services/IEmailSender.cs`）。押在 SMTP 而不是 Communication Services 的 SDK，是因為
-ACS Email 本身就提供 SMTP relay，SendGrid、M365 與客戶自己的郵件主機也都是 SMTP ——
-一套實作涵蓋所有候選管道，也不必為了寄兩種信多背一個 Azure SDK 相依。
+全部的交易信都走 **SMTP**（`Api/Services/IEmailSender.cs`）。押在 SMTP 而不是
+Communication Services 的 SDK，是因為 ACS Email 本身就提供 SMTP relay，SendGrid、M365 與
+客戶自己的郵件主機也都是 SMTP —— 一套實作涵蓋所有候選管道，也不必多背一個 Azure SDK 相依。
+
+會寄出的信共 **10 封**（三個 notifier）：
+
+| 觸發 | 收件人 | 實作 |
+| --- | --- | --- |
+| 註冊、重寄驗證信 | 會員 | `EmailMemberNotifier` |
+| 忘記密碼 | 會員 | 同上 |
+| 後台核准／拒絕會員 | 會員（拒絕信附後台必填的理由） | 同上 |
+| 詢問單送出 | 收件窗口（Reply-To＝客戶）＋ 客戶回執 | `InquiryNotifier` |
+| 樣品申請送出 | 收件窗口（Reply-To＝申請人）＋ 會員回執 | `SampleRequestNotifier` |
+| 樣品申請核准／出貨／拒絕 | 會員（出貨信附物流資訊） | 同上 |
+
+**樣品申請的其餘狀態（審核中、已送達、已取消）刻意不寄信**：一張單走完流程有六次狀態
+變動，每次都寄只會讓人把我們設成垃圾郵件。收信的人沒有要做的事，就不該收到信。
 
 | 設定鍵 | 說明 |
 | --- | --- |

@@ -22,6 +22,7 @@ public interface IContactInquiryService
 /// </summary>
 public sealed class ContactInquiryService(
     VicRoundDbContext db,
+    IContactChannelResolver channels,
     IInquiryNotifier notifier,
     ILogger<ContactInquiryService> logger) : IContactInquiryService
 {
@@ -43,7 +44,7 @@ public sealed class ContactInquiryService(
 
         var type = ResolveType(request, downloadId);
 
-        var channel = await ResolveChannelAsync(type, cancellationToken);
+        var channel = await channels.ResolveAsync(type, cancellationToken);
 
         var policyVersion = await db.SiteSettings
             .Where(s => s.Key == "privacy.policyVersion")
@@ -82,36 +83,6 @@ public sealed class ContactInquiryService(
 
         return referenceNumber;
     }
-
-    /// <summary>
-    /// 收件窗口依詢問類型指派。<b>對不到就退回 <c>Sales</c></b>——確認稿只給了業務、工程、
-    /// 合作三個窗口，而表單預設送出的是 <c>General</c>，硬要精準對應的結果是最大宗的詢問
-    /// 沒有人收信。退回業務窗口既符合實務，也讓後台的「已指派」欄位不會整片空白。
-    /// <para>通知信寄給同一個窗口，所以連 Email 一起撈回來，不另跑一次查詢。</para>
-    /// </summary>
-    private async Task<ChannelTarget?> ResolveChannelAsync(InquiryType type, CancellationToken cancellationToken)
-    {
-        var published = db.ContactChannels.Where(c => c.Status == ContentStatus.Published);
-
-        var matched = await published
-            .Where(c => c.InquiryType == type)
-            .OrderBy(c => c.SortOrder)
-            .Select(c => new ChannelTarget(c.Id, c.Email))
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (matched is not null)
-        {
-            return matched;
-        }
-
-        return await published
-            .Where(c => c.InquiryType == InquiryType.Sales)
-            .OrderBy(c => c.SortOrder)
-            .Select(c => new ChannelTarget(c.Id, c.Email))
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    private sealed record ChannelTarget(int Id, string Email);
 
     /// <summary>
     /// 單號是 <c>INQ-{年}-{6 位流水}</c>，年度內連號。

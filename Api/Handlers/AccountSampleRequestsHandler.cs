@@ -17,7 +17,7 @@ namespace VicRound.Api.Handlers;
 /// <c>SR-2026-000123</c> 也查不到那一單。
 /// </para>
 /// </summary>
-public sealed class AccountSampleRequestsHandler(VicRoundDbContext db)
+public sealed class AccountSampleRequestsHandler(VicRoundDbContext db, ISampleRequestNotifier notifier)
 {
     /// <summary>一次最多建幾個品項。防的是自動化灌單，不是正常使用者。</summary>
     private const int MaxItems = 30;
@@ -225,6 +225,16 @@ public sealed class AccountSampleRequestsHandler(VicRoundDbContext db)
 
         db.SampleRequests.Add(sample);
         await db.SaveChangesAsync(req.HttpContext.RequestAborted);
+
+        // 先存檔再寄信（同註冊流程的理由）。通知信要會員的 Email 與語系，
+        // 而這一層手上只有 memberId——多一次主鍵查詢，換業務真的收得到新單的通知。
+        var member = await db.Members.FirstOrDefaultAsync(
+            m => m.Id == memberId, req.HttpContext.RequestAborted);
+
+        if (member is not null)
+        {
+            await notifier.NotifySubmittedAsync(sample, member, req.HttpContext.RequestAborted);
+        }
 
         return await LoadAsync(req, sample.RequestNumber)
             ?? throw new AppException(ErrorCodes.Internal, "建立後讀不回申請單。", 500);
