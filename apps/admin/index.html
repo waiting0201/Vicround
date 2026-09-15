@@ -9,6 +9,16 @@
       後台介面固定為繁體中文（編輯者的語言），與站台的 en / zh-Hant 兩套內容無關。
     -->
     <meta name="robots" content="noindex, nofollow" />
+    <!--
+      路徑寫成根目錄相對（'/favicon.svg'），由 Vite 補上 base——dev 與 build 都會變成
+      '/admin/favicon.svg'，指到 public/ 底下那兩顆，不會誤指前台那一顆同名的。
+      **不要用 Vite 的 BASE_URL 佔位符**：build 是對的，但 dev 會再補一次 base，變成 /admin/admin/…（404）。
+      也不要寫相對路徑（'favicon.svg'）：後台深層網址由 web 的 middleware rewrite 回
+      index.html，相對路徑會跟著當下的網址跑掉。
+      兩顆是同一張圖的兩種格式：支援 SVG 的瀏覽器取向量版，其餘退回 .ico。
+    -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
     <title>VicRound CMS</title>
   </head>
   <body>

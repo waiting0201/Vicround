@@ -10,6 +10,7 @@ import { useList, useReorder } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { missingCultures, rowTitle } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 import { EntityDrawer } from '@/components/EntityDrawer';
 
 /**
@@ -71,7 +72,13 @@ export function NavigationScreen({ resource }: { resource: ResourceDef }) {
       flat.push(root.id);
       for (const child of childrenOf(root.id)) flat.push(child.id);
     }
-    await reorder.mutateAsync(flat);
+    try {
+      await reorder.mutateAsync(flat);
+    } catch (error) {
+      // 失敗時**不清掉 dirty**：畫面上的順序還是使用者排的那一份，再按一次就重送。
+      toast({ ...describeError(error, '選單順序沒有存起來'), variant: 'danger' });
+      return;
+    }
     setDirty(false);
     toast({ title: '選單順序已儲存', description: '前台的 Header 與 Footer 會依這份順序顯示。', variant: 'success' });
   }

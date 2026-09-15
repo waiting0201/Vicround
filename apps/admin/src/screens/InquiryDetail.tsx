@@ -6,6 +6,7 @@ import { useItem, useList, useSaveItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime, rowTitle } from '@/lib/format';
 import { resourceOf } from '@/lib/resources';
+import { describeError } from '@/lib/errors';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DetailRow } from '@/components/Timeline';
 
@@ -35,10 +36,15 @@ export function InquiryDetail({ resource }: { resource: ResourceDef }) {
   }, [row]);
 
   async function submit() {
-    await save.mutateAsync({
-      id,
-      data: { status, assignedChannelId: channelId || null, internalNote: note },
-    });
+    try {
+      await save.mutateAsync({
+        id,
+        data: { status, assignedChannelId: channelId || null, internalNote: note },
+      });
+    } catch (error) {
+      toast({ ...describeError(error, '這張詢問單沒有存起來'), variant: 'danger' });
+      return;
+    }
     toast({ title: '已更新這張詢問單', variant: 'success' });
   }
 

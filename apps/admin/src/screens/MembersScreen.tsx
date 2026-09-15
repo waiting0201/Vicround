@@ -19,6 +19,7 @@ import { useAction, useList } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime, formatRelative } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 import { StatusBadge } from '@/components/StatusBadge';
 
 /**
@@ -69,7 +70,7 @@ export function MembersScreen({ resource }: { resource: ResourceDef }) {
         variant: 'success',
       });
     } catch (error) {
-      toast({ title: '動作沒有完成', description: (error as Error).message, variant: 'danger' });
+      toast({ ...describeError(error, '動作沒有完成'), variant: 'danger' });
     } finally {
       setApproving(null);
       setRejecting(null);

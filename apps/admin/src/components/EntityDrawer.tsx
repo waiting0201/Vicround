@@ -1,10 +1,10 @@
-import { Button, Drawer, LoadingBlock, useToast } from '@/ui';
+import { Button, Drawer, Icon, LoadingBlock, useToast } from '@/ui';
 import type { Culture } from '@/lib/enums';
 import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
 import { useItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { rowTitle } from '@/lib/format';
-import { EntityForm } from './EntityForm';
+import { EntityForm, scrollToFirstFieldError } from './EntityForm';
 import { RecordActions } from './RecordActions';
 
 /**
@@ -32,9 +32,12 @@ export function EntityDrawer({
   useUnsavedGuard(draft.dirty);
 
   async function save() {
-    const saved = await draft.save();
-    if (!saved) {
-      toast({ title: '有欄位需要修正', description: '紅字標示的欄位填好後再存一次。', variant: 'danger' });
+    const result = await draft.save();
+    if (!result.ok) {
+      // 抽屜比獨立編輯頁更容易漏看：欄位少、捲動短，錯誤若在另一個語系分頁就完全不在畫面上。
+      if (result.culture) onCultureChange(result.culture);
+      scrollToFirstFieldError();
+      toast({ ...result.notice, variant: 'danger' });
       return;
     }
     toast({ title: `已儲存${resource.singular}`, variant: 'success' });
@@ -63,7 +66,22 @@ export function EntityDrawer({
       {!isNew && query.isLoading ? (
         <LoadingBlock className="py-8" />
       ) : (
-        <EntityForm resource={resource} draft={draft} culture={culture} onCultureChange={onCultureChange} />
+        <div className="flex flex-col gap-5">
+          {draft.submitError && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--danger-500)] bg-[var(--danger-50)] px-4 py-3 text-sm text-[var(--danger-500)]"
+            >
+              <Icon name="circle-alert" size={15} className="mt-0.5 shrink-0" />
+              <span>
+                <span className="font-medium">{draft.submitError.title}</span>
+                {draft.submitError.description && <> —— {draft.submitError.description}</>}
+              </span>
+            </p>
+          )}
+
+          <EntityForm resource={resource} draft={draft} culture={culture} onCultureChange={onCultureChange} />
+        </div>
       )}
     </Drawer>
   );

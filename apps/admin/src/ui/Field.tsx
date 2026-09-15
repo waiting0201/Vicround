@@ -27,7 +27,9 @@ export function Field({
   className?: string;
 }) {
   return (
-    <div className={cx('flex flex-col gap-1.5', className)}>
+    // data-field-error 是給「存檔失敗後捲到第一個紅字」用的定位點（見 EntityForm）——
+    // 長表單（產品頁的規格列可能三十列）裡，錯誤在畫面外就等於沒有顯示。
+    <div className={cx('flex flex-col gap-1.5', className)} data-field-error={error ? '' : undefined}>
       <label htmlFor={htmlFor} className="flex items-center gap-1 text-sm font-medium text-[var(--fg-1)]">
         {label}
         {required && (

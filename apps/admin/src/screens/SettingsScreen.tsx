@@ -4,6 +4,7 @@ import { CULTURES, type Culture } from '@/lib/enums';
 import { useList, useSaveItem, useSaveTranslation } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
+import { describeError } from '@/lib/errors';
 
 /**
  * 站台設定。key-value 表，所以沒有「清單 → 編輯一筆」的流程 —— 整頁就是表單。
@@ -46,20 +47,40 @@ export function SettingsScreen({ resource }: { resource: ResourceDef }) {
     setDirty((current) => new Set(current).add(id));
   }
 
+  /**
+   * 這一頁是**一次送出好幾列**（每一列各是一支 PUT），所以失敗要處理得比別的畫面細：
+   * 存壞的那一列之後就停手，已經存進去的從 dirty 拿掉、沒存到的留著。
+   * 全部一起清掉的話，畫面會顯示「所有變更都已儲存」，但其中一列其實沒進資料庫。
+   */
   async function submit() {
-    for (const row of rows) {
-      if (!dirty.has(row.id)) continue;
-      await save.mutateAsync({ id: row.id, data: { value: values[`${row.id}:base`] } });
-      if (row.isLocalized) {
-        for (const item of CULTURES) {
-          await saveTranslation.mutateAsync({
-            id: row.id,
-            culture: item.value,
-            data: { value: values[`${row.id}:${item.value}`] },
-          });
+    const pending = rows.filter((row) => dirty.has(row.id));
+    const saved = new Set<string>();
+
+    for (const row of pending) {
+      try {
+        await save.mutateAsync({ id: row.id, data: { value: values[`${row.id}:base`] } });
+        if (row.isLocalized) {
+          for (const item of CULTURES) {
+            await saveTranslation.mutateAsync({
+              id: row.id,
+              culture: item.value,
+              data: { value: values[`${row.id}:${item.value}`] },
+            });
+          }
         }
+        saved.add(row.id);
+      } catch (error) {
+        const notice = describeError(error, '設定沒有存完');
+        setDirty(new Set(pending.filter((item) => !saved.has(item.id)).map((item) => item.id)));
+        toast({
+          ...notice,
+          title: `${notice.title}（卡在「${String(row.key ?? row.id)}」）`,
+          variant: 'danger',
+        });
+        return;
       }
     }
+
     setDirty(new Set());
     toast({ title: '設定已儲存', description: '影響 SEO 的設定會在下一次頁面請求生效。', variant: 'success' });
   }

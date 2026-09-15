@@ -1,6 +1,6 @@
 import { Badge, Card, Icon, Tabs } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
-import type { EntityDraft } from '@/lib/draft';
+import { hasErrorsIn, type EntityDraft } from '@/lib/draft';
 import type { FieldDef, ResourceDef } from '@/lib/resources';
 import { FieldControl } from './FieldControl';
 
@@ -57,13 +57,25 @@ export function EntityForm({
               items={CULTURES.map((item) => ({
                 key: item.value,
                 label: item.label,
-                indicator: isTranslationEmpty(draft, item.value, resource) ? 'warning' : 'none',
+                // 錯誤優先於缺漏：缺漏可以先存著，錯誤會擋下存檔，要先被看到
+                indicator: hasErrorsIn(draft.errors, item.value)
+                  ? 'danger'
+                  : isTranslationEmpty(draft, item.value, resource)
+                    ? 'warning'
+                    : 'none',
               }))}
             />
           </div>
 
           <div className="flex flex-col gap-5 p-5">
-            {isTranslationEmpty(draft, culture, resource) && (
+            {hasErrorsIn(draft.errors, culture) && (
+              <p className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--danger-50)] px-3 py-2 text-xs text-[var(--danger-500)]" role="alert">
+                <Icon name="circle-alert" size={14} />
+                這個語系有欄位需要修正，見下方紅字。
+              </p>
+            )}
+
+            {!hasErrorsIn(draft.errors, culture) && isTranslationEmpty(draft, culture, resource) && (
               <p className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--warning-50)] px-3 py-2 text-xs text-[var(--warning-500)]">
                 <Icon name="alert-triangle" size={14} />
                 這個語系還沒有內容。存檔後前台的 {culture} 版本會找不到這一筆。
@@ -97,6 +109,24 @@ export function EntityForm({
         </Card>
       )}
     </div>
+  );
+}
+
+/**
+ * 存檔被驗證擋下後，把畫面捲到第一個紅字上。
+ *
+ * <p>
+ * 兩個 `requestAnimationFrame`：呼叫端通常同時切了語系分頁，要等 React 重繪完，
+ * 新分頁裡的欄位才存在於 DOM。`block: 'center'` 而不是 `'start'` —— 編輯頁底部有固定
+ * 動作列、頂部有 PageHeader，靠邊對齊會被蓋掉半截。
+ * </p>
+ */
+export function scrollToFirstFieldError() {
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const target = document.querySelector('[data-field-error]');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }),
   );
 }
 

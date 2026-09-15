@@ -3,6 +3,7 @@ import { Button, ConfirmDialog, Icon, useToast } from '@/ui';
 import { useDeleteItem, usePublishItem } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
+import { describeError } from '@/lib/errors';
 
 /**
  * 發布／取消發布／刪除三顆按鈕。
@@ -46,7 +47,7 @@ export function RecordActions({
         });
       }
     } catch (error) {
-      toast({ title: '動作沒有完成', description: (error as Error).message, variant: 'danger' });
+      toast({ ...describeError(error, '動作沒有完成'), variant: 'danger' });
     } finally {
       setConfirming(null);
     }

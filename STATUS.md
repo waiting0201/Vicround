@@ -248,19 +248,31 @@ apps/web/
 ### 瀏覽器驗收（2026-09-15）
 
 以 headless Chrome 對**真的 Admin API**（本機 `func` + SQL Server container，`VITE_ADMIN_MOCK=0`）
-逐畫面走過：27 個清單全部正常載入且有資料，除字型與 favicon 外沒有任何 4xx／5xx。
+逐畫面走過：27 個清單全部正常載入且有資料，除字型外沒有任何 4xx／5xx（當時缺的
+favicon 已於同日補上，見下方）。
 另外實跑：`article-tags` 的建立 → 編輯 → 發布 → 刪除（確認框文案、toast、清單即時更新都對）、
 雙語翻譯各存一份（`en` 與 `zh-Hant` 各一列）、產品編輯頁的 reference／multiReference／
 mediaList／子表（關聯產業原樣存檔不會被清掉）。
 
-驗收過程修掉四個缺陷：
+驗收過程修掉六個缺陷。前兩個是**存了也不會寫進去**的靜默資料遺失，
+`node scripts/check-admin-links.mjs`（已進 `api.yml`）現在會擋下同類問題：
 
 | 缺陷 | 症狀 | 修法 |
 | --- | --- | --- |
+| 產品圖庫沒有寫入路徑 | 畫面有「產品圖庫」可上傳、按下去也顯示已儲存，但 `AdminResources.cs` 沒登記 `gallery`，圖不會進 `ProductImages` | 登記 `gallery` → `ProductImage`（`ProductId`／`MediaAssetId`，帶排序） |
+| 後台新增的編輯者沒有角色 | `roles` 同樣沒登記 → 新帳號一個角色都沒有，而權限是預設拒絕，**那個帳號登入後每一支端點都是 403** | 登記 `roles` → `UserRole`；`AdminLink` 新增「以自然鍵對應」（前端送 `Editor`，後端查 `Roles.Name` 換成主鍵，查不到回 400） |
 | 外鍵型別與 id 不一致 | `id` 是字串但 `parentId` 是數字，導覽樹的 `parentId === id` 永遠不成立 —— **Header 選單的 15 個子項整層不顯示** | `AdminMapper.ToRow` 把外鍵也輸出成字串；`NavigationScreen` 比對前再正規化一次 |
 | 站台設定不分區 | 分區用 `:` 切 key，但 key 是 `seo.titleTemplate` 這種點號 —— 9 個設定全擠在「其他」 | `SettingsScreen` 改用 `.`，`GROUP_LABEL` 的鍵改成實際前綴 |
 | 刪除後多一次 404 | 抽屜關閉前 React Query 又拿已刪除的 id 抓一次 | `useDeleteItem` 先 `removeQueries` 再 invalidate |
 | 側欄對照假警報 | 媒體庫退役後 `media` 還留在資料字典，開發模式每頁都 `console.error` | `menu.ts` 加 `MENULESS_TYPES`，寫明媒體為何沒有側欄入口 |
+
+### 驗收後的三項調整（2026-09-15）
+
+| 項目 | 做了什麼 |
+| --- | --- |
+| 企業網域規則隱藏 | 從側欄拿掉（`MENULESS_TYPES`）。**規則本身照常生效**——註冊時比對網域是後端在做的事；這張表是一次設定好的政策，不該跟每天要處理的佇列擠在「營運」區。網址 `/admin/business-domains` 仍打得開，見 [docs/admin-ui.md](docs/admin-ui.md) §3.2 |
+| 表單驗證的訊息會顯示了 | 原本三種失敗會**靜靜地什麼都不發生**：①後端擋下與斷線只是 promise rejected（存檔鍵、排序、設定、詢問單、申請單、轉址全部沒接住）②錯誤落在沒被打開的語系分頁 ③子項（規格列／版塊／製程步驟）根本沒驗。現在：`lib/errors.ts` 把 `code` 翻成中文訊息、存檔失敗的紅色區塊留在表單頂端、分頁列標紅點並自動切過去、子項一起驗。另外補三條規則——看不到的欄位（`visibleWhen`）不驗、`email`／`url`／`color` 檢查格式、**至少要有一個語系是完整的**（原本兩個語系都空白也存得下去，列表上就多一列「（未命名）」） |
+| 前後台 favicon | 品牌「V」標記（幾何量自 `public/brand/vicround-mark-purple.png`，切角方塊呼應 `--chamfer-*`）。前台 `apps/web/app/` 的 `icon.svg`／`favicon.ico`／`apple-icon.png`（Next.js 檔案慣例），後台 `apps/admin/public/` 同一顆的 `.svg`＋`.ico`，兩邊同一張圖 |
 
 ### 已處理的跨畫面規則
 

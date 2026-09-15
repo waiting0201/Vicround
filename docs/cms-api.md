@@ -53,8 +53,8 @@ Account API 掛在 `fn-public` 而非 `fn-admin`：前台 SSR 對它是同源呼
 變成公開端點），新增後台端點忘了補權限表會 403（不會靜默放行）。
 
 Each endpoint is an HTTP-triggered function; route templates give the paths below. Versioned
-(`v1`) so the Next.js client can pin a contract. JSON only. `camelCase`. Errors use RFC 7807
-`application/problem+json`. Keep functions thin — call into the `Application` layer.
+(`v1`) so the Next.js client can pin a contract. JSON only. `camelCase`. Errors use the same
+envelope as success responses (`success: false` + `code` + human-readable `message`, above). Keep functions thin — call into the `Application` layer.
 
 ## Content API (public, read-only)
 

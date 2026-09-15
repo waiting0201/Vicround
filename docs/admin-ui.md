@@ -176,7 +176,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 ## 3. 畫面型別
 
-26 個畫面（`apps/admin/src/lib/menu.ts` 的 `ALL_ITEMS`）收斂成 **7 種型別**。分類依據
+25 個側欄畫面（`apps/admin/src/lib/menu.ts` 的 `ALL_ITEMS`）收斂成 **7 種型別**。分類依據
 兩個既有事實，不是憑感覺分：`menu.ts` 的 `hasDetail`（有沒有獨立 `/{type}/:id` 路由）
 與 `docs/database.md` 的表分類（Routable ／ Addressable ／ Embedded、有沒有
 `*Translations`）。
@@ -199,7 +199,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 > 再回來挑，中間那一趟沒有產生任何價值。`media` 資源本身仍在（欄位要靠
 > `GET /admin/media/{id}` 讀回檔名與縮圖），只是不再有自己的入口。
 
-### 3.2 27 個畫面對照表
+### 3.2 25 個側欄畫面對照表
 
 | 分區 | 畫面（`menu.ts` label） | `path` | 型別 | 備註 |
 | --- | --- | --- | --- | --- |
@@ -224,14 +224,20 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 營運 | 會員審核 | `members` | E | 見 5.5 |
 | 營運 | 樣品申請 | `sample-requests` | F | 見 5.6 |
 | 營運 | 詢問單 | `contact-inquiries` | E | 見 5.5 |
-| 營運 | 企業網域規則 | `business-domains` | C | `Domain` / `Rule` / `Note`，無翻譯欄位 |
 | 站台 | 導覽選單 | `navigation` | D | 見 5.7 |
 | 站台 | 轉址（301） | `redirects` | C | `FromPath`／`ToPath`／`StatusCode`，見 5.8 的碰撞檢查提示 |
 | 站台 | 站台設定 | `site-settings` | G | `adminOnly` |
 | 站台 | 後台使用者 | `users` | C | `adminOnly`；抽屜內是「角色勾選 + 帳號啟用開關」，不含密碼欄位（密碼由使用者自己在登入後修改，Admin 不代改密碼） |
 
-型別 A 共 10 個、型別 B 共 8 個、型別 C 共 3 個、型別 D／E／F／G 各 1–2 個，
-合計 27 個，與 `ALL_ITEMS.length` 一致。
+型別 A 共 10 個、型別 B 共 8 個、型別 C 共 2 個、型別 D／E／F／G 各 1–2 個，
+合計 25 個，與 `ALL_ITEMS.length` 一致。
+
+**側欄沒有入口、但畫面還在的**（`lib/menu.ts` 的 `MENULESS_TYPES`）：
+
+| 項目 | `type` | 型別 | 為什麼不放側欄 |
+| --- | --- | --- | --- |
+| 企業網域規則 | `business-domains` | C | 規則照常生效（註冊時比對網域是後端在做的事），但這張表是一次設定好的政策、不是日常內容。擺在「營運」區會跟會員審核、樣品申請、詢問單這些每天要處理的佇列搶注意力。要改時直接打 `/admin/business-domains`，或把那一行搬回 `MENU` |
+| 媒體庫 | `media` | — | 媒體庫已退役，檔案從各欄位直接上傳；資料字典留著它的定義是給欄位讀單筆媒體用 |
 
 ---
 
@@ -342,8 +348,12 @@ props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節�
 選擇器、不是文字輸入，跟其他三個文字欄位放在同一個可收合的「SEO」子區塊
 （預設收合，因為多數人不會每次都改）。
 
-### 5.3 翻譯缺漏的視覺標示
+### 5.3 翻譯缺漏與欄位錯誤的視覺標示
 
+- `Tabs` 的 `indicator="danger"`（紅點）——**該語系分頁裡有欄位錯誤**。紅點優先於黃點：
+  缺漏可以先存著，錯誤會擋下存檔，要先被看到。存檔被擋下時，畫面還會**自動切到**
+  第一個有錯的語系分頁（`EntityEditor` / `EntityDrawer`）——錯誤若留在沒被打開的那一頁，
+  Toast 說的「紅字標示的欄位」在畫面上一個都找不到，使用者只會卡住。
 - `Tabs` 的 `indicator="warning"`（黃點）——只要該語系分頁一次都還沒被儲存過就標記，
   跟「內容是否完整」無關（不做逐欄位檢查「還缺哪個欄位」那麼細，缺一整份翻譯
   跟缺一個欄位是兩件事，後者由必填欄位的紅字錯誤處理，見 `Field`）。
@@ -640,9 +650,17 @@ Testimonials/PartnerBrands/ContactChannels/NavigationItems 共用）
 
 ### 8.3 錯誤訊息
 
-- 後端回 RFC 7807 `problem+json` 的 `detail`（`docs/cms-api.md`）時，**直接顯示
-  `detail`**，不要在前端另外包一層「發生錯誤：」再貼上去——那是兩次「發生錯誤」
-  疊在一起。
+- **每一個寫入動作的失敗都必須變成一則看得見的訊息。** 後端擋下來的（`ApiError`）與
+  連線失敗的（`fetch` 丟 `TypeError`）如果只是讓 promise rejected，畫面上什麼都不會
+  發生——按鈕轉一下就恢復原狀，使用者會以為存好了。翻譯統一走 `lib/errors.ts` 的
+  `describeError()`：標題依 `code` 分類（**不比對 `message` 字串**），說明直接用後端
+  回應信封（`{ success, code, message, errors }`，見 `docs/cms-api.md`）的 `message`
+  ——那句話本來就是中文、寫給人看的，前端再包一層「發生錯誤：」就是兩次「發生錯誤」
+  疊在一起。斷線是唯一要自己給文案的情況：`Failed to fetch` 貼在畫面上等於沒說。
+- **存檔失敗的訊息要留在畫面上**（編輯頁／抽屜頂端的紅色區塊 `draft.submitError`），
+  不是只丟一則會飄走的 Toast：那是使用者接下來要處理的事，不是一則通知。
+- 前端驗證擋下時，欄位錯誤（`draft.errors`）貼在各自那一格；**看不到的欄位不驗證**
+  （`visibleWhen` 為否的條件欄位）——被一個畫面上根本沒有的必填擋住是最貴的一種錯誤。
 - 前端自己驗證出的錯誤（必填未填、格式不對）要講清楚**怎麼修**，不是只講「哪裡
   錯」：「Slug 只能包含小寫英文字母、數字與連字號」比「Slug 格式錯誤」更快讓人
   改對（對應 `docs/database.md §0.4` 的 Slug CHECK 約束）。

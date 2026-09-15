@@ -66,7 +66,6 @@ export const MENU: MenuSection[] = [
       { type: 'members', label: '會員審核', icon: 'users' },
       { type: 'sample-requests', label: '樣品申請', icon: 'clipboard-list' },
       { type: 'contact-inquiries', label: '詢問單', icon: 'inbox' },
-      { type: 'business-domains', label: '企業網域規則', icon: 'filter' },
     ],
   },
   {
@@ -89,12 +88,22 @@ export const ALL_ITEMS: MenuItem[] = MENU.flatMap((section) => section.items);
  * 側欄不放入口、但資料字典裡有定義的單元。
  *
  * <p>
- * `media` 是唯一一個：媒體庫已經退役（檔案從各欄位直接上傳），但欄位要拿它的
- * 定義去讀單筆媒體，所以 `RESOURCES` 留著它。列在這裡，下面的對照才不會每次
- * 開發都吵一次假警報。
+ * `media`：媒體庫已經退役（檔案從各欄位直接上傳），但欄位要拿它的定義去讀單筆媒體，
+ * 所以 `RESOURCES` 留著它。
+ * </p>
+ *
+ * <p>
+ * `business-domains`：**規則本身照常生效**——註冊時比對網域是後端 `AccountAuthService`
+ * 在做的事，跟側欄有沒有入口無關。只是這張表平常不必動（值是一次設定好的政策，不是
+ * 日常內容），擺在「營運」區會跟會員審核、樣品申請、詢問單這些每天要處理的佇列搶注意力。
+ * 要改規則時網址仍然打得開（`/business-domains`），把這一行搬回 `MENU` 就會再出現。
+ * </p>
+ *
+ * <p>
+ * 列在這裡，下面的對照才不會每次開發都吵一次假警報。
  * </p>
  */
-const MENULESS_TYPES = ['media'];
+const MENULESS_TYPES = ['media', 'business-domains'];
 
 /** 側欄與資料字典必須一一對應；對不起來就是有畫面連不到，開發時就要吵出來。 */
 if (import.meta.env.DEV) {

@@ -4,8 +4,12 @@ import { cx } from './cx';
 export type TabItem = {
   key: string;
   label: ReactNode;
-  /** `warning` = 該分頁有缺漏（主要用途：語系分頁的「翻譯缺漏」標記，見 docs/admin-ui.md）。 */
-  indicator?: 'warning' | 'none';
+  /**
+   * `warning` = 該分頁有缺漏（主要用途：語系分頁的「翻譯缺漏」標記，見 docs/admin-ui.md）；
+   * `danger` = 該分頁裡有欄位錯誤。兩者的差別是「還沒做」與「做錯了」——後者擋存檔，
+   * 而且錯誤很可能在沒被打開的那一個分頁裡，分頁列不標就等於沒有顯示。
+   */
+  indicator?: 'warning' | 'danger' | 'none';
 };
 
 export type TabsProps = {
@@ -56,6 +60,14 @@ export function Tabs({ items, value, defaultValue, onValueChange, className }: T
                 role="img"
                 aria-label="缺漏"
                 title="這個分頁有缺漏（例如尚未翻譯）"
+              />
+            )}
+            {item.indicator === 'danger' && (
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-[var(--danger-500)]"
+                role="img"
+                aria-label="有錯誤"
+                title="這個分頁有欄位需要修正"
               />
             )}
           </button>

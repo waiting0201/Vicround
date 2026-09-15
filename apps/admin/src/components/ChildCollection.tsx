@@ -39,12 +39,22 @@ export function ChildCollection({
     draft.setBase(definition.key, next);
   }
 
+  /**
+   * 子項的錯誤鍵是 `{key}.{index}.{欄位}`（見 lib/draft.ts），**綁在列的位置上**。
+   * 刪掉一列或上下搬動之後，留著的訊息會貼到另一列去 —— 改結構就把整組清掉，
+   * 由下一次存檔重新算。改單一格的值則只清那一格。
+   */
+  function reshape(next: ChildItem[]) {
+    draft.clearErrors(`${definition.key}.`);
+    update(next);
+  }
+
   function add() {
     update([...items, { id: `new-${Date.now()}`, translations: {} }]);
   }
 
   function remove(index: number) {
-    update(items.filter((_, position) => position !== index));
+    reshape(items.filter((_, position) => position !== index));
   }
 
   function move(index: number, delta: number) {
@@ -52,14 +62,16 @@ export function ChildCollection({
     if (target < 0 || target >= items.length) return;
     const next = [...items];
     [next[index], next[target]] = [next[target], next[index]];
-    update(next);
+    reshape(next);
   }
 
   function setItemBase(index: number, name: string, value: unknown) {
+    draft.clearErrors(`${definition.key}.${index}.${name}`);
     update(items.map((item, position) => (position === index ? { ...item, [name]: value } : item)));
   }
 
   function setItemTranslation(index: number, name: string, value: unknown) {
+    draft.clearErrors(`${definition.key}.${index}.${culture}.${name}`);
     update(
       items.map((item, position) =>
         position === index
@@ -118,7 +130,7 @@ export function ChildCollection({
                 <FieldGrid
                   fields={definition.baseFields}
                   values={item}
-                  errors={{}}
+                  errors={draft.errors}
                   errorPrefix={`${definition.key}.${index}`}
                   onChange={(name, value) => setItemBase(index, name, value)}
                 />
@@ -131,7 +143,7 @@ export function ChildCollection({
                     <FieldGrid
                       fields={definition.translationFields}
                       values={item.translations?.[culture] ?? {}}
-                      errors={{}}
+                      errors={draft.errors}
                       errorPrefix={`${definition.key}.${index}.${culture}`}
                       onChange={(name, value) => setItemTranslation(index, name, value)}
                     />

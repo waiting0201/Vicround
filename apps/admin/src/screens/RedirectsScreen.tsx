@@ -20,6 +20,7 @@ import { useDeleteItem, useList, useSaveItem } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 
 /**
  * 轉址表。
@@ -136,10 +137,17 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
     if (!valid) return;
 
     const flattened = valid.toPath !== normalize(form.toPath);
-    await save.mutateAsync({
-      id: editing === 'new' ? undefined : (editing as AdminRow).id,
-      data: { ...valid, statusCode: Number(valid.statusCode) },
-    });
+    try {
+      await save.mutateAsync({
+        id: editing === 'new' ? undefined : (editing as AdminRow).id,
+        data: { ...valid, statusCode: Number(valid.statusCode) },
+      });
+    } catch (error) {
+      // 後端也有一組唯一鍵（fromPath）——前端的重複檢查只看得到目前這一頁載入的那些列，
+      // 真正判定重複的是資料庫。被擋下來時抽屜要留著，不然使用者剛打的東西就沒了。
+      toast({ ...describeError(error, '轉址沒有存起來'), variant: 'danger' });
+      return;
+    }
 
     toast({
       title: '轉址已儲存',
@@ -324,7 +332,7 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
             toast({ title: '轉址已刪除', variant: 'success' });
             setEditing(null);
           } catch (error) {
-            toast({ title: '刪除沒有完成', description: (error as Error).message, variant: 'danger' });
+            toast({ ...describeError(error, '刪除沒有完成'), variant: 'danger' });
           } finally {
             setConfirmingDelete(false);
           }

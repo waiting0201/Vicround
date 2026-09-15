@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="VicRound">
+  <!--
+    品牌「V」標記做成 favicon。幾何量自 public/brand/vicround-mark-purple.png
+    （原圖 2000×1815，筆畫等寬 322px），不是重畫的近似形狀。
+
+    底色方塊用切角（chamfer）而不是圓角：ds/tokens/radii.css 的 --chamfer-* 就是從
+    這個 V 的銳角衍生出來的品牌語彙，後台的 BrandMark 也是同一顆（紫底切角方塊 + 白色字首）。
+
+    白 V 壓在品牌紫上而不是「紫 V 去背」：分頁列在淺色與深色系統下都畫得出來，
+    去背的細筆畫在 16px 會消失。同一份拷貝在 apps/admin/public/favicon.svg——
+    前後台是同一個品牌，兩邊要同時改。
+  -->
+  <path fill="#6436ef" d="M0 0h26l6 6v26H6l-6-6z"/>
+  <path fill="#fff" d="M6.17 6.93 16 25l9.83-18.07h-3.22L16 19.08 9.39 6.93z"/>
+</svg>

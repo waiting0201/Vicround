@@ -6,7 +6,7 @@ import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
 import { useItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { rowTitle } from '@/lib/format';
-import { EntityForm } from '@/components/EntityForm';
+import { EntityForm, scrollToFirstFieldError } from '@/components/EntityForm';
 import { ChildCollection } from '@/components/ChildCollection';
 import { RecordActions } from '@/components/RecordActions';
 
@@ -43,13 +43,17 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
   const slugChanged = Boolean(row?.slug) && draft.base.slug !== row?.slug;
 
   async function save() {
-    const saved = await draft.save();
-    if (!saved) {
-      toast({ title: '有欄位需要修正', description: '紅字標示的欄位填好後再存一次。', variant: 'danger' });
+    const result = await draft.save();
+    if (!result.ok) {
+      // 錯誤可能落在另一個語系分頁上：先切過去，Toast 說的「紅字」才真的看得到。
+      // 後端擋下來的訊息另外留在表單上方（`draft.submitError`），Toast 飄走了還查得到。
+      if (result.culture) setCulture(result.culture);
+      scrollToFirstFieldError();
+      toast({ ...result.notice, variant: 'danger' });
       return;
     }
     toast({ title: `已儲存${resource.singular}`, variant: 'success' });
-    if (isNew) navigate(`/${resource.type}/${saved}`, { replace: true });
+    if (isNew) navigate(`/${resource.type}/${result.id}`, { replace: true });
   }
 
   return (
@@ -72,6 +76,19 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
         <LoadingBlock />
       ) : (
         <div className="flex flex-col gap-5">
+          {draft.submitError && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--danger-500)] bg-[var(--danger-50)] px-4 py-3 text-sm text-[var(--danger-500)]"
+            >
+              <Icon name="circle-alert" size={15} className="mt-0.5 shrink-0" />
+              <span>
+                <span className="font-medium">{draft.submitError.title}</span>
+                {draft.submitError.description && <> —— {draft.submitError.description}</>}
+              </span>
+            </p>
+          )}
+
           {slugChanged && (
             <p className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning-500)] bg-[var(--warning-50)] px-4 py-3 text-sm text-[var(--warning-500)]">
               <Icon name="alert-triangle" size={15} className="mt-0.5 shrink-0" />
@@ -94,7 +111,8 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--border-1)] bg-[var(--surface-card)] px-6 py-3 shadow-[var(--shadow-md)] lg:left-64">
         <div className="flex items-center justify-end gap-2">
           <span className="mr-auto text-xs text-[var(--fg-3)]">
-            {draft.dirty ? '有尚未儲存的變更' : '所有變更都已儲存'}
+            {/* 還沒建立的那一筆不能說「所有變更都已儲存」—— 畫面上一個字都還沒進資料庫 */}
+            {isNew && !draft.dirty ? '這筆還沒有建立' : draft.dirty ? '有尚未儲存的變更' : '所有變更都已儲存'}
           </span>
           {row && <RecordActions resource={resource} row={row} onDeleted={() => navigate(`/${resource.type}`)} />}
           <Button variant="secondary" onClick={draft.reset} disabled={!draft.dirty}>

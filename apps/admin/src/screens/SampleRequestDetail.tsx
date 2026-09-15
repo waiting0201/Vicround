@@ -5,6 +5,7 @@ import { SAMPLE_REQUEST_STATUS_LABEL, SAMPLE_REQUEST_TIMESTAMPS } from '@/lib/en
 import { useItem, useSaveItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DetailRow, Timeline } from '@/components/Timeline';
 
@@ -39,7 +40,12 @@ export function SampleRequestDetail({ resource }: { resource: ResourceDef }) {
   }, [row]);
 
   async function submit() {
-    await save.mutateAsync({ id, data: form });
+    try {
+      await save.mutateAsync({ id, data: form });
+    } catch (error) {
+      toast({ ...describeError(error, '這張申請單沒有存起來'), variant: 'danger' });
+      return;
+    }
     toast({ title: '已更新這張申請單', variant: 'success' });
   }
 

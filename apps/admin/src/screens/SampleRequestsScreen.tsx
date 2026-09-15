@@ -10,6 +10,7 @@ import { useAction, useList } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { formatRelative } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 
 /**
  * 樣品申請看板。
@@ -132,7 +133,7 @@ function RequestCard({ resource, row }: { resource: ResourceDef; row: AdminRow }
       await action.mutateAsync({ id: row.id, action: 'status', data: { status: target } });
       toast({ title: `已改為「${SAMPLE_REQUEST_STATUS_LABEL[target]}」`, variant: 'success' });
     } catch (error) {
-      toast({ title: '狀態沒有更新', description: (error as Error).message, variant: 'danger' });
+      toast({ ...describeError(error, '狀態沒有更新'), variant: 'danger' });
     } finally {
       setTarget(null);
     }

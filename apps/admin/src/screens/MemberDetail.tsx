@@ -5,6 +5,7 @@ import { MEMBER_JOB_ROLE_LABEL, MEMBER_STATUS_LABEL } from '@/lib/enums';
 import { useAction, useItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DetailRow, Timeline } from '@/components/Timeline';
 
@@ -31,7 +32,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
       await action.mutateAsync({ id, action: name, data });
       toast({ title: '已更新這個帳號的狀態', variant: 'success' });
     } catch (error) {
-      toast({ title: '動作沒有完成', description: (error as Error).message, variant: 'danger' });
+      toast({ ...describeError(error, '動作沒有完成'), variant: 'danger' });
     } finally {
       setConfirming(null);
       setRejecting(false);

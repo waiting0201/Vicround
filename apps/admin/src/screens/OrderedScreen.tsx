@@ -5,6 +5,7 @@ import { useList, useReorder } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { missingCultures, optionLabel, rowTitle } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 import { CreateButton } from '@/components/ResourceList';
 import { EntityDrawer } from '@/components/EntityDrawer';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -45,7 +46,13 @@ export function OrderedScreen({ resource }: { resource: ResourceDef }) {
   }
 
   async function saveOrder() {
-    await reorder.mutateAsync(order.map((row) => row.id));
+    try {
+      await reorder.mutateAsync(order.map((row) => row.id));
+    } catch (error) {
+      // 失敗時**不清掉 dirty**：畫面上的順序還是使用者排的那一份，再按一次就重送。
+      toast({ ...describeError(error, '排序沒有存起來'), variant: 'danger' });
+      return;
+    }
     setDirty(false);
     toast({ title: '排序已儲存', description: '前台的顯示順序會跟著這一份。', variant: 'success' });
   }

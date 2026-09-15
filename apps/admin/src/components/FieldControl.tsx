@@ -16,6 +16,7 @@ import { uploadMedia } from '@/lib/api';
 import { useItem, useList } from '@/lib/queries';
 import { resourceOf, type FieldDef } from '@/lib/resources';
 import { formatBytes, isValidSlug, rowTitle, toSlug } from '@/lib/format';
+import { describeError } from '@/lib/errors';
 
 /**
  * 把一條欄位定義（`lib/resources.ts` 的 `FieldDef`）畫成一個輸入控制項。
@@ -343,7 +344,10 @@ function MediaControl({
       const row = await uploadMedia(file, container);
       onChange(row.id);
     } catch (error) {
-      setFailed((error as Error).message);
+      // 上傳失敗最常見的是檔案太大與格式不支援，兩種後端都回得出中文原因；
+      // 斷線時 fetch 只丟一句英文的 Failed to fetch，那一句貼在畫面上等於沒說。
+      const notice = describeError(error, '上傳失敗');
+      setFailed(notice.description ? `${notice.title}：${notice.description}` : notice.title);
     } finally {
       setUploading(false);
       // 清掉 input 的值，否則連續選同一個檔案不會觸發 change。
@@ -464,7 +468,10 @@ function MediaListControl({
       }
       onChange([...ids, ...added]);
     } catch (error) {
-      setFailed((error as Error).message);
+      // 上傳失敗最常見的是檔案太大與格式不支援，兩種後端都回得出中文原因；
+      // 斷線時 fetch 只丟一句英文的 Failed to fetch，那一句貼在畫面上等於沒說。
+      const notice = describeError(error, '上傳失敗');
+      setFailed(notice.description ? `${notice.title}：${notice.description}` : notice.title);
     } finally {
       setUploading(false);
       if (fileInput.current) fileInput.current.value = '';
