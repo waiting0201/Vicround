@@ -22,7 +22,14 @@ import { BrandMark } from './BrandMark';
  */
 
 const COLLAPSE_KEY = 'vicround-admin-sidebar-collapsed';
-const SECTIONS_KEY = 'vicround-admin-sidebar-sections';
+/** 尾巴的 `-v2` 是因為預設值改過（改成只開第一個分區）。沿用舊鍵的話，已經
+    在用的人存的是「一個都沒收」，新的預設對他們永遠不會生效。 */
+const SECTIONS_KEY = 'vicround-admin-sidebar-sections-v2';
+
+/** 第一次進後台的樣子：只開第一個分區（「內容」，也是 `HOME_PATH` 的所在地）。 */
+function defaultClosedSections(): Set<string> {
+  return new Set(MENU.slice(1).map((section) => section.title));
+}
 
 /**
  * 記的是「哪幾個分區被**收起來**」，不是「哪幾個是展開的」。
@@ -30,17 +37,23 @@ const SECTIONS_KEY = 'vicround-admin-sidebar-sections';
  * <p>
  * 兩者不對稱：之後在 `menu.ts` 加一個新分區時，記展開清單會讓那個分區對所有舊使用者
  * 都是收起來的（清單裡沒有它）——新功能上線第一天沒有人看得到入口。記收合清單則
- * 預設展開，使用者要收才收。
+ * 之後新增的分區一律是展開的，使用者要收才收。
+ * </p>
+ *
+ * <p>
+ * 只有**還沒存過**才套預設值（見 `defaultClosedSections`）。存過就照使用者自己的
+ * 安排——「我上次把它打開了，回來又被關上」比預設值不合口味惱人得多。
  * </p>
  */
 function readClosedSections(): Set<string> {
   try {
     const raw = localStorage.getItem(SECTIONS_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    if (raw === null) return defaultClosedSections();
+    const parsed: unknown = JSON.parse(raw);
     return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
   } catch {
     // 手動改壞、或無痕模式擋下 localStorage —— 側欄不該因此整個開不起來
-    return new Set();
+    return defaultClosedSections();
   }
 }
 
@@ -233,7 +246,9 @@ function Nav({ collapsed, isAdmin, closedSections, onToggleSection, onRevealSect
   }, [activeTitle, onRevealSection]);
 
   return (
-    <nav className="flex flex-col gap-5 px-2 pb-8">
+    // pt-3：不留這一段，第一個分區標題會貼著頂欄的分隔線，看起來像那條線的標籤
+    // 而不是一段清單的開頭。pb-8 則是讓最後一項捲到底時不會黏在收合鈕上。
+    <nav className="flex flex-col gap-5 px-2 pb-8 pt-3">
       {MENU.map((section) => {
         // Editor 看不到 Admin 專屬的項目 —— 不存在的選單比看得到按不動更少困惑
         const items = section.items.filter((item: MenuItem) => isAdmin || !item.adminOnly);
