@@ -74,7 +74,9 @@ export default async function ProductPage({ params }: Params) {
   const t = translator(locale);
   const data = await getProduct(locale, slug);
 
-  if (data === null && process.env.API_STRICT === 'true') notFound();
+  // 與其餘實體詳情頁（category／solution／article）一致：查不到就是真的 404，
+  // 不是伺服器暫時掛掉（那是 requirePage 的固定路由才有的例外）。
+  if (data === null) notFound();
 
   // 主圖排在圖庫第一張（後端刻意不把它重複收進 `images`）。
   const gallery = [
