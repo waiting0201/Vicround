@@ -147,7 +147,9 @@ public static class AdminResources
             ]),
 
         // ── 營運（沒有翻譯列）────────────────────────────────────────────────
-        new("members", typeof(Member), OrderBy: "CreatedAt DESC",
+        // 佇列語意：先來先審，等最久的排在最上面（docs/admin-ui.md §5.5），
+        // 刻意不是其他資源預設的「最新在上面」。
+        new("members", typeof(Member), OrderBy: "CreatedAt ASC",
             SearchColumns: ["Email", "FullName", "CompanyName"]),
 
         new("sample-requests", typeof(SampleRequest), OrderBy: "CreatedAt DESC",
@@ -157,7 +159,8 @@ public static class AdminResources
                 new("items", typeof(SampleRequestItem), "SampleRequestId"),
             ]),
 
-        new("contact-inquiries", typeof(ContactInquiry), OrderBy: "CreatedAt DESC",
+        // 同上，詢問單也是佇列（docs/admin-ui.md §5.5）。
+        new("contact-inquiries", typeof(ContactInquiry), OrderBy: "CreatedAt ASC",
             SearchColumns: ["ReferenceNumber", "Name", "CompanyName", "Email"]),
 
         new("business-domains", typeof(BusinessDomainRuleEntry), OrderBy: "Domain",
