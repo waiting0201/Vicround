@@ -256,7 +256,8 @@ GET    /api/admin/auth/me                ✅
 已撤銷的 refresh token 再次出現視為重放，該使用者的 token 全部撤銷。
 連續登入失敗 5 次鎖 15 分鐘（狀態在 `Users`，不建 log 表）。
 **後台登入用帳號（`Username`）而不是 Email**（database.md §13）：後台沒有寄信管道，
-帳號與密碼都由管理員直接給。`users` 單元新增帳號時必填 `password`（至少 12 字元），
+帳號與密碼都由管理員直接給。`users` 單元新增帳號時必填 `password`（至少 6 字元，
+下限在 `Api/Common/AdminPasswords.cs`），
 編輯時留空表示不變更、填了就等於替對方重設密碼並輪替 `SecurityStamp`。
 
 **權限**：token 只帶角色，81 個權限碼在伺服器端展開（`Api/Common/AdminPermissions.cs`）——

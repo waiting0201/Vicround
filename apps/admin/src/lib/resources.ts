@@ -1408,7 +1408,7 @@ const users: ResourceDef = {
       label: '密碼',
       type: 'password',
       scope: 'base',
-      hint: '至少 12 個字元。新帳號必填；編輯時留空表示不變更，填了就等於替對方重設密碼並登出他所有裝置。',
+      hint: '至少 6 個字元。新帳號必填；編輯時留空表示不變更，填了就等於替對方重設密碼並登出他所有裝置。',
     },
     { name: 'displayName', label: '名稱', type: 'text', scope: 'base', required: true, maxLength: 160 },
     {

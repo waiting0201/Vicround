@@ -44,9 +44,6 @@ public sealed class AdminCrudService(
 {
     private const int MaxPageSize = 200;
 
-    /// <summary>與 <c>AdminAuthService.ChangePasswordAsync</c> 同一個下限。</summary>
-    private const int MinPasswordLength = 12;
-
     // ── 讀 ──────────────────────────────────────────────────────────────────
 
     public async Task<PagedResult<Dictionary<string, object?>>> ListAsync(
@@ -379,10 +376,10 @@ public sealed class AdminCrudService(
 
         if (!string.IsNullOrEmpty(password))
         {
-            if (password.Length < MinPasswordLength)
+            if (password.Length < AdminPasswords.MinLength)
             {
                 throw AppException.BadRequest(
-                    ErrorCodes.ValidationFormat, $"密碼至少 {MinPasswordLength} 個字元。");
+                    ErrorCodes.ValidationFormat, $"密碼至少 {AdminPasswords.MinLength} 個字元。");
             }
 
             user.PasswordHash = passwordHasher.Hash(password);

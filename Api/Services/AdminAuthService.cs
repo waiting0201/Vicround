@@ -193,9 +193,10 @@ public sealed class AdminAuthService(
     public async Task ChangePasswordAsync(
         ClaimsPrincipal principal, string? current, string? next, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(next) || next.Length < 12)
+        if (string.IsNullOrWhiteSpace(next) || next.Length < AdminPasswords.MinLength)
         {
-            throw AppException.BadRequest(ErrorCodes.ValidationFormat, "新密碼至少 12 個字元。");
+            throw AppException.BadRequest(
+                ErrorCodes.ValidationFormat, $"新密碼至少 {AdminPasswords.MinLength} 個字元。");
         }
 
         var id = UserId(principal);
