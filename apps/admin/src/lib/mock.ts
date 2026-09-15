@@ -83,14 +83,21 @@ const SEED_NAMES: Record<string, string[]> = {
   'contact-channels': ['Sales & quotations', 'Technical support', 'Partnership'],
   'process-flows': ['Core processes', 'How optical film is made', 'Co-development', 'OEM / ODM', 'After you send an inquiry'],
   navigation: ['Products', 'Solutions', 'Technologies', 'About', 'Resources', 'Contact'],
+  // ⚠️ 要與 `Api/Data/Seeding/SeedData.cs` 的 SiteSettings 逐字一致。
+  // 這裡曾經是 `Seo:TitleTemplate` 這種舊寫法，於是 SettingsScreen 的說明文字
+  // 在開發模式下對得上、對真的 API 卻一句都沒顯示——假資料的形狀跟真資料不一樣時，
+  // 壞掉的東西只會在正式環境壞。
   'site-settings': [
-    'Seo:TitleTemplate',
-    'Seo:DefaultDescription',
-    'Organization:LegalName',
-    'Organization:Phone',
-    'Analytics:GtmId',
-    'Revalidate:WebhookUrl',
-    'Privacy:PolicyVersion',
+    'seo.titleTemplate',
+    'seo.defaultDescription',
+    'seo.defaultOgImageUrl',
+    'org.legalName',
+    'org.foundingYear',
+    'org.logoUrl',
+    'analytics.gtmId',
+    'revalidate.webhookUrl',
+    'site.baseUrl',
+    'privacy.policyVersion',
   ],
   media: ['hero-optical-film.jpg', 'plant-taoyuan.jpg', 'iso-14001.pdf', 'acoustic-grade-chart.png'],
 };
