@@ -75,9 +75,25 @@ public sealed record ProductDetailDto
     public string? Summary { get; init; }
     public string? Description { get; init; }
     public string? ApplicationNote { get; init; }
+
+    /// <summary>主圖（<c>Products.HeroMediaAssetId</c>）；OG 圖也用它。</summary>
+    public string? HeroImageUrl { get; init; }
+
     public SeoDto? Seo { get; init; }
     public IReadOnlyList<SpecificationRowDto> Specifications { get; init; } = [];
+
+    /// <summary>圖庫（<c>ProductImages</c>）。主圖不重複收錄在這裡。</summary>
+    public IReadOnlyList<ProductImageDto> Images { get; init; } = [];
+
+    /// <summary>掛在這個產品上的認證（<c>CertificationProducts</c>）；與認證頁共用同一份可見性規則。</summary>
+    public IReadOnlyList<CertificationDto> Certifications { get; init; } = [];
+
+    /// <summary>相關下載（<c>DownloadProducts</c>）。<c>memberOnly</c> 的檔案一樣只回 metadata。</summary>
+    public IReadOnlyList<DownloadDto> Downloads { get; init; } = [];
 }
+
+/// <summary>圖庫的一張圖。<c>Width</c>／<c>Height</c> 讓前台先留位，避免版面跳動。</summary>
+public sealed record ProductImageDto(string Url, string? AltText, string? Caption, int? Width, int? Height);
 
 public sealed record SolutionListItemDto
 {

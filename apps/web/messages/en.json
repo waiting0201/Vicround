@@ -488,6 +488,8 @@
     "researchAndDevelopment": "R&D"
   },
   "product": {
-    "specifications": "Specifications"
+    "specifications": "Specifications",
+    "certifications": "Certifications",
+    "downloads": "Documents"
   }
 }

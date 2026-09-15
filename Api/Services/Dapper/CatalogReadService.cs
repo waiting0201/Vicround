@@ -193,16 +193,25 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         var row = await db.QuerySingleOrDefaultAsync<ProductDetailRow>(
             """
             SELECT e.Id, e.Slug, e.Code, e.Brand, c.Slug AS CategorySlug,
+                   CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS HeroImageUrl,
                    t.Name, t.Summary, t.Description, t.ApplicationNote,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Products e
             INNER JOIN Categories c ON c.Id = e.CategoryId
+            LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
             INNER JOIN ProductTranslations t ON t.ProductId = e.Id AND t.Culture = @Culture
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
             new { culture, Slug = slug, Sql.Published });
 
-        return row is null ? null : new ProductDetailDto
+        if (row is null)
+        {
+            return null;
+        }
+
+        // 認證與下載都走各自服務的 static 入口，可見性規則（過期、AccessLevel、private container）
+        // 因此只有一份——產品頁不會不小心把 memberOnly 檔案的真實網址漏出去。
+        return new ProductDetailDto
         {
             Slug = row.Slug,
             CategorySlug = row.CategorySlug,
@@ -212,9 +221,35 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Summary = row.Summary,
             Description = row.Description,
             ApplicationNote = row.ApplicationNote,
+            HeroImageUrl = row.HeroImageUrl,
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
             Specifications = await ContentReaders.SpecificationsAsync(db, "OwnerProductId", row.Id, culture),
+            Images = await ProductImagesAsync(db, culture, row.Id),
+            Certifications = await CertificationReadService.ListAsync(db, culture, category: null, productSlug: row.Slug),
+            Downloads = await DownloadReadService.ListAsync(
+                db, culture, kindValue: null, productSlug: row.Slug, categorySlug: null, solutionSlug: null),
         };
+    }
+
+    /// <summary>圖庫（<c>ProductImages</c>）。private container 的檔案不會出現在公開端點。</summary>
+    private static async Task<IReadOnlyList<ProductImageDto>> ProductImagesAsync(
+        IDbConnection db, string culture, int productId)
+    {
+        var rows = await db.QueryAsync<ProductImageRow>(
+            """
+            SELECT m.Url, m.Width, m.Height,
+                   COALESCE(t.AltText, f.AltText) AS AltText,
+                   COALESCE(t.Caption, f.Caption) AS Caption
+            FROM ProductImages x
+            INNER JOIN MediaAssets m ON m.Id = x.MediaAssetId AND m.IsArchived = 0 AND m.IsPrivate = 0
+            LEFT JOIN MediaAssetTranslations t ON t.MediaAssetId = m.Id AND t.Culture = @Culture
+            LEFT JOIN MediaAssetTranslations f ON f.MediaAssetId = m.Id AND f.Culture = @DefaultCulture
+            WHERE x.ProductId = @ProductId AND m.Url IS NOT NULL
+            ORDER BY x.SortOrder
+            """,
+            new { ProductId = productId, culture, DefaultCulture = CultureCodes.Default });
+
+        return rows.Select(r => new ProductImageDto(r.Url, r.AltText, r.Caption, r.Width, r.Height)).ToList();
     }
 
     /// <summary>頁面與產品線頁的 <c>ProductGrid</c> reference block：只取前幾筆，不分頁。</summary>
@@ -360,7 +395,9 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     }
 
     private sealed record ProductDetailRow(
-        int Id, string Slug, string? Code, string? Brand, string CategorySlug,
+        int Id, string Slug, string? Code, string? Brand, string CategorySlug, string? HeroImageUrl,
         string? Name, string? Summary, string? Description, string? ApplicationNote,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);
+
+    private sealed record ProductImageRow(string Url, int? Width, int? Height, string? AltText, string? Caption);
 }

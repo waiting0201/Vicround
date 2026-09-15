@@ -488,6 +488,8 @@
     "researchAndDevelopment": "研發中心"
   },
   "product": {
-    "specifications": "規格"
+    "specifications": "規格",
+    "certifications": "認證",
+    "downloads": "相關文件"
   }
 }

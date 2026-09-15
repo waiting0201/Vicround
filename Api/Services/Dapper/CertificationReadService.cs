@@ -25,8 +25,12 @@ public sealed class CertificationReadService(IDbConnection db) : ICertificationR
     /// <see cref="TechnologyReadService"/> 也要這一份（合規表），因此開成 static，
     /// 讓兩個端點共用同一組可見性規則。
     /// </summary>
+    /// <param name="productSlug">
+    /// 只取掛在這個產品上的認證（<c>CertificationProducts</c>）——產品詳情頁用。
+    /// <b>不往父產品繼承</b>：型號要顯示哪幾張證書由編輯者明講，猜錯的代價是對外宣稱不實的合規範圍。
+    /// </param>
     internal static async Task<IReadOnlyList<CertificationDto>> ListAsync(
-        IDbConnection db, string culture, byte? category)
+        IDbConnection db, string culture, byte? category, string? productSlug = null)
     {
         var today = DateTime.UtcNow.Date;
 
@@ -51,9 +55,21 @@ public sealed class CertificationReadService(IDbConnection db) : ICertificationR
             WHERE e.Status = @Published
               AND (@Category IS NULL OR e.Category = @Category)
               AND (e.ValidUntil IS NULL OR e.ValidUntil >= @Today)
+              AND (@ProductSlug IS NULL OR EXISTS (
+                      SELECT 1 FROM CertificationProducts x
+                      INNER JOIN Products p ON p.Id = x.ProductId
+                      WHERE x.CertificationId = e.Id AND p.Slug = @ProductSlug))
             ORDER BY e.Category, e.SortOrder, e.Id
             """,
-            new { culture, DefaultCulture = CultureCodes.Default, Sql.Published, Category = category, Today = today }))
+            new
+            {
+                culture,
+                DefaultCulture = CultureCodes.Default,
+                Sql.Published,
+                Category = category,
+                Today = today,
+                ProductSlug = productSlug,
+            }))
             .ToList();
 
         if (rows.Count == 0)
