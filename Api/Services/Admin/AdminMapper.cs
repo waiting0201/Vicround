@@ -37,6 +37,13 @@ public static class AdminMapper
     {
         var row = new Dictionary<string, object?>(StringComparer.Ordinal);
 
+        // 外鍵跟著 id 一起走字串（見下面的 row["id"]）。兩邊型別若不一致，前端拿
+        // `parentId === id` 這種比較就會永遠是 false——導覽樹的子項因此整層不見。
+        var foreignKeys = entityType.GetForeignKeys()
+            .SelectMany(fk => fk.Properties)
+            .Select(property => property.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
         foreach (var property in entityType.GetProperties())
         {
             if (HiddenProperties.Contains(property.Name))
@@ -53,7 +60,9 @@ public static class AdminMapper
                 continue;
             }
 
-            row[Camel(property.Name)] = ToJsonValue(value, property.ClrType);
+            var json = ToJsonValue(value, property.ClrType);
+
+            row[Camel(property.Name)] = foreignKeys.Contains(property.Name) ? json?.ToString() : json;
         }
 
         // 後台一律以字串當 id，而且**每一列都要有**：實體的鍵有 int / Guid / string 三種，

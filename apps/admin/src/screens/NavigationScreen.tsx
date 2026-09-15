@@ -44,12 +44,15 @@ export function NavigationScreen({ resource }: { resource: ResourceDef }) {
     }
   }, [query.data]);
 
-  const roots = items.filter((item) => !item.parentId);
-  const childrenOf = (id: string) => items.filter((item) => item.parentId === id);
+  /** 一律用字串比對：假資料與舊版 API 的外鍵可能還是數字，型別一差就整層子項不見。 */
+  const parentKey = (item: AdminRow) => (item.parentId == null ? null : String(item.parentId));
+
+  const roots = items.filter((item) => parentKey(item) === null);
+  const childrenOf = (id: string) => items.filter((item) => parentKey(item) === String(id));
 
   /** 只在同一個 parent 底下換位置；跨層級要去抽屜改「上層項目」。 */
   function move(row: AdminRow, delta: number) {
-    const siblings = items.filter((item) => (item.parentId ?? null) === (row.parentId ?? null));
+    const siblings = items.filter((item) => parentKey(item) === parentKey(row));
     const index = siblings.findIndex((item) => item.id === row.id);
     const target = index + delta;
     if (target < 0 || target >= siblings.length) return;
@@ -58,11 +61,7 @@ export function NavigationScreen({ resource }: { resource: ResourceDef }) {
     [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
 
     let cursor = 0;
-    setItems(
-      items.map((item) =>
-        (item.parentId ?? null) === (row.parentId ?? null) ? reordered[cursor++] : item,
-      ),
-    );
+    setItems(items.map((item) => (parentKey(item) === parentKey(row) ? reordered[cursor++] : item)));
     setDirty(true);
   }
 

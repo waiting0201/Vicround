@@ -85,9 +85,19 @@ export function useSaveTranslation(type: string) {
   });
 }
 
+/**
+ * 刪除。**先把那一筆的快取移掉再讓列表失效** —— 只 invalidate 的話，抽屜關閉前
+ * React Query 會拿已經不存在的 id 再抓一次，console 留下一筆 404。
+ */
 export function useDeleteItem(type: string) {
-  const invalidate = useInvalidate(type);
-  return useMutation({ mutationFn: (id: string) => deleteItem(type, id), onSuccess: invalidate });
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteItem(type, id),
+    onSuccess: (_result, id) => {
+      client.removeQueries({ queryKey: keys.item(type, id) });
+      return client.invalidateQueries({ queryKey: [type] });
+    },
+  });
 }
 
 /**

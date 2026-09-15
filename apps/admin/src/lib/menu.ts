@@ -85,11 +85,23 @@ export const HOME_PATH = 'products';
 
 export const ALL_ITEMS: MenuItem[] = MENU.flatMap((section) => section.items);
 
+/**
+ * 側欄不放入口、但資料字典裡有定義的單元。
+ *
+ * <p>
+ * `media` 是唯一一個：媒體庫已經退役（檔案從各欄位直接上傳），但欄位要拿它的
+ * 定義去讀單筆媒體，所以 `RESOURCES` 留著它。列在這裡，下面的對照才不會每次
+ * 開發都吵一次假警報。
+ * </p>
+ */
+const MENULESS_TYPES = ['media'];
+
 /** 側欄與資料字典必須一一對應；對不起來就是有畫面連不到，開發時就要吵出來。 */
 if (import.meta.env.DEV) {
   const missingScreen = ALL_ITEMS.filter((item) => !resourceOf(item.type)).map((item) => item.type);
   const missingMenu = RESOURCES.filter(
-    (resource) => !ALL_ITEMS.some((item) => item.type === resource.type),
+    (resource) =>
+      !MENULESS_TYPES.includes(resource.type) && !ALL_ITEMS.some((item) => item.type === resource.type),
   ).map((resource) => resource.type);
 
   if (missingScreen.length) console.error('側欄有項目沒有對應的畫面定義：', missingScreen);

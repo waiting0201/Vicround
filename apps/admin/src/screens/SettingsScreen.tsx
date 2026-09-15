@@ -64,10 +64,10 @@ export function SettingsScreen({ resource }: { resource: ResourceDef }) {
     toast({ title: '設定已儲存', description: '影響 SEO 的設定會在下一次頁面請求生效。', variant: 'success' });
   }
 
-  /** 分區是從 key 的前綴算出來的，不是寫死的清單。 */
+  /** 分區是從 key 的前綴算出來的（`seo.titleTemplate` → `seo`），不是寫死的清單。 */
   const groups = rows.reduce<Record<string, AdminRow[]>>((acc, row) => {
     const key = String(row.key ?? row.id);
-    const group = key.includes(':') ? key.split(':')[0] : '其他';
+    const group = key.includes('.') ? key.split('.')[0] : '其他';
     (acc[group] ??= []).push(row);
     return acc;
   }, {});
@@ -110,12 +110,15 @@ export function SettingsScreen({ resource }: { resource: ResourceDef }) {
   );
 }
 
+/** key 前綴 → 分區標題。**要與 `SiteSettings` 實際的 key 一致**（database.md §13）。 */
 const GROUP_LABEL: Record<string, string> = {
-  Seo: '搜尋引擎',
-  Organization: '公司資訊（Organization 結構化資料）',
-  Analytics: '分析工具',
-  Revalidate: '發布後失效',
-  Privacy: '隱私權',
+  seo: '搜尋引擎',
+  org: '公司資訊（Organization 結構化資料）',
+  analytics: '分析工具',
+  revalidate: '發布後失效',
+  privacy: '隱私權',
+  site: '站台',
+  mail: '寄信',
 };
 
 function SettingRow({
