@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Badge, Drawer, Icon, IconButton, cx } from '@/ui';
 import { logout } from '@/lib/api';
 import { MOCK_ENABLED } from '@/lib/mock';
 import { useCurrentUser } from '@/lib/queries';
-import { MENU, type MenuItem } from '@/lib/menu';
+import { MENU, type MenuItem, type MenuSection } from '@/lib/menu';
 import { BrandMark } from './BrandMark';
 
 /**
@@ -17,22 +17,75 @@ import { BrandMark } from './BrandMark';
  *
  * <p>
  * 收合狀態存在 `localStorage` 而不是跟著視窗寬度自動切換：使用者手動展開之後，
- * 因為把視窗拉窄一點就被收回去，是很惱人的行為。
+ * 因為把視窗拉窄一點就被收回去，是很惱人的行為。側欄分區的收合（accordion）同理。
  * </p>
  */
 
 const COLLAPSE_KEY = 'vicround-admin-sidebar-collapsed';
+const SECTIONS_KEY = 'vicround-admin-sidebar-sections';
+
+/**
+ * 記的是「哪幾個分區被**收起來**」，不是「哪幾個是展開的」。
+ *
+ * <p>
+ * 兩者不對稱：之後在 `menu.ts` 加一個新分區時，記展開清單會讓那個分區對所有舊使用者
+ * 都是收起來的（清單裡沒有它）——新功能上線第一天沒有人看得到入口。記收合清單則
+ * 預設展開，使用者要收才收。
+ * </p>
+ */
+function readClosedSections(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SECTIONS_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch {
+    // 手動改壞、或無痕模式擋下 localStorage —— 側欄不該因此整個開不起來
+    return new Set();
+  }
+}
 
 export function Shell() {
   const navigate = useNavigate();
   const me = useCurrentUser();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1');
+  const [closedSections, setClosedSections] = useState(readClosedSections);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0');
   }, [collapsed]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SECTIONS_KEY, JSON.stringify([...closedSections]));
+    } catch {
+      // 無痕模式／封鎖 storage：記不住就算了，這一輪照樣能開合
+    }
+  }, [closedSections]);
+
+  const toggleSection = useCallback((title: string) => {
+    setClosedSections((current) => {
+      const next = new Set(current);
+      if (!next.delete(title)) next.add(title);
+      return next;
+    });
+  }, []);
+
+  /**
+   * 只展開、不收合。給「跳進一個已經被收起來的分區」用（麵包屑、直接打網址、
+   * 頁面內的連結）——目前所在的頁面連在側欄上都找不到，是最容易迷路的狀態。
+   * 刻意與 `toggleSection` 分開：共用一支的話，使用者手動收合正在看的那個分區時
+   * 會被立刻彈開。
+   */
+  const revealSection = useCallback((title: string) => {
+    setClosedSections((current) => {
+      if (!current.has(title)) return current;
+      const next = new Set(current);
+      next.delete(title);
+      return next;
+    });
+  }, []);
 
   const isAdmin = me.data?.roles?.includes('Admin') ?? false;
 
@@ -41,7 +94,14 @@ export function Shell() {
     navigate('/login', { replace: true });
   }
 
-  const nav = <Nav collapsed={collapsed} isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} />;
+  const navProps = {
+    isAdmin,
+    closedSections,
+    onToggleSection: toggleSection,
+    onRevealSection: revealSection,
+  };
+
+  const nav = <Nav collapsed={collapsed} {...navProps} onNavigate={() => setMobileOpen(false)} />;
 
   return (
     <div className="flex min-h-screen">
@@ -134,21 +194,44 @@ export function Shell() {
 
       {/* 窄螢幕的選單直接重用抽屜元件：側滑 + Esc 關閉 + 焦點鎖定本來就是它的工作 */}
       <Drawer open={mobileOpen} onClose={() => setMobileOpen(false)} title="VicRound CMS" width="280px">
-        <Nav collapsed={false} isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} />
+        <Nav collapsed={false} {...navProps} onNavigate={() => setMobileOpen(false)} />
       </Drawer>
     </div>
   );
 }
 
-function Nav({
-  collapsed,
-  isAdmin,
-  onNavigate,
-}: {
+type NavProps = {
   collapsed: boolean;
   isAdmin: boolean;
+  closedSections: Set<string>;
+  onToggleSection: (title: string) => void;
+  onRevealSection: (title: string) => void;
   onNavigate: () => void;
-}) {
+};
+
+/**
+ * 側欄導覽。**分區可收合（accordion）**：六個分區裡，多數編輯者一天只用其中兩三個，
+ * 收起用不到的那幾個，常用的入口就不必每次都在 25 項裡面找。
+ *
+ * <p>
+ * 分區各自獨立開合，不是「一次只能開一個」——編輯者常在「內容」與「營運」之間來回，
+ * 開了一個就自動關掉另一個，等於每切一次頁就要多按一次。
+ * </p>
+ */
+function Nav({ collapsed, isAdmin, closedSections, onToggleSection, onRevealSection, onNavigate }: NavProps) {
+  const { pathname } = useLocation();
+
+  /** 目前這一頁屬於哪個分區。`/products/3` 這種詳情頁也算在 `products` 的分區裡。 */
+  const activeTitle = MENU.find((section) =>
+    section.items.some((item) => pathname === `/${item.type}` || pathname.startsWith(`/${item.type}/`)),
+  )?.title;
+
+  // 從別處跳進一個收起來的分區時自動展開。只在「所在分區換了」時跑，所以使用者
+  // 仍然收得起自己正在看的那一個（那不會改變 activeTitle，effect 不會再跑）。
+  useEffect(() => {
+    if (activeTitle) onRevealSection(activeTitle);
+  }, [activeTitle, onRevealSection]);
+
   return (
     <nav className="flex flex-col gap-5 px-2 pb-8">
       {MENU.map((section) => {
@@ -157,12 +240,76 @@ function Nav({
         if (items.length === 0) return null;
 
         return (
-          <div key={section.title} className="flex flex-col gap-0.5">
-            {!collapsed && (
-              <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wider text-[var(--fg-3)]">
-                {section.title}
-              </p>
-            )}
+          <NavSection
+            key={section.title}
+            section={section}
+            items={items}
+            collapsed={collapsed}
+            // 收合成 64px 時沒有分區標題，也就沒有東西可以按 —— 那個狀態下一律全開，
+            // 否則會有一半的圖示無故消失，而畫面上找不到把它們叫回來的地方。
+            open={collapsed || !closedSections.has(section.title)}
+            hasActive={activeTitle === section.title}
+            onToggle={() => onToggleSection(section.title)}
+            onNavigate={onNavigate}
+          />
+        );
+      })}
+    </nav>
+  );
+}
+
+function NavSection({
+  section,
+  items,
+  collapsed,
+  open,
+  hasActive,
+  onToggle,
+  onNavigate,
+}: {
+  section: MenuSection;
+  items: MenuItem[];
+  collapsed: boolean;
+  open: boolean;
+  hasActive: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
+  const panelId = useId();
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {!collapsed && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls={panelId}
+          className="admin-transition flex w-full items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1 text-xs font-medium uppercase tracking-wider text-[var(--fg-3)] transition-colors hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]"
+        >
+          <span className="truncate">{section.title}</span>
+          {/* 收起來的分區裡就是目前這一頁時，標題旁點一顆品牌色小點——「我在哪」
+              這個訊號不能因為分區收起來就整個消失 */}
+          {!open && hasActive && (
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]"
+              role="img"
+              aria-label="目前所在的頁面在這個分區裡"
+            />
+          )}
+          <Icon
+            name="chevron-down"
+            size={13}
+            className={cx('admin-transition ml-auto shrink-0 transition-transform', !open && '-rotate-90')}
+          />
+        </button>
+      )}
+
+      <div id={panelId} className="admin-accordion" data-open={open}>
+        {/* 收起來時整段要退出 tab 順序：只是高度 0 的話，鍵盤使用者仍然會 tab 進
+            看不見的連結，然後畫面捲到一個什麼都沒有的地方 */}
+        <div inert={!open}>
+          <div className="flex flex-col gap-0.5">
             {items.map((item) => (
               <NavLink
                 key={item.type}
@@ -172,6 +319,9 @@ function Nav({
                 className={({ isActive }) =>
                   cx(
                     'admin-transition flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm transition-colors',
+                    // focus ring 畫在框線內側：分區收合用的 overflow: hidden 會把畫在
+                    // 外側的那一圈裁掉（見 index.css 的 .admin-accordion）
+                    'focus-visible:[outline-offset:-2px]',
                     collapsed && 'justify-center',
                     isActive
                       ? // 底色 + 左側 2px 品牌色貼邊：收合成純圖示時底色範圍很小，
@@ -186,8 +336,8 @@ function Nav({
               </NavLink>
             ))}
           </div>
-        );
-      })}
-    </nav>
+        </div>
+      </div>
+    </div>
   );
 }

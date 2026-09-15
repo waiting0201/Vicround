@@ -124,6 +124,27 @@ body {
   animation: admin-toast-in var(--admin-motion-duration-slow) var(--ease-out) both;
 }
 
+/* 側欄分區的收合（Shell.tsx 的 Nav）。用 grid-template-rows 0fr → 1fr 做高度過場：
+   不必量內容高度，也不必像 max-height 那樣猜一個數字——猜小了分區多幾項就被裁掉，
+   猜大了動畫尾巴是一段什麼都沒發生的空轉。 */
+.admin-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--admin-motion-duration-slow) var(--admin-motion-ease);
+}
+
+.admin-accordion[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+/* `min-height: 0` 是這個做法的必要條件：沒有它，grid item 的最小高度是內容高度，
+   0fr 收不起來。overflow 會連 focus ring 一起裁掉，所以側欄連結的 ring 改成畫在
+   自己框線內側（Shell.tsx 的 outline-offset:-2px），不必為了外框再撐開一圈 padding。 */
+.admin-accordion > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
 /* 尊重「減少動態效果」的作業系統設定——編輯者一天要看很多次這些小動畫，
    對前庭功能敏感的使用者來說，滿版側欄收合、下拉選單位移都可能造成不適。 */
 @media (prefers-reduced-motion: reduce) {
@@ -132,7 +153,8 @@ body {
     animation: none;
   }
   .admin-transition,
-  .admin-transition-slow {
+  .admin-transition-slow,
+  .admin-accordion {
     transition-duration: 0.01ms;
   }
 }
