@@ -170,7 +170,7 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 | hreflang 只宣告「真的有內容」的語系 | [lib/hreflang.ts](apps/web/lib/hreflang.ts) | 後端未上線時退回只宣告自身語系 |
 | `sitemap.xml`（由 DB 資料產生） | [app/sitemap.ts](apps/web/app/sitemap.ts) | 回 200 / `application/xml` |
 | `robots.txt`（非正式站整站 Disallow） | [app/robots.ts](apps/web/app/robots.ts) | 已含 `/admin`、`/{locale}/account`、`/*/preview` |
-| 語系前綴與舊網址 301 | [middleware.ts](apps/web/middleware.ts) | `/` → 307 `/en`；410 直接回 410 |
+| 語系前綴與舊網址 301 | [middleware.ts](apps/web/middleware.ts) | `/` → 307 `/en`；410 直接回 410。**matcher 只放行 `.html` 以外的副檔名** —— 241 條轉址裡 238 條是 `/xxx.html`，連 `.html` 一起放行等於整批 301 比不到（2026-09-15 修） |
 | 發布後失效（`revalidateTag`） | [app/api/revalidate/route.ts](apps/web/app/api/revalidate/route.ts) | 無密鑰回 401 |
 | 詢問表單送出（同源代理） | [app/api/contact/route.ts](apps/web/app/api/contact/route.ts) | 實跑回 202 + 受理編號；蜜罐回 `BOT_CHECK_FAILED`。`/contact` 頁與 Header 的 dialog 共用這一條 |
 | 會員 API 同源代理 | [app/api/v1/account/[...path]/route.ts](apps/web/app/api/v1/account/%5B...path%5D/route.ts) | 路徑必須原樣落在 `/api/v1/account`，否則 refresh cookie 的 Path 對不上 |
@@ -386,7 +386,10 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
    - 預覽網域 `vicround.4webdemo.com`（測試 DNS）：頁面已由 `lib/seo.ts` 強制
      `noindex`（非正式站一律如此）。**但 Cloudflare 的 managed robots.txt 仍是
      `Allow: /`**，蓋掉我們的 `Disallow: /` —— 要在 Cloudflare 關掉它才算兩道防線都在
-   - 舊站 301 已在正式環境（實測 `/v1/redirects` 241 筆）✅
+   - 舊站 301 已在正式環境：**對正式站實打 241 條全量驗過，241/241 回 301**，
+     狀態碼與目標路徑都與轉址表一致 ✅ 2026-09-15。先前只驗到 `/v1/redirects`
+     回得出 241 筆，沒驗站台真的會轉 —— 而當時 middleware 的 matcher 正把
+     238 條 `.html` 擋在外面，全部 404
 6. ~~Account API 與會員專區~~ ✅ 2026-09-11
 7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
    （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
