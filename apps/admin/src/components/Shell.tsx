@@ -246,9 +246,10 @@ function Nav({ collapsed, isAdmin, closedSections, onToggleSection, onRevealSect
   }, [activeTitle, onRevealSection]);
 
   return (
-    // pt-3：不留這一段，第一個分區標題會貼著頂欄的分隔線，看起來像那條線的標籤
-    // 而不是一段清單的開頭。pb-8 則是讓最後一項捲到底時不會黏在收合鈕上。
-    <nav className="flex flex-col gap-5 px-2 pb-8 pt-3">
+    // pt-5 與分區之間的 gap-5 同值（20px）：第一個分區的上緣看起來就跟其他分區
+    // 一樣是「一段的開頭」，而不是貼著頂欄分隔線、像那條線的標籤。
+    // pb-8 則是讓最後一項捲到底時不會黏在收合鈕上。
+    <nav className="flex flex-col gap-5 px-2 pb-8 pt-5">
       {MENU.map((section) => {
         // Editor 看不到 Admin 專屬的項目 —— 不存在的選單比看得到按不動更少困惑
         const items = section.items.filter((item: MenuItem) => isAdmin || !item.adminOnly);
