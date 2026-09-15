@@ -77,12 +77,16 @@ jobs:
       #
       # `NEXT_PUBLIC_MEDIA_BASE` 沒設就是空字串：版位素材照舊隨產物打包（見
       # lib/page-assets.ts 與 scripts/pack-standalone.mjs，兩邊綁在一起）。
+      #
+      # `NEXT_PUBLIC_MEMBERS_ENABLED` 沒設就是關閉 —— 前台會員區整段藏起來
+      # 要重新開放就把 repo 變數設成 true 再重跑這條 workflow，不必動程式。
       - name: Build web
         run: pnpm --filter web build
         env:
           API_BASE: ${{ env.API_BASE }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
           NEXT_PUBLIC_MEDIA_BASE: ${{ vars.MEDIA_BASE }}
+          NEXT_PUBLIC_MEMBERS_ENABLED: ${{ vars.MEMBERS_ENABLED }}
 
       # postbuild 已經跑過 250MB 閘（apps/web/scripts/check-size.mjs），
       # 這裡只把數字留在 log 裡，方便日後回頭看是哪一次開始變大的。

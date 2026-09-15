@@ -63,8 +63,7 @@ export const MENU: MenuSection[] = [
   {
     title: '營運',
     items: [
-      { type: 'members', label: '會員審核', icon: 'users' },
-      { type: 'sample-requests', label: '樣品申請', icon: 'clipboard-list' },
+      // 會員審核與樣品申請暫時收起來（見下方 MENULESS_TYPES）。
       { type: 'contact-inquiries', label: '詢問單', icon: 'inbox' },
     ],
   },
@@ -100,10 +99,17 @@ export const ALL_ITEMS: MenuItem[] = MENU.flatMap((section) => section.items);
  * </p>
  *
  * <p>
+ * `members`／`sample-requests`：**前台會員區已經整段隱藏**（`apps/web` 的
+ * `MEMBERS_ENABLED`，預設關閉），不會再有新的會員或樣品申請進來，側欄留著只是兩列
+ * 空佇列。資料與畫面都沒動——既有的資料還在，網址也還打得開
+ * （`/members`、`/sample-requests`），前台重新開放時把這兩行搬回上面的「營運」區即可。
+ * </p>
+ *
+ * <p>
  * 列在這裡，下面的對照才不會每次開發都吵一次假警報。
  * </p>
  */
-const MENULESS_TYPES = ['media', 'business-domains'];
+const MENULESS_TYPES = ['media', 'business-domains', 'members', 'sample-requests'];
 
 /** 側欄與資料字典必須一一對應；對不起來就是有畫面連不到，開發時就要吵出來。 */
 if (import.meta.env.DEV) {

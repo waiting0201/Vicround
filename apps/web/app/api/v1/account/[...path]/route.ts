@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { MEMBERS_ENABLED } from '@/lib/features';
 
 /**
  * 會員 API 的同源代理。
@@ -24,6 +25,12 @@ const API_BASE = process.env.API_BASE ?? 'http://localhost:7071/api/v1';
 export const dynamic = 'force-dynamic';
 
 async function proxy(request: Request, path: string[]): Promise<Response> {
+  /*
+   * 會員功能關閉時連代理一起關（lib/features.ts）。只藏頁面是不夠的——
+   * 註冊與登入都是 fetch 打這裡，代理留著就等於前台看不到、但照樣註冊得成。
+   */
+  if (!MEMBERS_ENABLED) return new NextResponse(null, { status: 404 });
+
   const url = new URL(request.url);
   const target = `${API_BASE}/account/${path.join('/')}${url.search}`;
 

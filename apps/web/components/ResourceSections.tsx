@@ -5,6 +5,7 @@ import type { Download } from '@/lib/content-api';
 import type { Locale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
 import { ROUTES } from '@/lib/routes';
+import { MEMBERS_ENABLED } from '@/lib/features';
 
 /**
  * Resources 頁的共用小元件 —— 抽出來是因為 `/resources` 與 `/resources/downloads`
@@ -61,7 +62,11 @@ export function DownloadList({
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 36 }}>
       {items.map((item) => {
-        const href = item.fileUrl ?? (item.requiresSignIn ? localeHref(locale, ROUTES.member) : null);
+        // 會員功能關閉時不把人導去登入頁（那頁會 404）——落到下一行的
+        // requestUrl／聯絡我們，也就是「來信索取」這條路（lib/features.ts）。
+        const href =
+          item.fileUrl ??
+          (item.requiresSignIn && MEMBERS_ENABLED ? localeHref(locale, ROUTES.member) : null);
         const target = href ?? localeHref(locale, item.requestUrl ?? ROUTES.contact);
 
         return (

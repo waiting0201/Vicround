@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { MEMBERS_ENABLED } from '@/lib/features';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { ROUTES } from '@/lib/routes';
@@ -28,6 +30,9 @@ export default async function AccountLayout({
   children: ReactNode;
   params: Promise<{ locale: string }>;
 }) {
+  // 會員功能關閉時整棵子樹 404（lib/features.ts）。擋在 layout，新增頁面不會漏掉。
+  if (!MEMBERS_ENABLED) notFound();
+
   const { locale: rawLocale } = await params;
   const locale = requireLocale(rawLocale);
   const t = translator(locale);

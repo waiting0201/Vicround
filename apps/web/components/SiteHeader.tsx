@@ -4,6 +4,7 @@ import { translator } from '@/lib/i18n';
 import type { Locale } from '@/lib/locale';
 import { localeHref, navItems, searchChips } from '@/lib/nav';
 import { ROUTES } from '@/lib/routes';
+import { MEMBERS_ENABLED } from '@/lib/features';
 
 /**
  * 頁首 —— 版型逐項對照 `mockup/Rounded Design/Header.dc.html`（rounded 變體）。
@@ -29,10 +30,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     homeHref: `/${locale}`,
     contactHref: localeHref(locale, ROUTES.contact),
     searchHref: localeHref(locale, ROUTES.search),
-    memberHref: localeHref(locale, ROUTES.member),
+    // 會員功能關閉時不渲染這顆鈕（lib/features.ts）。
+    memberHref: MEMBERS_ENABLED ? localeHref(locale, ROUTES.member) : null,
     privacyHref: localeHref(locale, ROUTES.privacy),
     contactLabel: t('nav.contact'),
-    memberLabel: t('nav.member'),
+    memberLabel: MEMBERS_ENABLED ? t('nav.member') : null,
     searchLabel: t('search.label'),
     languageLabel: t('common.language'),
     items:

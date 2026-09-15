@@ -2,6 +2,7 @@ import { apiGet, tag } from '@/lib/api';
 import { DEFAULT_LOCALE } from '@/lib/locale';
 import { absoluteUrl, IS_PRODUCTION_SITE, SITE_URL } from '@/lib/site';
 import { ROUTES } from '@/lib/routes';
+import { MEMBERS_ENABLED } from '@/lib/features';
 
 /**
  * `/llms.txt` —— 給 AI 檢索與回答引擎的站台導覽（llmstxt.org 格式）。
@@ -26,6 +27,14 @@ export const dynamic = 'force-dynamic';
 
 const L = DEFAULT_LOCALE;
 
+/**
+ * 文件取得方式的說法要跟著會員開關走 —— 會員區藏起來時還告訴模型「去登入會員」，
+ * 等於把使用者指到一個 404（lib/features.ts）。
+ */
+const MEMBER_ACCESS_FACT = MEMBERS_ENABLED
+  ? '- Full specification sheets and some documents are **behind a member sign-in**; the public pages show the product and its published specifications, and the member area handles document access and sample requests.'
+  : '- Full specification sheets and some documents are **not published on the site**; the public pages show the product and its published specifications, and anything beyond that is requested through the contact form.';
+
 /** 這一段是人寫的定位說明，不從 CMS 來 —— 它描述的是「網站」而不是「內容」。 */
 const PREAMBLE = `# VicRound
 
@@ -33,10 +42,10 @@ const PREAMBLE = `# VicRound
 
 Facts worth getting right before answering questions about this site:
 
-- This is a **B2B catalogue and corporate site, not an online shop**. There are no prices, no cart and no checkout anywhere on it. Buying and quotation questions are answered through the contact form or a sample request.
+- This is a **B2B catalogue and corporate site, not an online shop**. There are no prices, no cart and no checkout anywhere on it. Buying and quotation questions are answered through ${MEMBERS_ENABLED ? 'the contact form or a sample request' : 'the contact form'}.
 - Products are organised as product line > product, and URLs follow that shape: \`/{locale}/products/{product-line}/{product}\`.
 - There are exactly three product lines: **Optical Film**, **Textile & Foam** and **Acoustic**. "Solutions" pages are a different axis — they group products by the industry they serve, not by material.
-- Full specification sheets and some documents are **behind a member sign-in**; the public pages show the product and its published specifications, and the member area handles document access and sample requests.
+${MEMBER_ACCESS_FACT}
 - The site is bilingual: English under \`/en/\`, Traditional Chinese under \`/zh-Hant/\`. A page with no translation in one language simply does not exist there, so an English URL does not guarantee a Chinese counterpart.
 - Specification values on this site come from the manufacturer's own published data. Quote them with the product name and do not generalise them across a product line.`;
 
@@ -93,14 +102,20 @@ export async function GET() {
       '',
       `- [Resources hub](${absoluteUrl(L, ROUTES.resources)}): entry point for the four resource sections below.`,
       `- [FAQ](${absoluteUrl(L, ROUTES.faq)}): material selection, specification and ordering questions.`,
-      `- [Downloads](${absoluteUrl(L, ROUTES.downloads)}): catalogues, spec sheets and certificates (PDF; some require member sign-in).`,
+      `- [Downloads](${absoluteUrl(L, ROUTES.downloads)}): catalogues, spec sheets and certificates (PDF; ${
+        MEMBERS_ENABLED ? 'some require member sign-in' : 'some are available on request'
+      }).`,
       `- [News & Exhibitions](${absoluteUrl(L, ROUTES.news)}): announcements and trade-show appearances, with dates and booth numbers.`,
     ].join('\n'),
     [
       '## Optional',
       '',
       `- [Privacy & Legal](${absoluteUrl(L, ROUTES.privacy)}): privacy policy and legal notices.`,
-      `- [Member area](${absoluteUrl(L, ROUTES.member)}): sign-in for member-only documents and sample requests (the documents themselves are not public).`,
+      ...(MEMBERS_ENABLED
+        ? [
+            `- [Member area](${absoluteUrl(L, ROUTES.member)}): sign-in for member-only documents and sample requests (the documents themselves are not public).`,
+          ]
+        : []),
       `- [sitemap.xml](${SITE_URL}/sitemap.xml): every indexable URL in both languages, with hreflang.`,
     ].join('\n'),
   );

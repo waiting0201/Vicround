@@ -15,10 +15,11 @@ export type HeaderModel = {
   locale: Locale;
   homeHref: string;
   contactHref: string;
-  memberHref: string;
+  /** 會員功能關閉時為 null —— 那顆鈕整個不渲染（lib/features.ts）。 */
+  memberHref: string | null;
   privacyHref: string;
   contactLabel: string;
-  memberLabel: string;
+  memberLabel: string | null;
   searchLabel: string;
   languageLabel: string;
   items: {
@@ -210,22 +211,24 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
               <Icon name={search ? 'x' : 'search'} size={18} />
             </button>
 
-            <Link
-              href={model.memberHref}
-              aria-label={model.memberLabel}
-              title={model.memberLabel}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 36,
-                height: 36,
-                textDecoration: 'none',
-                color: pathname.startsWith(model.memberHref) ? '#ffffff' : 'rgba(255,255,255,0.65)',
-              }}
-            >
-              <Icon name="circle-user-round" size={22} />
-            </Link>
+            {model.memberHref && (
+              <Link
+                href={model.memberHref}
+                aria-label={model.memberLabel ?? undefined}
+                title={model.memberLabel ?? undefined}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36,
+                  textDecoration: 'none',
+                  color: pathname.startsWith(model.memberHref) ? '#ffffff' : 'rgba(255,255,255,0.65)',
+                }}
+              >
+                <Icon name="circle-user-round" size={22} />
+              </Link>
+            )}
 
             {/*
               mockup 用的是 <select>（EN / 中文）。保留這個外觀，但真的會切換路由。

@@ -37,6 +37,13 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 （16 支：註冊／登入／換發／驗證信／忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請），
 **16 支全部有前台介面**。
 
+**前台會員區已整段隱藏**（2026-09-15）：環境變數 `NEXT_PUBLIC_MEMBERS_ENABLED`（repo 變數 `MEMBERS_ENABLED`，`apps/web/lib/features.ts`，
+**預設關閉**）——Header 的會員鈕不渲染、`llms.txt` 不提會員區、需要登入的下載改指向聯絡我們，
+`/member/**` 與 `/account/**` 共 11 條路由與同源代理 `/api/v1/account/**` 一律 404。
+後台側欄同步收起「會員審核」與「樣品申請」（`apps/admin/src/lib/menu.ts` 的 `MENULESS_TYPES`，
+網址仍打得開）。**程式與資料都沒動**，要重新開放就把該變數設成 `true` 重新部署、
+並把那兩行搬回側欄。⚠️ 後端的 Account API 照常在跑，這個開關關的是前台入口與代理。
+
 **寄信管道已接上**（2026-09-12）：`SmtpEmailSender` + 三個 notifier，**共 10 封交易信**——
 驗證信、重設密碼信、會員審核結果、詢問單的窗口通知與客戶回執、樣品申請的窗口通知與
 會員回執、樣品申請核准／出貨／拒絕的通知。本機以 SMTP 收件槽逐封實測，
