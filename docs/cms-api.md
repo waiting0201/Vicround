@@ -71,7 +71,7 @@ GET  /api/v1/categories          ✅          # ?type=optical-film|textile-foam|
 GET  /api/v1/categories/{slug}   ✅ 含 specs、blocks、關聯 solutions
 
 GET  /api/v1/products            ✅ ?category=&solution=&featured=true&page=1&pageSize=24
-GET  /api/v1/products/{slug}     ✅ detail incl. specs（gallery／certifications／downloads 待補）
+GET  /api/v1/products/{slug}     ✅ detail：specs、主圖與圖庫、認證、相關下載
 
 GET  /api/v1/solutions           ✅ 產業解決方案索引（取代舊的 /applications）
 GET  /api/v1/solutions/{slug}    ✅
@@ -316,8 +316,12 @@ POST   /api/admin/members/{id}/reject              ✅ {reviewNote}（必填）
 POST   /api/admin/members/{id}/suspend             ✅
 POST   /api/admin/members/{id}/reactivate          ✅
 PUT    /api/admin/sample-requests/{id}/status      ✅ 含 carrier / trackingNumber / trackingUrl
-POST   /api/admin/legacy-import/run                # 觸發 LegacyImportSeeder（僅 Admin 角色）—— 尚未做
 ```
+
+> **舊站匯入沒有後台端點，這是刻意的**（2026-09-15 決定）：來源檔（`reference/sbk/data`、
+> `artifacts/legacy-urls.json`）都不在版控，Functions 在雲端讀不到；而 241 條 301 已經在
+> 正式庫裡，之後要重跑就用本機 CLI（`dotnet $VR import-legacy`）對目標 DB 跑一次。
+> 個別轉址在後台的「轉址（301）」畫面改即可。
 
 會員與樣品申請的動作走**狀態機**：不合法的轉移回 `409 CONFLICT_STATE`
 （例如已拒絕的會員不能直接停權、拒絕必須填理由）。前端的看板只列合法的下一步，

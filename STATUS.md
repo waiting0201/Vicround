@@ -5,7 +5,7 @@
 > 分工：本檔記錄**狀態**；[CLAUDE.md](CLAUDE.md) 記錄**慣例與檢索地圖**；
 > [docs/](docs/) 記錄各子系統的**設計**。三份不要互相抄，各司其職。
 
-**最後更新**：2026-09-12
+**最後更新**：2026-09-15
 
 ---
 
@@ -18,8 +18,9 @@
 19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址），其餘 12 條是確認稿沒有的
 功能頁（搜尋、會員信件流程、會員專區）；SEO 與 GEO 的基礎建設
 （metadata／hreflang／sitemap／robots／llms.txt／六種 JSON-LD）已就緒並實測通過。
-`apps/admin` 的 **26 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
-開發模式下吃 `src/lib/mock.ts` 的記憶體假資料，所以在後端出現之前就能操作與驗版。
+`apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
+且已**在瀏覽器對真的 Admin API 逐畫面驗收**（2026-09-15，見第五節）。開發模式仍可吃
+`src/lib/mock.ts` 的假資料，設 `VITE_ADMIN_MOCK=0` 就打真的後端。
 
 **後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
 [docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
@@ -48,12 +49,8 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
 推上 `master` 即自動部署。robots.txt 目前整站 Disallow —— 網域還沒換成 www.vicround.com。
 
-**⛔ 但正式站目前整站破圖**（2026-09-11 實測）：8 張版位素材全部 404 —— 首頁 hero、
-首頁三張產品照、22 個內頁的 banner 底圖。**版型與文案本身是對的**（25 頁逐頁文字比對，
-19 頁只差 1–4 筆，且都是 mockup 的 `{{ }}` 佔位或客戶後來改過的句子），破圖是唯一的大面積落差。
-成因與修法見 [docs/azure-deployment.md](docs/azure-deployment.md) 的
-「前台的 build-time 變數」——**repo variable `MEDIA_BASE` 從未設定，而 `public/assets` 不在版控**，
-兩邊同時落空。素材上傳 `public-media` 後設好變數、重跑 `web.yml` 即可解。
+**版位素材已就位**（2026-09-15 複驗）：`MEDIA_BASE` 已設，首頁與各內頁引用的素材
+逐張實打皆為 200（首頁 4 張、各內頁 banner 1 張，中英兩語系都查過）。先前的整站破圖已解除。
 
 **預覽網域已綁**：`vicround.4webdemo.com`（SWA 自訂網域，DNS 在 Cloudflare 且開 proxy）。
 因此該網域的 robots.txt 與頁面裡的 email 都被 Cloudflare 改寫過，不是本站輸出——
@@ -77,7 +74,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | 子系統 | 狀態 | 說明 |
 | --- | --- | --- |
 | 前台 `apps/web` | ✅ | 確認稿 25 頁全數實作（19 條路由檔）**且全部改吃 Content API**；暫代文案目錄已刪 |
-| 後台 `apps/admin` | 🟡 | 27 個畫面全數實作；**Admin API 已上線**，開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端（27 個單元實跑通過），尚未在瀏覽器逐畫面驗收 |
+| 後台 `apps/admin` | ✅ | 27 個畫面全數實作，**已在瀏覽器對真的 Admin API 逐畫面驗收**（2026-09-15）：27 個清單皆正常載入，CRUD／發布／刪除／雙語翻譯實跑通過 |
 | 設計系統 | ✅ | 客戶確認的 `_ds` 已同步進兩個 app，字型自架子集；後台介面規格見 [docs/admin-ui.md](docs/admin-ui.md) |
 | SEO / GEO | ✅ | metadata、sitemap、robots、llms.txt、JSON-LD 全數實測通過 |
 | Content API（`fn-public`） | ✅ | **21 支端點已上線並實跑驗證**（含 contact 寫入、reference block 解析與站內搜尋） |
@@ -85,7 +82,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
 | 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
-| 媒體 / Blob | 🟡 | 正式 `stvicroundprod` 已建、`public-media` 為公開讀；**版位素材尚未上傳**（實測 404，見上方說明） |
+| 媒體 / Blob | ✅ | 正式 `stvicroundprod`、`public-media` 公開讀；版位素材已上傳且逐張實打 200（2026-09-15） |
 | CI | ✅ | `.github/workflows/api.yml`：建置、106 項測試、產物防呆、migration 同步檢查 |
 | 部署 / Azure 資源 | ✅ | `VicRoundUS`（westus2）：Function App、SWA、SQL、Storage、App Insights；前後台都已上線 |
 
@@ -150,7 +147,7 @@ FAQ、展會、文章、下載…），因此「這一區顯示哪幾筆」是�
 
 | 路由 | 現況 |
 | --- | --- |
-| `/products/{category}/{slug}` 產品詳情 | ✅ `GET /v1/products/{slug}`；**圖庫、認證與相關下載該端點還沒回** |
+| `/products/{category}/{slug}` 產品詳情 | ✅ `GET /v1/products/{slug}`；主圖與圖庫、認證卡、相關下載都已接上（2026-09-15） |
 | `/search?q=` 站內搜尋結果 | ✅ `GET /v1/search`；原生 GET form，無 JS 也能用，`noindex` |
 | `/member/forgot`、`/member/verify?token=`、`/member/reset?token=` | ✅ 信件流程三頁，網址與 `EmailMemberNotifier` 組出的連結一致，`noindex` |
 | `/account`、`/account/downloads`、`/account/profile`、`/account/sample-requests`、`/account/sample-requests/{no}` | ✅ Account API（瀏覽器端取資料，`noindex`） |
@@ -232,7 +229,7 @@ apps/web/
 | 資料字典 | ✅ | `src/lib/resources.ts`：27 個實體的列表欄位與表單欄位，並區分**不分語系／分語系**兩層 |
 | 實際畫面 | ✅ | **27 個全部實作**，見下表 |
 | 開發用假 API | ✅ | `src/lib/mock.ts`：路徑形狀與 Admin API 契約一致，後端上線設 `VITE_ADMIN_MOCK=0` 即切換 |
-| 接真的 Admin API | ⬜ | 等 `fn-admin`；只需要關掉假資料旗標，畫面不用改 |
+| 接真的 Admin API | ✅ | 設 `VITE_ADMIN_MOCK=0` 打本機 `fn-admin`，27 個畫面逐一走過（2026-09-15） |
 
 ### 27 個畫面
 
@@ -247,6 +244,23 @@ apps/web/
 | 看板 | sample-requests | `SampleRequestsScreen` + `SampleRequestDetail`（只列合法的下一個狀態，不做拖曳） |
 | 轉址 | redirects | `RedirectsScreen`（存檔前先算轉址鏈與環，鏈會自動壓平成最終目標） |
 | 站台設定 | site-settings | `SettingsScreen`（依 key 前綴自動分區，分語系設定另有語系分頁） |
+
+### 瀏覽器驗收（2026-09-15）
+
+以 headless Chrome 對**真的 Admin API**（本機 `func` + SQL Server container，`VITE_ADMIN_MOCK=0`）
+逐畫面走過：27 個清單全部正常載入且有資料，除字型與 favicon 外沒有任何 4xx／5xx。
+另外實跑：`article-tags` 的建立 → 編輯 → 發布 → 刪除（確認框文案、toast、清單即時更新都對）、
+雙語翻譯各存一份（`en` 與 `zh-Hant` 各一列）、產品編輯頁的 reference／multiReference／
+mediaList／子表（關聯產業原樣存檔不會被清掉）。
+
+驗收過程修掉四個缺陷：
+
+| 缺陷 | 症狀 | 修法 |
+| --- | --- | --- |
+| 外鍵型別與 id 不一致 | `id` 是字串但 `parentId` 是數字，導覽樹的 `parentId === id` 永遠不成立 —— **Header 選單的 15 個子項整層不顯示** | `AdminMapper.ToRow` 把外鍵也輸出成字串；`NavigationScreen` 比對前再正規化一次 |
+| 站台設定不分區 | 分區用 `:` 切 key，但 key 是 `seo.titleTemplate` 這種點號 —— 9 個設定全擠在「其他」 | `SettingsScreen` 改用 `.`，`GROUP_LABEL` 的鍵改成實際前綴 |
+| 刪除後多一次 404 | 抽屜關閉前 React Query 又拿已刪除的 id 抓一次 | `useDeleteItem` 先 `removeQueries` 再 invalidate |
+| 側欄對照假警報 | 媒體庫退役後 `media` 還留在資料字典，開發模式每頁都 `console.error` | `menu.ts` 加 `MENULESS_TYPES`，寫明媒體為何沒有側欄入口 |
 
 ### 已處理的跨畫面規則
 
@@ -268,7 +282,7 @@ apps/web/
 | `Api/` 專案 | ✅ | `VicRound.slnx`：`Api/VicRound.Api.csproj` + `tests/Api.Tests`；namespace `VicRound.Api` |
 | Router 與授權 | ✅ | `RouterFunction` catch-all + `AppRouter` 三張表：公開白名單（未登記 404）、會員 JWT（強制 no-store）、後台 81 個權限碼（**預設拒絕**，未登記 403） |
 | 回應信封 / 例外 | ✅ | `ApiResponse<T>` + `ErrorCodes` + `AppException`；`ExceptionMiddleware` 把 SQL 約束違反轉成 409 而非 500 |
-| JWT | 🟡 | `JwtService`（HS256、雙 issuer/audience/金鑰）可驗證；**登入端點尚未實作** |
+| JWT | ✅ | `JwtService`（HS256、雙 issuer/audience/金鑰）；後台與會員的登入／換發端點都已上線 |
 | EF Core 模型 | ✅ | 14 個功能單元 → **77 張表**，schema 權威為 `Api/Data/Migrations/` |
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
@@ -318,7 +332,7 @@ apps/web/
 | 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
-| 測試 | `tests/Api.Tests` **87 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
+| 測試 | `tests/Api.Tests` **106 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
 | DB 層約束實測 | slug CHECK 擋大寫／底線、unique 擋重複、**刪除後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
@@ -329,7 +343,6 @@ apps/web/
 | ⛔ 版位照片與 partner logo | 等客戶提供 | 目前顯示 mockup 自己的虛線佔位框。舊站 212 張圖已在 Blob，但**內文引用的 2863 個檔名只有約 10% 在匯出裡**，其餘須另外取得 |
 | ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
 | ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
-| 🟡 產品詳情頁設計 | 確認稿沒有這一頁 | 已接 `GET /v1/products/{slug}`，渲染簡介／說明／規格表；**圖庫、認證與相關下載該端點還沒回**，等補上再加版塊 |
 | ⛔ 正式環境的 SMTP 設定 | 等客戶提供郵件主機／帳號 | 程式已就緒（本機實測通過），正式環境未設 `Mail:*` 之前信寄不出去，只會記 Warning |
 | ⛔ `SiteSettings.site.baseUrl` | 等正式網域定案 | 信裡的連結需要絕對網址；沒設就不寄信（寧可不寄，也不要寄出壞連結） |
 | ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
@@ -348,12 +361,13 @@ apps/web/
    `navigation`、`technologies`、`POST /contact`~~ ✅ 2026-09-08
 3c. ~~前台改吃 API，刪掉 `apps/web/content/`~~ ✅ 2026-09-08
 4. ~~Admin API~~ ✅ 2026-09-08（後台開發時設 `VITE_ADMIN_MOCK=0` 即打真的後端）
-4b. 後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除），並補上
-   `legacy-import/run`
+4b. ~~後台在瀏覽器逐畫面驗收（27 個畫面 × 建立／編輯／發布／刪除）~~ ✅ 2026-09-15，
+   驗收過程修掉四個缺陷（見第五節）。`legacy-import/run` **決定不做**（2026-09-15）：
+   來源檔不在版控、雲端讀不到，而 241 條 301 已在正式庫；要重跑就用本機 CLI，
+   個別轉址在後台改（見 [docs/cms-api.md](docs/cms-api.md)）
 5. ~~CI/CD 與 Azure 佈署~~ ✅ 2026-09-08
 5b. 上線前的收尾：
-   - **版位素材進 `public-media` + 設 repo 變數 `MEDIA_BASE` + 重跑 `web.yml`**
-     —— 目前整站破圖，這三步缺一不可（作法見 [docs/azure-deployment.md](docs/azure-deployment.md)）
+   - ~~版位素材進 `public-media` + 設 repo 變數 `MEDIA_BASE` + 重跑 `web.yml`~~ ✅ 2026-09-15 複驗
    - 綁 `www.vicround.com`（DNS + SWA 自訂網域）
    - 把 repo 變數 `SITE_URL` 改成正式網域（robots 才會開放索引；現在 canonical
      與 `sitemap.xml` 仍指向 SWA 預設網域）
