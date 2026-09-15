@@ -26,11 +26,12 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
 
   const row = query.data;
   const status = String(row?.status ?? '');
+  const applicant = String(row?.fullName ?? '這個人');
 
   async function run(name: string, data?: Record<string, unknown>) {
     try {
       await action.mutateAsync({ id, action: name, data });
-      toast({ title: '已更新這個帳號的狀態', variant: 'success' });
+      toast({ title: `已更新「${applicant}」的帳號狀態`, variant: 'success' });
     } catch (error) {
       toast({ ...describeError(error, '動作沒有完成'), variant: 'danger' });
     } finally {
@@ -128,7 +129,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
         onClose={() => setConfirming(null)}
         onConfirm={() => run('approve')}
         pending={action.isPending}
-        title="核准這個帳號？"
+        title={`核准「${applicant}」的註冊申請？`}
         description="核准後對方可以取得限會員文件的下載連結，並送出樣品申請。"
         confirmLabel="核准"
       />
@@ -139,7 +140,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
         onConfirm={() => run('suspend')}
         pending={action.isPending}
         tone="danger"
-        title="停權這個帳號？"
+        title={`停權「${applicant}」的帳號？`}
         description="對方會立刻無法登入與下載，既有的樣品申請單不受影響。"
         confirmLabel="停權"
       />
@@ -149,7 +150,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
         onClose={() => setConfirming(null)}
         onConfirm={() => run('reactivate')}
         pending={action.isPending}
-        title="恢復這個帳號？"
+        title={`恢復「${applicant}」的帳號？`}
         description="狀態會回到已核准，對方可以重新登入使用會員功能。"
         confirmLabel="恢復"
       />
@@ -157,7 +158,7 @@ export function MemberDetail({ resource }: { resource: ResourceDef }) {
       <Dialog
         open={rejecting}
         onClose={() => setRejecting(false)}
-        title="拒絕這個申請？"
+        title={`拒絕「${applicant}」的註冊申請？`}
         description="請寫下原因。這段文字會留在帳號上，是日後回覆對方時唯一的依據。"
         footer={
           <>

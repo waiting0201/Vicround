@@ -4,6 +4,7 @@ import { Button, ConfirmDialog, Icon, LoadingBlock, PageHeader, useToast } from 
 import { CULTURES, type Culture } from '@/lib/enums';
 import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
 import { useItem } from '@/lib/queries';
+import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
 import { rowTitle } from '@/lib/format';
 import { EntityForm, scrollToFirstFieldError } from '@/components/EntityForm';
@@ -52,7 +53,10 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
       toast({ ...result.notice, variant: 'danger' });
       return;
     }
-    toast({ title: `已儲存${resource.singular}`, variant: 'success' });
+    // 用畫面上剛存的值算標題（不是等下一次查詢回來）：新增時 query 的 row 還是
+    // undefined，得等重新導向後才會有；用 draft 目前的內容才拿得到「剛存的是哪一筆」。
+    const savedTitle = rowTitle({ ...draft.base, translations: draft.translations } as AdminRow, resource, culture);
+    toast({ title: `已儲存「${savedTitle}」的變更`, variant: 'success' });
     if (isNew) navigate(`/${resource.type}/${result.id}`, { replace: true });
   }
 

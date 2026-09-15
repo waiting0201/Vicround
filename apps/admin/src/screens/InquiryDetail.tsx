@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Button, Card, Field, Icon, LoadingBlock, PageHeader, Select, Textarea, useToast } from '@/ui';
-import { INQUIRY_STATUS_OPTIONS, INQUIRY_TYPE_LABEL } from '@/lib/enums';
+import { CULTURES, INQUIRY_STATUS_OPTIONS, INQUIRY_TYPE_LABEL } from '@/lib/enums';
 import { useItem, useList, useSaveItem } from '@/lib/queries';
 import type { ResourceDef } from '@/lib/resources';
 import { formatDateTime, rowTitle } from '@/lib/format';
@@ -45,7 +45,7 @@ export function InquiryDetail({ resource }: { resource: ResourceDef }) {
       toast({ ...describeError(error, '這張詢問單沒有存起來'), variant: 'danger' });
       return;
     }
-    toast({ title: '已更新這張詢問單', variant: 'success' });
+    toast({ title: `已更新「${String(row?.referenceNumber ?? '')}」這張詢問單`, variant: 'success' });
   }
 
   if (query.isLoading) return <LoadingBlock />;
@@ -137,7 +137,9 @@ export function InquiryDetail({ resource }: { resource: ResourceDef }) {
             <DetailRow label="送出頁面">
               <code className="font-mono text-xs">{String(row.sourceUrl ?? '—')}</code>
             </DetailRow>
-            <DetailRow label="語系">{String(row.culture ?? '—')}</DetailRow>
+            <DetailRow label="語系">
+              {CULTURES.find((item) => item.value === row.culture)?.label ?? String(row.culture ?? '—')}
+            </DetailRow>
             <DetailRow label="收到時間">{formatDateTime(row.createdAt)}</DetailRow>
             <DetailRow label="回覆時間">{formatDateTime(row.respondedAt)}</DetailRow>
           </div>

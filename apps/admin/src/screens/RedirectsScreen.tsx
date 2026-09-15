@@ -207,7 +207,7 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
     <>
       <PageHeader
         title={resource.label}
-        description="改 slug 或封存內容時，系統會自動寫入轉址。這一頁是給舊站遷移、印刷品短網址這類需要人工補登的情況。"
+        description="改網址片段或刪除內容時，系統會自動寫入轉址。這一頁是給舊站遷移、印刷品短網址這類需要人工補登的情況。"
         actions={
           <Button variant="primary" icon={<Icon name="plus" size={15} />} onClick={() => open('new')}>
             新增轉址
@@ -323,7 +323,7 @@ export function RedirectsScreen({ resource }: { resource: ResourceDef }) {
         onClose={() => setConfirmingDelete(false)}
         pending={remove.isPending}
         tone="danger"
-        title="刪除這筆轉址？"
+        title={`刪除「${String((editing as AdminRow)?.fromPath ?? '')}」這筆轉址？`}
         description="轉址會從資料庫永久移除，不能復原。原本會被導走的舊網址，之後會直接變成 404。"
         confirmLabel="刪除"
         onConfirm={async () => {

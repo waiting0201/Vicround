@@ -176,7 +176,7 @@ export function MembersScreen({ resource }: { resource: ResourceDef }) {
         onClose={() => setApproving(null)}
         onConfirm={() => approving && run(approving, 'approve')}
         pending={action.isPending}
-        title={`核准 ${String(approving?.fullName ?? '')}？`}
+        title={`核准「${String(approving?.fullName ?? '')}」的註冊申請？`}
         description={`核准後這個帳號可以取得限會員文件的下載連結，並送出樣品申請。信箱網域：${String(approving?.email ?? '').split('@')[1] ?? ''}`}
         confirmLabel="核准"
       />
@@ -184,7 +184,7 @@ export function MembersScreen({ resource }: { resource: ResourceDef }) {
       <Dialog
         open={Boolean(rejecting)}
         onClose={() => setRejecting(null)}
-        title="拒絕這個申請？"
+        title={`拒絕「${String(rejecting?.fullName ?? '')}」的註冊申請？`}
         description="請寫下原因。這段文字會留在帳號上，是日後回覆對方時唯一的依據。"
         footer={
           <>

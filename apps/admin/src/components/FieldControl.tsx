@@ -68,6 +68,9 @@ function buildHint(field: FieldDef, text: string): string | undefined {
   if (field.type === 'html' && !field.hint) {
     return '直接輸入 HTML；所見即所得編輯器尚未接上。';
   }
+  if (field.type === 'json' && !field.hint) {
+    return '進階設定，用大括號包起來的格式（JSON）填寫；不確定怎麼寫的話請先洽工程團隊，格式錯了會存不進去。';
+  }
   return field.hint;
 }
 
@@ -202,7 +205,7 @@ function renderControl({ id, field, value, text, onChange, error, readOnly, valu
         <Input
           id={id}
           value={text}
-          placeholder="lucide 圖示名稱，例：layers"
+          placeholder="圖示名稱（英文，例：layers）"
           disabled={readOnly}
           error={error}
           onChange={(event) => onChange(event.target.value)}

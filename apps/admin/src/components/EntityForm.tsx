@@ -4,6 +4,11 @@ import { hasErrorsIn, type EntityDraft } from '@/lib/draft';
 import type { FieldDef, ResourceDef } from '@/lib/resources';
 import { FieldControl } from './FieldControl';
 
+/** `en` / `zh-Hant` 這種代碼是給程式看的；畫面上一律顯示 `CULTURES` 裡配好的中文講法。 */
+function cultureLabel(culture: string): string {
+  return CULTURES.find((item) => item.value === culture)?.label ?? culture;
+}
+
 /**
  * 一筆內容的完整編輯表單：**上半部是不分語系的基底資料，下半部是 en / zh-Hant 分頁**。
  *
@@ -78,7 +83,7 @@ export function EntityForm({
             {!hasErrorsIn(draft.errors, culture) && isTranslationEmpty(draft, culture, resource) && (
               <p className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--warning-50)] px-3 py-2 text-xs text-[var(--warning-500)]">
                 <Icon name="alert-triangle" size={14} />
-                這個語系還沒有內容。存檔後前台的 {culture} 版本會找不到這一筆。
+                這個語系還沒有內容。存檔後前台的{cultureLabel(culture)}版本會找不到這一筆。
               </p>
             )}
 
@@ -94,7 +99,7 @@ export function EntityForm({
               <div className="border-t border-[var(--border-1)] pt-5">
                 <div className="mb-4 flex items-center gap-2">
                   <h4 className="text-sm font-semibold text-[var(--fg-1)]">搜尋結果呈現</h4>
-                  <Badge tone="neutral">{culture}</Badge>
+                  <Badge tone="neutral">{cultureLabel(culture)}</Badge>
                 </div>
                 <FieldGrid
                   fields={seoFields}

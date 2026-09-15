@@ -1,8 +1,13 @@
 import { Badge, Button, Card, Icon, IconButton } from '@/ui';
-import type { Culture } from '@/lib/enums';
+import { CULTURES, type Culture } from '@/lib/enums';
 import type { EntityDraft } from '@/lib/draft';
 import type { ChildCollectionDef } from '@/lib/resources';
 import { FieldGrid } from './EntityForm';
+
+/** `en` / `zh-Hant` 這種代碼是給程式看的；畫面上一律顯示配好的中文講法。 */
+function cultureLabel(culture: string): string {
+  return CULTURES.find((item) => item.value === culture)?.label ?? culture;
+}
 
 /**
  * 子項編輯器：規格列、版塊、製程步驟這種「附屬於一筆內容、順序有意義」的東西。
@@ -137,7 +142,7 @@ export function ChildCollection({
                 {definition.translationFields.length > 0 && (
                   <div className="border-t border-[var(--border-1)] pt-4">
                     <p className="mb-3 text-xs text-[var(--fg-2)]">
-                      以下欄位屬於 <span className="font-medium text-[var(--fg-1)]">{culture}</span>，
+                      以下欄位屬於<span className="font-medium text-[var(--fg-1)]">{cultureLabel(culture)}</span>，
                       切換上方語系分頁可編輯另一個語系。
                     </p>
                     <FieldGrid

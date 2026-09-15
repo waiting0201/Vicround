@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Button, ConfirmDialog, Icon, useToast } from '@/ui';
+import { DEFAULT_CULTURE } from '@/lib/enums';
 import { useDeleteItem, usePublishItem } from '@/lib/queries';
 import type { AdminRow } from '@/lib/api';
 import type { ResourceDef } from '@/lib/resources';
+import { rowTitle } from '@/lib/format';
 import { describeError } from '@/lib/errors';
 
 /**
@@ -13,6 +15,13 @@ import { describeError } from '@/lib/errors';
  * 「確定嗎？」沒有資訊量，「這會讓 /en/products/ag 立刻從網站上消失」才有。
  * 刪除是**真的刪掉**（2026-09-12 起不再封存），救不回來，所以它是唯一一顆 `danger` 實心鈕，
  * 對話框也要把「不可復原」與「舊網址會變成 410」講明白。
+ * </p>
+ *
+ * <p>
+ * 標題一律帶**這一筆的名稱**（docs/admin-ui.md §8.2 的範例：「刪除「Anti-Fog Film」」），
+ * 不是只寫「刪除這筆產品？」——27 個畫面共用這顆按鈕，名稱是使用者唯一能確認
+ * 「我是不是點錯那一列」的線索。語系固定取 `DEFAULT_CULTURE`：這裡只是要一個
+ * 認得出來的名字，不必跟著畫面當下選的語系分頁走。
  * </p>
  */
 export function RecordActions({
@@ -31,17 +40,18 @@ export function RecordActions({
 
   const status = String(row.status ?? '');
   const isPublished = status === 'published';
+  const title = rowTitle(row, resource, DEFAULT_CULTURE);
 
   async function run() {
     try {
       if (confirming === 'delete') {
         await remove.mutateAsync(row.id);
-        toast({ title: `已刪除這筆${resource.singular}`, description: '舊網址已寫成 410，不會變成 404。', variant: 'success' });
+        toast({ title: `已刪除「${title}」`, description: '舊網址已寫成 410，不會變成 404。', variant: 'success' });
         onDeleted?.();
       } else if (confirming) {
         await publish.mutateAsync({ id: row.id, next: confirming === 'publish' ? 'published' : 'draft' });
         toast({
-          title: confirming === 'publish' ? '已發布' : '已取消發布',
+          title: confirming === 'publish' ? `已發布「${title}」` : `已取消發布「${title}」`,
           description: '前台會在下一次請求就看到變更。',
           variant: 'success',
         });
@@ -78,7 +88,7 @@ export function RecordActions({
         onClose={() => setConfirming(null)}
         onConfirm={run}
         pending={publish.isPending}
-        title={`發布這筆${resource.singular}？`}
+        title={`發布「${title}」？`}
         description="發布後公開站立刻看得到，兩個語系的快取都會失效重抓。"
         confirmLabel="發布"
       />
@@ -89,7 +99,7 @@ export function RecordActions({
         onConfirm={run}
         pending={publish.isPending}
         tone="danger"
-        title={`取消發布這筆${resource.singular}？`}
+        title={`取消發布「${title}」？`}
         description="它會從公開站消失，網址會變成 404，但資料還在，可以再次發布。"
         confirmLabel="取消發布"
       />
@@ -100,7 +110,7 @@ export function RecordActions({
         onConfirm={run}
         pending={remove.isPending}
         tone="danger"
-        title={`刪除這筆${resource.singular}？`}
+        title={`刪除「${title}」？`}
         description="資料會從資料庫永久移除，不能復原；原本的網址會寫成 410（永久移除），不會留下 404。若還有其他內容引用它，刪除會被擋下來。"
         confirmLabel="刪除"
       />

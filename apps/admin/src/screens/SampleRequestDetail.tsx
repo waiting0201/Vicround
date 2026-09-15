@@ -46,7 +46,7 @@ export function SampleRequestDetail({ resource }: { resource: ResourceDef }) {
       toast({ ...describeError(error, '這張申請單沒有存起來'), variant: 'danger' });
       return;
     }
-    toast({ title: '已更新這張申請單', variant: 'success' });
+    toast({ title: `已更新「${String(row?.requestNumber ?? '')}」這張申請單`, variant: 'success' });
   }
 
   if (query.isLoading) return <LoadingBlock />;
