@@ -130,7 +130,9 @@ function RequestCard({ resource, row }: { resource: ResourceDef; row: AdminRow }
   async function move() {
     if (!target) return;
     try {
-      await action.mutateAsync({ id: row.id, action: 'status', data: { status: target } });
+      // 後端把這個動作登記在 PUT /sample-requests/{id}/status（見 lib/api.ts 的 runAction
+      // 註解）——送 POST 會落在路由表外面，被當成未登記端點回 403。
+      await action.mutateAsync({ id: row.id, action: 'status', data: { status: target }, method: 'PUT' });
       toast({ title: `已改為「${SAMPLE_REQUEST_STATUS_LABEL[target]}」`, variant: 'success' });
     } catch (error) {
       toast({ ...describeError(error, '狀態沒有更新'), variant: 'danger' });

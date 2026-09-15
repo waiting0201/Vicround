@@ -118,12 +118,28 @@ export function useReorder(type: string) {
   return useMutation({ mutationFn: (ids: string[]) => reorder(type, ids), onSuccess: invalidate });
 }
 
-/** 會員審核、樣品申請狀態這類非 CRUD 的動作。 */
+/**
+ * 會員審核、樣品申請狀態這類非 CRUD 的動作。
+ *
+ * <p>
+ * `method` 預設 `POST`；樣品申請的狀態轉換要指定 `PUT`
+ * （後端登記在 `PUT /admin/sample-requests/{id}/status`，見 `lib/api.ts` 的 `runAction`）。
+ * </p>
+ */
 export function useAction(type: string) {
   const invalidate = useInvalidate(type);
   return useMutation({
-    mutationFn: ({ id, action, data }: { id: string; action: string; data?: Record<string, unknown> }) =>
-      runAction(type, id, action, data ?? {}),
+    mutationFn: ({
+      id,
+      action,
+      data,
+      method,
+    }: {
+      id: string;
+      action: string;
+      data?: Record<string, unknown>;
+      method?: 'POST' | 'PUT';
+    }) => runAction(type, id, action, data ?? {}, method),
     onSuccess: invalidate,
   });
 }

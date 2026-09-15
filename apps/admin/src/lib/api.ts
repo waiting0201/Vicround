@@ -108,7 +108,31 @@ export async function login(username: string, password: string): Promise<void> {
   auth.set(data.accessToken);
 }
 
-export async function refresh(): Promise<boolean> {
+/**
+ * 換發 access token。**同一時間只能有一個真的在跑**——這支會被 `apiFetch` 在每一個
+ * 收到 401 的請求裡各自呼叫一次，一個畫面同時發出好幾個請求（例如列表 + 好幾支
+ * `useItem` 一起打）在 token 過期的那一刻會變成好幾個平行的 refresh。
+ *
+ * <p>
+ * 後端的 refresh token **每次換發都會輪替**（docs/cms.md），舊的用過即失效，重放
+ * 會被當成攻擊、把這個使用者的 token 全部撤銷（docs/cms-api.md）。平行呼叫時只有
+ * 第一個真的換到新 cookie，其餘幾個會在半路撿到已經被換掉的 refresh cookie ——
+ * 輕則白白多打幾次，重則直接觸發重放偵測、把人整個踢出去。用一顆共用的
+ * in-flight promise 讓後到的呼叫都搭上同一次換發，就不會有這個問題。
+ * </p>
+ */
+let refreshPromise: Promise<boolean> | null = null;
+
+export function refresh(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = doRefresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+async function doRefresh(): Promise<boolean> {
   try {
     const data = await apiFetch<{ accessToken: string }>('/auth/refresh', { method: 'POST' });
     auth.set(data.accessToken);
@@ -203,15 +227,27 @@ export function reorder(type: string, ids: string[]) {
   return apiFetch<void>(`/${type}/reorder`, { method: 'POST', body: JSON.stringify({ ids }) });
 }
 
-/** 非 CRUD 的動作端點（會員審核、樣品申請狀態…）。 */
+/**
+ * 非 CRUD 的動作端點（會員審核、樣品申請狀態…）。
+ *
+ * <p>
+ * 大多數動作端點是 `POST /{type}/{id}/{action}`（`docs/cms-api.md` 的會員審核四支）。
+ * **樣品申請的狀態轉換是例外**——後端登記的是
+ * `PUT /admin/sample-requests/{id}/status`（`AppRouter.Admin.cs`），因為它同時要接受
+ * `carrier`／`trackingNumber`／`trackingUrl` 這些欄位，形狀比較接近「更新」而不是
+ * 單純的動作。呼叫端要送對方法，否則會落在路由表外面被當成未登記的端點擋下
+ * （`/api/admin/**` 沒登記一律 403，不會是看得懂的錯誤訊息）。
+ * </p>
+ */
 export function runAction(
   type: string,
   id: string,
   action: string,
   data: Record<string, unknown> = {},
+  method: 'POST' | 'PUT' = 'POST',
 ) {
   return apiFetch<AdminRow>(`/${type}/${id}/${action}`, {
-    method: 'POST',
+    method,
     body: JSON.stringify(data),
   });
 }
