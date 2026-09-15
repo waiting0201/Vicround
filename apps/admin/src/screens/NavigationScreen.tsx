@@ -38,11 +38,21 @@ export function NavigationScreen({ resource }: { resource: ResourceDef }) {
   const query = useList(resource.type, { location, pageSize: 200 });
   const reorder = useReorder(resource.type);
 
+  /**
+   * 存檔／存翻譯的 invalidate 涵蓋整個 type（`lib/queries.ts`），包括這一頁自己的
+   * `useList`。編輯者若剛排好順序（`dirty === true`）還沒按「儲存排序」就先打開抽屜
+   * 改了某個項目再存，這個 effect 照舊整包覆蓋 `items` 會把手動排的順序悄悄丟掉——
+   * 見 `OrderedScreen.tsx` 同一處的註解，這裡是同一個模式（排序型清單）的第二個畫面。
+   * `dirty` 時只用新資料更新既有項目的內容，順序維持使用者當下排的那一份。
+   */
   useEffect(() => {
-    if (query.data) {
-      setItems(query.data.items);
-      setDirty(false);
-    }
+    if (!query.data) return;
+    setItems((current) => {
+      if (!dirty) return query.data.items;
+      const byId = new Map(query.data.items.map((row) => [row.id, row]));
+      return current.filter((row) => byId.has(row.id)).map((row) => byId.get(row.id)!);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data]);
 
   /** 一律用字串比對：假資料與舊版 API 的外鍵可能還是數字，型別一差就整層子項不見。 */

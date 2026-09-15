@@ -29,11 +29,26 @@ export function OrderedScreen({ resource }: { resource: ResourceDef }) {
   const query = useList(resource.type, { pageSize: 200 });
   const reorder = useReorder(resource.type);
 
+  /**
+   * `useSaveItem`／`useSaveTranslation` 存檔成功會 invalidate 整個 type 的查詢
+   * （`lib/queries.ts` 的註解：「動到某個 type 的任何一筆，就讓那個 type 的所有查詢重抓」）——
+   * 包括這一頁自己的 `useList`。如果編輯者剛排好順序（`dirty === true`）還沒按「儲存排序」，
+   * 就先開抽屜改了某一列的文字並存檔，這個 effect 若照舊用新資料整包覆蓋 `order`，
+   * 手動排好的順序會被悄悄丟掉，而畫面上完全沒有提示發生了什麼事。
+   *
+   * <p>
+   * 所以 `dirty` 時**不整批換掉**，只用新資料更新既有列的內容（標題、狀態這些
+   * 抽屜可能改到的欄位），順序與已經刪除的列維持使用者當下排的那一份。
+   * </p>
+   */
   useEffect(() => {
-    if (query.data) {
-      setOrder(query.data.items);
-      setDirty(false);
-    }
+    if (!query.data) return;
+    setOrder((current) => {
+      if (!dirty) return query.data.items;
+      const byId = new Map(query.data.items.map((row) => [row.id, row]));
+      return current.filter((row) => byId.has(row.id)).map((row) => byId.get(row.id)!);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data]);
 
   function move(index: number, delta: number) {
