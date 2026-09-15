@@ -29,6 +29,7 @@ public static class AdminResources
             Links:
             [
                 new("solutionIds", typeof(ProductSolution), "ProductId", "SolutionId", HasSortOrder: true),
+                new("gallery", typeof(ProductImage), "ProductId", "MediaAssetId", HasSortOrder: true),
             ],
             Children:
             [
@@ -182,7 +183,14 @@ public static class AdminResources
             TranslationSearchColumns: ["AltText", "Caption"]),
 
         new("users", typeof(User), OrderBy: "DisplayName",
-            SearchColumns: ["Username", "DisplayName", "Email"]),
+            SearchColumns: ["Username", "DisplayName", "Email"],
+            Links:
+            [
+                // 沒有這一條，後台新增的編輯者會一個角色都沒有——而權限是預設拒絕，
+                // 那個帳號登入後每一支端點都是 403。
+                new("roles", typeof(UserRole), "UserId", "RoleId",
+                    OtherEntity: typeof(Role), OtherNaturalKey: "Name"),
+            ]),
     ];
 
     private static readonly Dictionary<string, AdminResource> BySlug =

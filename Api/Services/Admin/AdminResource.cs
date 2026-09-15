@@ -40,7 +40,21 @@ public sealed record AdminResource(
 /// 多對多欄位：後台送一組 id 陣列（<c>categoryIds</c>），對應一張連結表。
 /// 儲存時整組換掉——後台的 UI 就是「選一組」，逐筆 diff 只會多出中間狀態。
 /// </summary>
-public sealed record AdminLink(string Field, Type LinkEntity, string OwnerFk, string OtherFk, bool HasSortOrder = false);
+/// <param name="OtherEntity">
+/// 對面的實體。只有在 <paramref name="OtherNaturalKey"/> 有值時才需要——要靠它把名稱換成主鍵。
+/// </param>
+/// <param name="OtherNaturalKey">
+/// 前端送的不是主鍵而是這一欄的值（目前只有 <c>Roles.Name</c>）。角色的 id 是 seed 決定的，
+/// 讓前端記住 1／2 等於把魔術數字釘進兩個專案；用名稱對應，日後加角色也不必改前端。
+/// </param>
+public sealed record AdminLink(
+    string Field,
+    Type LinkEntity,
+    string OwnerFk,
+    string OtherFk,
+    bool HasSortOrder = false,
+    Type? OtherEntity = null,
+    string? OtherNaturalKey = null);
 
 /// <summary>
 /// 子項集合：規格列、版塊、製程步驟。跟著母體一起送出（`ChildCollection.tsx` 的註解說明了理由），

@@ -56,6 +56,11 @@ jobs:
       - name: Test
         run: dotnet test VicRound.slnx -c Release --no-build --nologo
 
+      # 後台畫面的關聯欄位（產品圖庫、角色、規格列…）必須在 AdminResources.cs 有登記，
+      # 否則編輯者會看到「已儲存」但資料被靜默丟掉。跨 TS／C# 兩邊，測試涵蓋不到。
+      - name: Assert admin link fields are registered
+        run: node scripts/check-admin-links.mjs
+
       # ⚠️ **一定要指定 RID。** 不指定的話 NuGet 會把每個平台的原生資產都塞進
       # `runtimes/`（SqlClient 的 Windows SNI 等），冷啟動時 Flex Consumption 得先把
       # 那包下載解壓，全部落在 30 秒的 app init 上限裡。實測 28MB → 23MB。

@@ -145,6 +145,7 @@ pnpm lint
 pnpm sync:tokens                             # 從 mockup 同步設計 token 進兩個 app
 
 node scripts/check-content-language.mjs      # 擋輸入法誤植與英文欄位混入中文
+node scripts/check-admin-links.mjs           # 後台的關聯欄位都要在 AdminResources.cs 有登記
 ```
 
 ## 前台頁面現況（2026-09-12）

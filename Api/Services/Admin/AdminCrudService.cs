@@ -541,7 +541,7 @@ public sealed class AdminCrudService(
         {
             var row = Activator.CreateInstance(link.LinkEntity)!;
             SetProperty(row, link.OwnerFk, ownerKey);
-            otherProperty.SetValue(row, AdminMapper.ToClrValue(id, otherProperty.PropertyType, link.Field));
+            otherProperty.SetValue(row, await ResolveOtherKeyAsync(link, id, otherProperty.PropertyType, ct));
 
             if (link.HasSortOrder)
             {
@@ -551,6 +551,36 @@ public sealed class AdminCrudService(
             db.Add(row);
             order++;
         }
+    }
+
+    /// <summary>
+    /// 前端送的值 → 連結表要存的鍵。一般就是主鍵本身；
+    /// 有 <c>OtherNaturalKey</c> 的（角色）則先把名稱查成主鍵，查不到就回 400 而不是靜默略過。
+    /// </summary>
+    private async Task<object?> ResolveOtherKeyAsync(
+        AdminLink link, JsonElement value, Type targetType, CancellationToken ct)
+    {
+        if (link.OtherNaturalKey is null || link.OtherEntity is null)
+        {
+            return AdminMapper.ToClrValue(value, targetType, link.Field);
+        }
+
+        var otherType = Meta(link.OtherEntity);
+        var keyProperty = otherType.FindPrimaryKey()!.Properties[0];
+
+        var resolved = await connection.ExecuteScalarAsync<object?>(new CommandDefinition(
+            $"""
+             SELECT [{ColumnName(keyProperty, otherType)}] FROM {Table(otherType)}
+             WHERE [{ColumnOf(otherType, link.OtherNaturalKey)}] = @Value
+             """,
+            new { Value = value.ToString() },
+            cancellationToken: ct));
+
+        return resolved is null
+            ? throw AppException.BadRequest(
+                ErrorCodes.ValidationFormat, $"{link.Field}：找不到 {value}。")
+            : AdminMapper.ToClrValue(
+                JsonSerializer.SerializeToElement(resolved), targetType, link.Field);
     }
 
     private async Task ReplaceChildrenAsync(AdminChild child, object ownerKey, JsonElement items, CancellationToken ct)
@@ -669,13 +699,34 @@ public sealed class AdminCrudService(
             var linkType = Meta(link.LinkEntity);
             var order = link.HasSortOrder ? "SortOrder" : ColumnOf(linkType, link.OtherFk);
 
+            // 有自然鍵的（角色）回名稱，沒有的回主鍵——兩者都要與前端選項的 value 同一種東西。
+            var select = $"[{ColumnOf(linkType, link.OtherFk)}]";
+            var from = Table(linkType);
+
+            if (link.OtherNaturalKey is not null && link.OtherEntity is not null)
+            {
+                var otherType = Meta(link.OtherEntity);
+                var otherKey = ColumnName(otherType.FindPrimaryKey()!.Properties[0], otherType);
+
+                select = $"o.[{ColumnOf(otherType, link.OtherNaturalKey)}]";
+                from = $"""
+                    {Table(linkType)} l
+                    INNER JOIN {Table(otherType)} o ON o.[{otherKey}] = l.[{ColumnOf(linkType, link.OtherFk)}]
+                    """;
+                order = $"o.[{ColumnOf(otherType, link.OtherNaturalKey)}]";
+            }
+
+            var ownerColumn = link.OtherNaturalKey is null
+                ? $"[{ColumnOf(linkType, link.OwnerFk)}]"
+                : $"l.[{ColumnOf(linkType, link.OwnerFk)}]";
+
             // 只選一欄，因此逐列取第一個值就是 id；用泛型 QueryAsync<object> 會拿到 DapperRow。
             var ids = (await connection.QueryAsync(new CommandDefinition(
                 $"""
-                 SELECT [{ColumnOf(linkType, link.OtherFk)}]
-                 FROM {Table(linkType)}
-                 WHERE [{ColumnOf(linkType, link.OwnerFk)}] = @Id
-                 ORDER BY [{order}]
+                 SELECT {select}
+                 FROM {from}
+                 WHERE {ownerColumn} = @Id
+                 ORDER BY {order}
                  """, new { Id = key }, cancellationToken: ct)))
                 .Cast<IDictionary<string, object?>>()
                 .Select(item => item.Values.FirstOrDefault()?.ToString())
