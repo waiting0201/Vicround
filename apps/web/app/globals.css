@@ -540,6 +540,14 @@ textarea.vr-input {
   border-color: rgba(100, 54, 239, 0.5);
 }
 
+/* product-detail — 同系列型號卡（產品線頁 family 卡的可點擊版） */
+.vr-card-link {
+  transition: border-color 0.15s ease;
+}
+.vr-card-link:hover {
+  border-color: rgba(100, 54, 239, 0.5);
+}
+
 /* article.dc.html — 側欄目錄 */
 .vr-toc-link {
   padding: 8px 18px;

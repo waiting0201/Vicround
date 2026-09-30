@@ -346,7 +346,13 @@
   "solutions": {
     "other": "其他應用",
     "explore": "了解這個應用 →",
-    "challenge": "課題"
+    "challenge": "課題",
+    "cases": "客戶案例",
+    "caseProducts": "使用產品",
+    "caseChallenge": "客戶需求",
+    "caseSolution": "我們的解決方案",
+    "caseResult": "最終成果",
+    "caseResultPending": "成果照片待補"
   },
   "faq": {
     "all": "全部問題",
@@ -490,6 +496,22 @@
   "product": {
     "specifications": "規格",
     "certifications": "認證",
-    "downloads": "相關文件"
+    "downloads": "相關文件",
+    "crossSection": "剖面結構",
+    "crossSectionLabels": "剖面結構",
+    "top": "上",
+    "bottom": "下",
+    "about": "產品說明",
+    "usedIn": "應用場景",
+    "familyModels": "此系列的型號",
+    "otherModels": "同系列的其他型號",
+    "onlyModel": "目前此系列只列出這一個型號。",
+    "backToLine": "回到產品線",
+    "models": "型號",
+    "groupSpecSheet": "規格書",
+    "groupTestReport": "測試報告",
+    "groupCertificate": "證書",
+    "groupCatalogue": "型錄與簡介",
+    "groupOther": "其他文件"
   }
 }

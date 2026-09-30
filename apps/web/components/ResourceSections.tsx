@@ -60,7 +60,7 @@ export function DownloadList({
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 36 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16, marginTop: 36 }}>
       {items.map((item) => {
         // 會員功能關閉時不把人導去登入頁（那頁會 404）——落到下一行的
         // requestUrl／聯絡我們，也就是「來信索取」這條路（lib/features.ts）。

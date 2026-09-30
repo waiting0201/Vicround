@@ -65,3 +65,14 @@ export const CATEGORY_DEEP: Record<string, string> = {
   textileFoam: 'var(--textile-900)',
   acoustic: 'var(--acoustic-900)',
 };
+
+/**
+ * 產品詳情頁在**淺色底**上的文字用強調色（編號、數值帶、型號 chip）。
+ * 取自確認稿 `product-*.dc.html` 的實際色值——500 階的亮色（`CATEGORY_ACCENT`）
+ * 放在白底上對比不足，確認稿在淺色頁改用較深的一階。以產品線 slug 為鍵。
+ */
+export const CATEGORY_TEXT_ACCENT: Record<string, string> = {
+  'optical-film': '#1f6ab4',
+  'textile-foam': '#a2540f',
+  acoustic: '#0f8a76',
+};

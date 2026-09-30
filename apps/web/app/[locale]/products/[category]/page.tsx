@@ -150,8 +150,16 @@ export default async function ProductLinePage({ params }: Params) {
           {families ? <BlockHeading block={families} /> : null}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
-            {category.products.map((product) => (
-              <div key={product.slug} style={{ ...cardStyle, padding: '28px 26px' }}>
+            {category.products.map((product, index, all) => (
+              <div
+                key={product.slug}
+                style={{
+                  ...cardStyle,
+                  padding: '28px 26px',
+                  // 四欄格線裡落單的最後一張橫跨整列，比照確認稿（Acoustic 的 AFP 卡）。
+                  ...(index === all.length - 1 && all.length % 4 === 1 ? { gridColumn: '1 / -1' } : {}),
+                }}
+              >
                 {product.code ? (
                   <span
                     style={{
@@ -178,6 +186,23 @@ export default async function ProductLinePage({ params }: Params) {
                   }}
                 >
                   {product.name}
+                  {product.isNew ? (
+                    <span
+                      style={{
+                        marginLeft: 10,
+                        verticalAlign: 'middle',
+                        font: "500 10px/1 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: '#0f8a76',
+                        border: '1px solid rgba(15,138,118,0.45)',
+                        borderRadius: 999,
+                        padding: '3px 8px',
+                      }}
+                    >
+                      {t('common.new')}
+                    </span>
+                  ) : null}
                 </span>
                 <p
                   style={{
@@ -188,6 +213,45 @@ export default async function ProductLinePage({ params }: Params) {
                 >
                   {product.summary}
                 </p>
+                {product.variants && product.variants.length > 0 ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      paddingTop: 14,
+                      borderTop: '1px solid var(--page-border)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        font: "500 11px/1.4 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--page-faint)',
+                      }}
+                    >
+                      {t('product.models')}
+                    </span>
+                    {product.variants.map((variant) => (
+                      <Link
+                        key={variant.slug}
+                        href={localeHref(locale, `${ROUTES.products}/${variant.categorySlug}/${variant.slug}`)}
+                        style={{
+                          borderRadius: 999,
+                          padding: '5px 12px',
+                          background: 'rgba(100,54,239,0.1)',
+                          font: "500 12px/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                          color: '#6436ef',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {variant.name ?? variant.slug}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 'auto' }}>
                   {product.specifications
                     .filter((spec) => spec.isHighlighted)

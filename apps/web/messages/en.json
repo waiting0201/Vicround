@@ -346,7 +346,13 @@
   "solutions": {
     "other": "Other applications",
     "explore": "Explore this application →",
-    "challenge": "The challenge"
+    "challenge": "The challenge",
+    "cases": "Customer case studies",
+    "caseProducts": "Featured product",
+    "caseChallenge": "Challenge",
+    "caseSolution": "Solution",
+    "caseResult": "Result",
+    "caseResultPending": "Result photos pending"
   },
   "faq": {
     "all": "All questions",
@@ -490,6 +496,22 @@
   "product": {
     "specifications": "Specifications",
     "certifications": "Certifications",
-    "downloads": "Documents"
+    "downloads": "Documents",
+    "crossSection": "Cross-section structure",
+    "crossSectionLabels": "Cross-section",
+    "top": "Top",
+    "bottom": "Bottom",
+    "about": "About this product",
+    "usedIn": "Where it is used",
+    "familyModels": "Models in this family",
+    "otherModels": "Other models in this family",
+    "onlyModel": "This is the only listed model in its family so far.",
+    "backToLine": "Back to the product line",
+    "models": "Models",
+    "groupSpecSheet": "Spec sheets",
+    "groupTestReport": "Test reports",
+    "groupCertificate": "Certificates",
+    "groupCatalogue": "Brochures",
+    "groupOther": "Other documents"
   }
 }

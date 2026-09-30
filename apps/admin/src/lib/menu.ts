@@ -54,6 +54,7 @@ export const MENU: MenuSection[] = [
     items: [
       { type: 'milestones', label: '里程碑', icon: 'flag' },
       { type: 'locations', label: '據點', icon: 'map-pin' },
+      { type: 'case-studies', label: '客戶案例', icon: 'clipboard-list' },
       { type: 'testimonials', label: '客戶見證', icon: 'quote' },
       { type: 'partner-brands', label: '合作品牌', icon: 'building' },
       { type: 'contact-channels', label: '聯絡管道', icon: 'inbox' },

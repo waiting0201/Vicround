@@ -81,6 +81,24 @@ export type ProductListItem = Translated & {
   summary: string | null;
   /** 系列卡的 chip（`isHighlighted`）與比較表的欄位都在這裡。 */
   specifications: SpecificationRow[];
+  /** 掛在這個 family 之下的型號；只有產品線頁（`/v1/categories/{slug}`）會填。 */
+  variants?: ProductRef[];
+};
+
+/** 連到另一個產品所需的最少欄位（family ↔ 型號）。 */
+export type ProductRef = { slug: string; categorySlug: string; code: string | null; name: string | null };
+
+/** 客戶案例：需求 → 解法 → 成果（database.md §02.1）。掛在產業頁，`products` 是案例用到的產品。 */
+export type CaseStudy = {
+  slug: string;
+  clientName: string | null;
+  projectName: string | null;
+  title: string | null;
+  challenge: string | null;
+  solution: string | null;
+  result: string | null;
+  imageUrl: string | null;
+  products: ProductRef[];
 };
 
 export type ProductDetail = {
@@ -120,6 +138,8 @@ export type SolutionDetail = {
   specifications: SpecificationRow[];
   blocks: ContentBlock[];
   categories: CategoryListItem[];
+  /** 這個產業的客戶案例，已排序；沒有案例就是空陣列（該區段不渲染）。 */
+  caseStudies?: CaseStudy[];
 };
 
 // ── 頁面與版塊 ────────────────────────────────────────────────────────────
@@ -497,7 +517,8 @@ export function getSolutions(culture: Locale) {
 }
 
 export function getSolution(culture: Locale, slug: string) {
-  return apiGet<SolutionDetail>(`/solutions/${slug}`, { culture, tags: [tag.solution(slug)] });
+  // `solutions` 標籤讓後台改客戶案例（一則可掛多個產業）時，一次刷新所有產業頁。
+  return apiGet<SolutionDetail>(`/solutions/${slug}`, { culture, tags: [tag.solutions(), tag.solution(slug)] });
 }
 
 export function getTechnologies(culture: Locale) {

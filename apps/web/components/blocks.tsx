@@ -275,15 +275,15 @@ export function ProductComparisonTable({
   firstColumnLabel: string;
   note?: string | null;
 }) {
-  const labels = [
-    ...new Set(
-      products.flatMap((product) =>
-        product.specifications.filter((spec) => !spec.isHighlighted && spec.label).map((spec) => spec.label!),
-      ),
-    ),
-  ];
+  const comparable = (product: ProductListItem) =>
+    product.specifications.filter((spec) => !spec.isHighlighted && spec.label);
 
-  if (products.length === 0 || labels.length === 0) return null;
+  // 沒有任何可比較規格的產品不進表——例如只帶卡片亮點的 family（Acoustic 的 AFP），
+  // 進表只會是一列只有名稱的空白。
+  const rows = products.filter((product) => comparable(product).length > 0);
+  const labels = [...new Set(rows.flatMap((product) => comparable(product).map((spec) => spec.label!)))];
+
+  if (rows.length === 0 || labels.length === 0) return null;
 
   return (
     <>
@@ -315,7 +315,7 @@ export function ProductComparisonTable({
             </tr>
           </thead>
           <tbody>
-            {products.map((product, index) => (
+            {rows.map((product, index) => (
               <tr key={product.slug} style={index % 2 === 1 ? { background: 'rgba(20,20,31,0.03)' } : undefined}>
                 <td style={{ ...tdStyle, color: 'var(--page-fg)' }}>{product.name}</td>
                 {labels.map((label) => (

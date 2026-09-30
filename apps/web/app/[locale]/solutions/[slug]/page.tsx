@@ -10,6 +10,7 @@ import {
   ProductComparisonTable,
   SpecTable,
   StatBandBlock,
+  cardStyle,
   eyebrowStyle,
   sectionTitleStyle,
 } from '@/components/blocks';
@@ -36,6 +37,11 @@ import { pageMetadata } from '@/lib/seo';
  * Acoustic 是變體：沒有「材料」卡而是**等級比較表**（內容來自那條產品線的四個等級產品，
  * 見 `ProductComparisonTable`），另有兩組驗證／應用卡片。差別全部由 CMS 的版塊決定 ——
  * 這一頁不為單一 slug 寫特例，版塊的順序也照 CMS 的排序。
+ * </p>
+ *
+ * <p>
+ * 客戶案例（`caseStudies`）排在所有版塊之後、「其他應用」之前：先講為什麼選我們，再拿實際案例佐證。
+ * 沒有案例的產業整段不渲染；白／淺紫底接在最後一個實際渲染的區段之後交錯。
  * </p>
  */
 type Params = { params: Promise<{ locale: string; slug: string }> };
@@ -90,6 +96,14 @@ export default async function SolutionPage({ params }: Params) {
         />
       </BlockSection>
     ) : null;
+
+  // 案例區段的底色：接在最後一個實際渲染的區段之後交錯（空的 statBand 不算）。
+  const lastRendered = sections.reduce(
+    (found, block, index) => (block.blockType === 'statBand' && block.items.length === 0 ? found : index),
+    -1,
+  );
+  const lastRaised = specsAt < 0 && specsSection ? false : lastRendered >= 0 && lastRendered % 2 === 0;
+  const caseStudies = solution.caseStudies ?? [];
 
   const renderSection = (block: ContentBlock, index: number) => {
     const raised = index % 2 === 0;
@@ -189,6 +203,154 @@ export default async function SolutionPage({ params }: Params) {
           </Fragment>
         ))}
         {specsAt < 0 ? specsSection : null}
+
+        {/* ============ 客戶案例：需求 → 解法 → 成果，三張步驟卡 ============ */}
+        {caseStudies.length > 0 ? (
+          <BlockSection id="cases" raised={!lastRaised}>
+            <h2 style={sectionTitleStyle}>{t('solutions.cases')}</h2>
+            {caseStudies.map((study, caseIndex) => (
+              <div
+                key={study.slug}
+                style={{
+                  marginTop: caseIndex === 0 ? 40 : 56,
+                  ...(caseIndex === 0 ? {} : { paddingTop: 56, borderTop: '1px solid var(--page-border)' }),
+                }}
+              >
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {study.clientName ? (
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: '5px 12px',
+                        background: 'rgba(100,54,239,0.1)',
+                        font: "500 11px/1.4 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: '#6436ef',
+                      }}
+                    >
+                      {study.clientName}
+                    </span>
+                  ) : null}
+                  {study.projectName ? (
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: '5px 12px',
+                        border: '1px solid rgba(20,20,31,0.14)',
+                        font: "500 11px/1.4 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.04em',
+                        color: 'var(--page-muted)',
+                      }}
+                    >
+                      {study.projectName}
+                    </span>
+                  ) : null}
+                </div>
+                {study.title ? (
+                  <h3
+                    style={{
+                      margin: '16px 0 0',
+                      maxWidth: 820,
+                      font: "500 1.5rem/1.25 'Geologica', 'GenYoGothic TW', sans-serif",
+                      color: 'var(--page-fg)',
+                      textWrap: 'balance',
+                    }}
+                  >
+                    {study.title}
+                  </h3>
+                ) : null}
+                {study.products.length > 0 ? (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 16 }}>
+                    <span
+                      style={{
+                        font: "500 11px/1.4 'IBM Plex Mono', monospace",
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--page-faint)',
+                      }}
+                    >
+                      {t('solutions.caseProducts')}
+                    </span>
+                    {study.products.map((product) => (
+                      <Link
+                        key={product.slug}
+                        href={localeHref(locale, `${ROUTES.products}/${product.categorySlug}/${product.slug}`)}
+                        style={{
+                          borderRadius: 999,
+                          padding: '5px 12px',
+                          background: 'rgba(100,54,239,0.1)',
+                          font: "500 12px/1.4 'Geologica', 'GenYoGothic TW', sans-serif",
+                          color: '#6436ef',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        {product.name ?? product.slug}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                    gap: 20,
+                    marginTop: 28,
+                  }}
+                >
+                  {(
+                    [
+                      ['solutions.caseChallenge', study.challenge],
+                      ['solutions.caseSolution', study.solution],
+                      ['solutions.caseResult', study.result],
+                    ] as const
+                  ).map(([label, body], index) => (
+                    <div key={label} style={cardStyle}>
+                      <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span
+                        style={{
+                          font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
+                          color: 'var(--page-fg)',
+                        }}
+                      >
+                        {t(label)}
+                      </span>
+                      {body ? (
+                        <p
+                          style={{
+                            margin: 0,
+                            font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                            color: 'var(--page-muted)',
+                            textWrap: 'pretty',
+                          }}
+                        >
+                          {body}
+                        </p>
+                      ) : (
+                        // 成果還沒到：確認稿的待補虛線卡語彙，不留一個空白格。
+                        <p
+                          style={{
+                            margin: 0,
+                            padding: '20px 16px',
+                            border: '1px dashed rgba(100,54,239,0.4)',
+                            borderRadius: 14,
+                            textAlign: 'center',
+                            font: "500 0.875rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
+                            color: 'var(--page-faint)',
+                          }}
+                        >
+                          {t('solutions.caseResultPending')}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </BlockSection>
+        ) : null}
 
         {/* ============ 其他應用 ============ */}
         <section id="other" style={{ scrollMarginTop: 90 }}>

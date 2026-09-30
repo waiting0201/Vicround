@@ -78,6 +78,7 @@ const SEED_NAMES: Record<string, string[]> = {
   certifications: ['ISO 9001', 'ISO 14001', 'RoHS', 'REACH', 'IATF 16949', 'IEC 60529 IP Rating'],
   milestones: ['Founding', 'First optical coating line', 'Acoustic material platform', 'Vietnam plant'],
   locations: ['Taipei Headquarters', 'Taoyuan Plant', 'Ho Chi Minh Sales Office'],
+  'case-studies': ['A privacy filter staff actually keep on', 'Quieter glass-walled meeting rooms'],
   testimonials: ['Consistent haze across three production lots.', 'They matched our die-cut tolerance on the first sample.'],
   'partner-brands': ['Brand A', 'Brand B', 'Brand C', 'Brand D'],
   'contact-channels': ['Sales & quotations', 'Technical support', 'Partnership'],

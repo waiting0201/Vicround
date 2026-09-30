@@ -1258,6 +1258,58 @@ const locations: ResourceDef = {
   ],
 };
 
+const caseStudies: ResourceDef = {
+  type: 'case-studies',
+  label: '客戶案例',
+  singular: '案例',
+  screen: 'editor',
+  titleField: 'title',
+  titleFromTranslation: true,
+  hasSlug: true,
+  hasStatus: true,
+  hasSort: true,
+  hasTranslations: true,
+  hasSeo: true,
+  description:
+    '一則案例分成「客戶需求 → 我們的解決方案 → 最終成果」三段，會出現在勾選的產業解決方案頁。客戶名稱與 Logo 要先取得客戶書面授權；沒有授權就把客戶名稱留空，在標題用「知名電競品牌」這類代稱。',
+  columns: [
+    { name: 'title', label: '案例', fromTranslation: true },
+    { name: 'clientName', label: '客戶', fromTranslation: true, width: '10rem' },
+    STATUS_COLUMN,
+  ],
+  baseFields: [
+    SLUG_FIELD,
+    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。' },
+    {
+      name: 'productIds',
+      label: '關聯產品',
+      type: 'multiReference',
+      scope: 'base',
+      refType: 'products',
+      wide: true,
+      hint: '案例裡用到的產品；產業頁上的這則案例會連到這些產品頁。',
+    },
+    {
+      name: 'solutionIds',
+      label: '顯示在產業頁',
+      type: 'multiReference',
+      scope: 'base',
+      refType: 'solutions',
+      wide: true,
+      hint: '這則案例會出現在勾選的產業解決方案頁；沒勾就不會出現在前台任何地方。',
+    },
+    SORT_FIELD,
+  ],
+  translationFields: [
+    { name: 'title', label: '標題', type: 'text', scope: 'translation', required: true, maxLength: 300, wide: true },
+    { name: 'clientName', label: '客戶名稱', type: 'text', scope: 'translation', maxLength: 160, hint: '未取得具名授權時留空。' },
+    { name: 'projectName', label: '專案名稱', type: 'text', scope: 'translation', maxLength: 200 },
+    { name: 'challenge', label: '客戶需求', type: 'textarea', scope: 'translation', required: true, maxLength: 2000, rows: 5, wide: true },
+    { name: 'solution', label: '我們的解決方案', type: 'textarea', scope: 'translation', required: true, maxLength: 2000, rows: 5, wide: true },
+    { name: 'result', label: '最終成果與反饋', type: 'textarea', scope: 'translation', maxLength: 2000, rows: 4, wide: true, hint: '客戶還沒提供成果或回饋時留空，前台就不顯示這一段。' },
+  ],
+};
+
 const testimonials: ResourceDef = {
   type: 'testimonials',
   label: '客戶見證',
@@ -1864,6 +1916,7 @@ export const RESOURCES: ResourceDef[] = [
   certifications,
   milestones,
   locations,
+  caseStudies,
   testimonials,
   partnerBrands,
   contactChannels,
