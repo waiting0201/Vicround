@@ -56,7 +56,7 @@ Api/                   Azure Functions（.NET 10 isolated + ASP.NET Core Integra
   Services/            跨 Handler 的共用服務（JWT／密碼／Blob）
     Dapper/            <Unit>ReadService —— 純讀取
   Models/
-    Entities/          EF Core POCO（14 個功能單元的 77 張表）
+    Entities/          EF Core POCO（14 個功能單元的 81 張表）
     Dtos/              一單元一檔
   Data/
     VicRoundDbContext.cs + Configurations/ + Migrations/    ★ schema 權威來源

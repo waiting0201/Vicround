@@ -1,7 +1,7 @@
 # 後台介面設計規範（apps/admin）
 
-這份文件定義 VicRound 自建 CMS 後台（`apps/admin`）的介面語言：版面骨架、27 個畫面
-歸類、清單頁／編輯頁的固定樣式、元件清單與色彩語意。目的是讓實作 27 個畫面的人
+這份文件定義 VicRound 自建 CMS 後台（`apps/admin`）的介面語言：版面骨架、28 個畫面
+歸類、清單頁／編輯頁的固定樣式、元件清單與色彩語意。目的是讓實作 28 個畫面的人
 **不需要每個畫面重新做設計判斷**——版型、按鈕位置、狀態顏色、文案語氣都已經決定好，
 剩下的是把 `docs/database.md` 的欄位塞進固定的骨架。
 
@@ -242,6 +242,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 永續 | 認證管理 | `certifications` | A | 同時餵 Sustainability／About／Technologies／CertificationDialog（四處共用），編輯時提示「這筆資料同時顯示在 4 個頁面」 |
 | 公司 | 里程碑 | `milestones` | B | 依 `Year`／`Month` 排序，抽屜內另有「上移／下移」（見 4.4） |
 | 公司 | 據點 | `locations` | B | |
+| 公司 | 客戶案例 | `case-studies` | A | 需求／解法／成果三段；關聯產品與產業；`ClientName` 可留空（未取得具名授權時）（2026-09-30 新增） |
 | 公司 | 客戶見證 | `testimonials` | B | `AuthorName` 可留空（未取得具名授權時） |
 | 公司 | 合作品牌 | `partner-brands` | B | |
 | 公司 | 聯絡管道 | `contact-channels` | B | |

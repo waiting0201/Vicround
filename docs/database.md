@@ -16,7 +16,7 @@ mockup 頁面）與「**API**」（對應哪些端點），讓每一張表都能
 | --- | --- | --- |
 | [00](#00-讀我全域慣例) | 全域慣例 | `Cultures` |
 | [01](#01-路由地圖) | 路由地圖與 Slug 作用域 | — |
-| [02](#02-產品目錄) | 產品目錄 | `Categories` `Products` `SpecificationRows` `ProductImages` |
+| [02](#02-產品目錄) | 產品目錄 | `Categories` `Products` `SpecificationRows` `ProductImages` `CaseStudies` |
 | [03](#03-產業解決方案) | 產業解決方案 | `Solutions` |
 | [04](#04-技術與製程) | 技術與製程 | `ProcessFlows` `ProcessSteps` |
 | [05](#05-資源中心) | 資源中心 | `Articles` `Authors` `ArticleTags` `Exhibitions` `FaqCategories` `FaqItems` |
@@ -322,6 +322,36 @@ CHECK 約束與 filtered index 見 [0.6](#06-owner-triple-模式多型-owner)。
 ### ProductImages（join）
 
 `ProductId`、`MediaAssetId`、`SortOrder`；PK = `(ProductId, MediaAssetId)`。
+
+### CaseStudies（Addressable）— 客戶案例（2026-09-30 新增）
+
+客戶 2026-09 交來的產品資料每項都附一份「客戶案例表單」：**客戶需求 → 我們的解決方案 → 最終成果**
+三段。依 [09](#09-頁面與版塊) 的判準建強型別表，而不是塞進 `Testimonials` 或產品描述：
+
+- **呈現位置是產業頁**（2026-09-30 決定）：案例講的是某個產業的課題怎麼被解決，放在
+  `/solutions/{slug}`；產品頁不顯示。`CaseStudySolutions` 決定出現在哪幾個產業頁，
+  `CaseStudyProducts` 記錄案例用到的產品，產業頁上的案例據此連到產品頁。
+- 判準 1：同一則案例可掛在多個產業頁，並關聯多個產品。
+- 形狀不同：`Testimonials` 是一句引言＋署名，案例是有結構的三段敘事與實品照。
+
+| 欄位 | 型別 | 說明 |
+| --- | --- | --- |
+| `Id` | `int` PK | |
+| `Slug` | `nvarchar(200)` | filtered unique，供 `#case-{slug}` 錨點；目前**沒有**自己的網址（不實作 `IRoutable`） |
+| `MediaAssetId` | `int NULL` FK→`MediaAssets` | 實品照或案例海報 |
+| `Status` `SortOrder` + 三時間戳 | | |
+
+`CaseStudyTranslations(CaseStudyId, Culture)`：`ClientName nvarchar(160) NULL`（**具名需客戶書面
+授權**，未取得時留空）、`ProjectName nvarchar(200)`、`Title nvarchar(300)`、
+`Challenge nvarchar(2000)`、`Solution nvarchar(2000)`、`Result nvarchar(2000) NULL`（客戶尚未
+提供成果時為 NULL，前台整段不顯示）、+ SEO 四欄。
+
+Join：`CaseStudyProducts(CaseStudyId, ProductId, SortOrder)`、
+`CaseStudySolutions(CaseStudyId, SolutionId, SortOrder)`。
+
+**Family 與型號**（與案例無關，同屬本次新增）：客戶給的是具體型號（`VRF-PF-AGHC-460-N`），掛在確認稿的 family 之下
+（`ParentProductId`）。`GET /v1/products/{slug}` 回 `parent` 與同一 family 的其他型號
+（`variants`）；`GET /v1/categories/{slug}` 的系列卡帶 `variants`，卡片可以直接連到型號頁。
 
 ---
 
@@ -1187,6 +1217,8 @@ SampleRequestItems
 | `ArticleProducts` | Articles | Products | — | 產品頁的相關文章 |
 | `ArticleTagLinks` | Articles | ArticleTags | — | 舊站 knowledge / activity |
 | `CertificationProducts` | Certifications | Products | — | 產品頁的合規標章 |
+| `CaseStudyProducts` | CaseStudies | Products | `SortOrder` | 產業頁案例上的產品連結 |
+| `CaseStudySolutions` | CaseStudies | Solutions | `SortOrder` | 產業頁的客戶案例 |
 | `CertificationCategories` | Certifications | Categories | — | 證書涵蓋的產品線 |
 | `DownloadProducts` | Downloads | Products | `SortOrder` | 產品頁 Download spec sheet |
 | `DownloadCategories` | Downloads | Categories | `SortOrder` | 產品線頁的規格書 |
@@ -1361,6 +1393,14 @@ Key Vault，**永不進版控**。
 | **B. `BootstrapSeeder`** | 應用啟動時執行，可重複執行 | super admin、`Categories`(3)、`Solutions`(7)、`Pages`(11)、`NavigationItems`、`FaqCategories`(6)+`FaqItems`(13)、`Certifications`(9)、`ProcessFlows`+Steps、`Locations`(3)、`ContactChannels`(3)、`BusinessDomainRules`、`SiteSettings` | 自然鍵（`Slug` / `UsernameNormalized` / `Key` / `Domain`），**只 insert 缺的，不覆寫已存在的** |
 | **C. `LegacyImportSeeder`** | 一次性 CLI（`dotnet run -- import-legacy`）或 Admin 觸發 | 舊站 ~118 頁內容、`blog_post.csv`、`url_redirects.csv`、`/store/*` 與 `*.html` 的 301、`官網圖片/` 上傳 Blob | `LegacySourceKey`（UNIQUE filtered index）與 `Redirects.FromPath` |
 
+C 層另有兩支：`ContentImportSeeder`（`import-content`，確認稿文案）與
+**`ProductImportSeeder`**（`import-products [--root reference/product-docs]`，2026-09-30）——
+客戶提供的產品規格書、第三方報告、證書與客戶案例。文字已人工整理成
+`reference/product-docs/product-catalog.json`，與原始檔放在一起，**兩者都不進版控**——內容含客戶
+名稱與尚未取得授權的案例，而 GitHub repo 是公開的（經 `scripts/sync-nas-assets.sh` 同步到 NAS）。冪等鍵：實體用 `Slug`、媒體用 `LegacySourceKey = product-docs:{public|private}:{sha256}`
+（同一份 PDF 在客戶的兩個資料夾各放一份，只會存一次）。`MemberOnly` 的報告進私有容器。
+認證上的 `[Pending client input]` 佔位字視為「缺」，會被真實資料填上；其餘一律不覆寫。
+
 B 層**只補缺、不覆寫**——編輯者改過的內容不能被 seeder 蓋掉。
 
 **為什麼 super admin 不能用 `HasData`**：密碼雜湊含隨機 salt，每次跑
@@ -1521,3 +1561,7 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
 11. **`Exhibitions` 的「Book a meeting」目的地** — 站內 contact 表單或外部排程工具；
     `MeetingUrl` 已設 nullable，兩者皆可。
 12. **Floating Button 的「AI Agent」** — 兩版 Sitemap 都有列但完全未定義，本版不建模。
+13. **客戶 2026-09 產品資料的疑點**（`import-products` 已依指示**照原檔匯入**，待客戶校稿）——
+    共 9 項：防焰結果與案例說法矛盾、部分測試報告與專利不在盈絲名下、REACH 項數不一、
+    一則案例檔放錯、尺寸三處不一、供應商證書過期、具名客戶待授權、案例圖疑為渲染圖。**明細含客戶與供應商資料，
+    不進公開 repo**，見 `reference/product-docs/資料疑點.md`（NAS 同步）。

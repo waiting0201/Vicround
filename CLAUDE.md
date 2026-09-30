@@ -129,6 +129,9 @@ export VICROUND_SQL_CONNECTION='Server=localhost,1433;Database=VicRound;User Id=
 dotnet $VR seed [--migrate]        # B 層：super admin、產品線、Solutions、Pages、導覽…
 dotnet $VR import-content          # C 層：確認稿文案進翻譯表
                                    #（來源：Api/Data/Seeding/ContentImport/confirmed-copy.json）
+dotnet $VR import-products         # C 層：客戶產品資料（規格書／報告／證書／客戶案例）→ Blob + DB
+                                   #（文字與原始檔都在 reference/product-docs/，含客戶資料、不進 GitHub；
+                                   #  需 Azurite，--root 可改）
 dotnet $VR import-legacy           # C 層：舊站圖片→Blob、blog→Articles、舊網址→301
                                    #（需 Azurite；reference/ 不在版控，本機才跑得動）
 

@@ -71,7 +71,7 @@ GET  /api/v1/categories          ✅          # ?type=optical-film|textile-foam|
 GET  /api/v1/categories/{slug}   ✅ 含 specs、blocks、關聯 solutions
 
 GET  /api/v1/products            ✅ ?category=&solution=&featured=true&page=1&pageSize=24
-GET  /api/v1/products/{slug}     ✅ detail：specs、主圖與圖庫、認證、相關下載
+GET  /api/v1/products/{slug}     ✅ detail：specs、主圖與圖庫、認證、相關下載、family／同系列型號
 
 GET  /api/v1/solutions           ✅ 產業解決方案索引（取代舊的 /applications）
 GET  /api/v1/solutions/{slug}    ✅
@@ -148,6 +148,15 @@ from this `/api/v1/sitemap` data — not hand-built XML in the API. See [sitemap
 label/value/note list), `gallery` (CDN URLs), `category` (slug+name), `solutions`,
 `certifications`, `downloads`, and `seo` (`title`, `description`, `canonicalUrl`, `alternates`
 for hreflang).
+
+> **實際輸出（2026-09-30）**：`slug`、`categorySlug`、`category`（slug＋name）、`code`、`brand`、
+> `isNew`、`name`、`summary`、`description`、`applicationNote`、`heroImageUrl`、`seo`、
+> `specifications`、`images`、`certifications`、`downloads`、
+> **`parent`**（型號才有：family 的 slug／categorySlug／code／name）、**`variants`**（family 頁＝旗下
+> 型號；型號頁＝同 family 的其他型號）。`GET /v1/categories/{slug}` 的每張系列卡也帶 `variants`。
+> **客戶案例在產業頁**：`GET /v1/solutions/{slug}` 回 `caseStudies`（`clientName`／`projectName`／
+> `title`／`challenge`／`solution`／`result`／`imageUrl`／`products[]`，`result` 未提供時為 null）。
+> 規格裡欄名為「Cross-section／剖面結構」的那一列，前台會以斜線切層畫成剖面色帶。
 
 **Download DTO** 依 `accessLevel` 回不同內容 —— 公開端**永不**回 `MemberOnly` 檔案的真實 URL：
 
@@ -302,7 +311,7 @@ int / Guid / string 三種），enum 一律 camelCase 字串。
 categories | products | solutions | articles | article-tags | authors |
 pages | content-blocks | faq-categories | faq-items | exhibitions |
 certifications | downloads | process-flows | milestones | locations |
-testimonials | partner-brands | contact-channels | navigation | redirects |
+case-studies | testimonials | partner-brands | contact-channels | navigation | redirects |
 media | site-settings | users | members | sample-requests |
 contact-inquiries | business-domains
 ```

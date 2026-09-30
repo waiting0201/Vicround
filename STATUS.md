@@ -5,7 +5,7 @@
 > 分工：本檔記錄**狀態**；[CLAUDE.md](CLAUDE.md) 記錄**慣例與檢索地圖**；
 > [docs/](docs/) 記錄各子系統的**設計**。三份不要互相抄，各司其職。
 
-**最後更新**：2026-09-15
+**最後更新**：2026-09-30
 
 ---
 
@@ -18,12 +18,12 @@
 19 條**（產品線與產業頁各由一支動態路由服務 3 與 7 個網址），其餘 12 條是確認稿沒有的
 功能頁（搜尋、會員信件流程、會員專區）；SEO 與 GEO 的基礎建設
 （metadata／hreflang／sitemap／robots／llms.txt／六種 JSON-LD）已就緒並實測通過。
-`apps/admin` 的 **27 個畫面已全數實作**（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
+`apps/admin` 的 **27 個畫面已全數實作**（2026-09-30 加上第 28 個「客戶案例」）（依 [docs/admin-ui.md](docs/admin-ui.md) 的 7 種畫面型別），
 且已**在瀏覽器對真的 Admin API 逐畫面驗收**（2026-09-15，見第五節）。開發模式仍可吃
 `src/lib/mock.ts` 的假資料，設 `VITE_ADMIN_MOCK=0` 就打真的後端。
 
 **後端**是單一 `Api/` 專案（.NET 10 isolated，形狀對齊姊妹專案 NTI 的施工標準），
-[docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **77 張表**。
+[docs/database.md](docs/database.md) 的 14 個功能單元全數落成 EF Core 模型 —— **81 張表**（2026-09-30 加上 `CaseStudies` 等 4 張）。
 migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表 / 269 索引 / 37 filtered /
 17 CHECK / 162 FK 建置無誤，DB 層約束逐條實測有效。**106 項測試通過**。
 
@@ -36,6 +36,17 @@ migration 與 seeder 已在**本機 SQL Server container 實跑通過**：77 表
 **Admin API 也已上線**（登入 + 27 個單元的 CRUD）。**Account API 也已上線**
 （16 支：註冊／登入／換發／驗證信／忘記密碼／個人資料／會員下載＋SAS 連結／樣品申請），
 **16 支全部有前台介面**。
+
+**客戶產品資料已進庫並上 mockup**（2026-09-30）：客戶交來光學膜／吸音／紡織各兩項的規格書、
+第三方報告、證書與客戶案例。解析後整理成 `reference/product-docs/product-catalog.json`（含客戶資料，**不進 GitHub**，走 NAS），
+以新的 `import-products` 匯入（冪等）：6 個型號＋1 個新 family（Acoustic「吸音毛氈板」AFP）、
+47 列規格、30 份下載（測試報告為 `MemberOnly`、進私有容器）、4 則客戶案例（**顯示在產業解決方案頁**，連到用到的產品）；GRS 認證的佔位字
+換成真實證號（CU1207675GRS-2026-00024788，至 2027-03-11）。為此新增 **`CaseStudies`**（＋翻譯與
+兩張 join，共 4 張表）、後台單元「客戶案例」、產業詳情 API 的 `caseStudies`、產品詳情 API 的 `parent`／`variants`。
+mockup 新增 `product-detail.dc.html`（6 個產品可切換），三個產品線頁的系列卡加上型號連結；
+前台 `/products/{category}/{slug}` 依此改版。⚠️ **客戶資料有 9 處疑點待校稿**（防焰級外 vs.
+案例寫一級、NRC 與甲醛報告不在盈絲名下、「專利清單」是 LG 的專利…），見
+[docs/database.md](docs/database.md) §19 第 13 項——依指示**照原檔匯入**。
 
 **前台會員區已整段隱藏**（2026-09-15）：環境變數 `NEXT_PUBLIC_MEMBERS_ENABLED`（repo 變數 `MEMBERS_ENABLED`，`apps/web/lib/features.ts`，
 **預設關閉**）——Header 的會員鈕不渲染、`llms.txt` 不提會員區、需要登入的下載改指向聯絡我們，
@@ -87,7 +98,7 @@ API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（�
 | Content API（`fn-public`） | ✅ | **21 支端點已上線並實跑驗證**（含 contact 寫入、reference block 解析與站內搜尋） |
 | Account API（會員） | ✅ | 16 支端點已上線，**前台介面全數補齊**；寄信已接，本機端到端跑過完整註冊與重設密碼流程 |
 | Admin API（`fn-admin`） | ✅ | 登入 + 27 個單元共用的 CRUD、轉址、快取失效、媒體上傳、審核動作 |
-| 資料庫 / EF Core | ✅ | 77 張表、首次 migration、三層 seeder，已於本機 SQL Server 實跑驗證 |
+| 資料庫 / EF Core | ✅ | 81 張表、三層 seeder，已於本機 SQL Server 實跑驗證（`AddCaseStudies` 2026-09-30） |
 | 內容匯入 | ✅ | 確認稿文案（B/C 層）與舊站資料都已進庫，全數冪等 |
 | 媒體 / Blob | ✅ | 正式 `stvicroundprod`、`public-media` 公開讀；版位素材已上傳且逐張實打 200（2026-09-15） |
 | CI | ✅ | `.github/workflows/api.yml`：建置、106 項測試、產物防呆、migration 同步檢查 |
@@ -302,7 +313,7 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
 | Router 與授權 | ✅ | `RouterFunction` catch-all + `AppRouter` 三張表：公開白名單（未登記 404）、會員 JWT（強制 no-store）、後台 81 個權限碼（**預設拒絕**，未登記 403） |
 | 回應信封 / 例外 | ✅ | `ApiResponse<T>` + `ErrorCodes` + `AppException`；`ExceptionMiddleware` 把 SQL 約束違反轉成 409 而非 500 |
 | JWT | ✅ | `JwtService`（HS256、雙 issuer/audience/金鑰）；後台與會員的登入／換發端點都已上線 |
-| EF Core 模型 | ✅ | 14 個功能單元 → **77 張表**，schema 權威為 `Api/Data/Migrations/` |
+| EF Core 模型 | ✅ | 14 個功能單元 → **81 張表**，schema 權威為 `Api/Data/Migrations/` |
 | 首次 migration | ✅ | `InitialCreate`；已套用於本機 SQL Server，`has-pending-model-changes` 為 no changes |
 | 三層 seeder / 匯入 | ✅ | A 層 `HasData`、B 層 `BootstrapSeeder`、C 層 `ContentImportSeeder` 與 `LegacyImportSeeder`，全部冪等 |
 | **Content API** `/api/v1/**` | ✅ | **21 支已上線並實跑驗證**（下表）。中英雙語、分頁、快取標頭、404/400 錯誤碼皆已驗；reference block 由後端解析成強型別資料；`GET /v1/search` 是 §19.5 的 Phase 1（`LIKE` 掃七張翻譯表，跳脫萬用字元） |
@@ -349,9 +360,10 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
 | 翻譯 fallback | 列表缺該語系時回退預設語系並回報 `hasRequestedCulture = false`（前台據此不宣告 hreflang）；詳情缺該語系直接 404（§0.2） |
 | 種子 | A 層：`Cultures`(2)、`Roles`(2)。B 層：super admin（帳號 `sa@system.local`）、產品線 3、Solutions 7、Pages 11、Locations 3、ContactChannels 3、封鎖網域 27、SiteSettings 9、NavigationItems 36 |
 | 內容匯入 | `import-content`（來源 `confirmed-copy.json`，隨 build 複製）：認證 9、FAQ 5/13、產品系列 18、規格列（含系列 chip 與等級表）、製程 7/27、文章 12、展會 3、版塊（含 reference block 的查詢參數） |
+| 產品資料匯入 | `import-products`（2026-09-30；`product-catalog.json` 與原始檔都在 `reference/product-docs/`，不進版控）：產品 7、規格列 47、下載 30、媒體 32、客戶案例 4、GRS 證號與效期。重跑零新增 |
 | 舊站匯入 | `import-legacy`：212 張圖 → Blob + `MediaAssets`、4 篇 blog → `Articles`(Draft)、241 條 301 |
 | 舊站轉址工具 | `tools/crawl-legacy-site.mjs` 爬真實網址；`check-redirects` 報覆蓋率（**241/241 = 100%**，全部導首頁） |
-| 測試 | `tests/Api.Tests` **106 項**：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
+| 測試 | `tests/Api.Tests` **112 項**（2026-09-30 加 `product-catalog.json` 守門 6 項，檔案不在時略過）：慣例守門（EF 模型）、密碼雜湊、後台帳號格式與正規化、語系解析與分頁、公開網址組裝、詢問表單限流、後台登記表與權限表對照 |
 | DB 層約束實測 | slug CHECK 擋大寫／底線、unique 擋重複、**刪除後 slug 可重用**、owner triple 擋雙 owner 與零 owner、`EmailDomain` 自動算出、`Cultures` FK 擋未登錄語系 —— 7 項皆如文件所述 |
 
 ## 七、擋住的事項
@@ -398,6 +410,9 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
      回得出 241 筆，沒驗站台真的會轉 —— 而當時 middleware 的 matcher 正把
      238 條 `.html` 擋在外面，全部 404
 6. ~~Account API 與會員專區~~ ✅ 2026-09-11
+6b. 客戶產品資料（2026-09-30 已匯入本機）：**待客戶校稿 database.md §19 第 13 項的 9 處疑點**，
+   並補上實品照與案例成果；確認後對正式庫跑 `import-products`（需先把原始檔放進
+   `reference/product-docs/`，並指向正式 Blob）
 7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
    （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
    變更密碼與新增樣品申請、寄信管道（會員信 + 詢問單通知信與回執）
