@@ -73,6 +73,10 @@ public class VicRoundDbContext(DbContextOptions<VicRoundDbContext> options) : Db
     public DbSet<MilestoneTranslation> MilestoneTranslations => Set<MilestoneTranslation>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<LocationTranslation> LocationTranslations => Set<LocationTranslation>();
+    public DbSet<CaseStudy> CaseStudies => Set<CaseStudy>();
+    public DbSet<CaseStudyTranslation> CaseStudyTranslations => Set<CaseStudyTranslation>();
+    public DbSet<CaseStudyProduct> CaseStudyProducts => Set<CaseStudyProduct>();
+    public DbSet<CaseStudySolution> CaseStudySolutions => Set<CaseStudySolution>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<TestimonialTranslation> TestimonialTranslations => Set<TestimonialTranslation>();
     public DbSet<PartnerBrand> PartnerBrands => Set<PartnerBrand>();

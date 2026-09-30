@@ -91,6 +91,11 @@ public sealed partial class AppRouter
             ("PUT" or "PATCH", ["admin", "locations", ..]) => PermissionCodes.LocationsEdit,
             ("DELETE",         ["admin", "locations", ..]) => PermissionCodes.LocationsDelete,
 
+            ("GET",            ["admin", "case-studies", ..]) => PermissionCodes.CaseStudiesView,
+            ("POST",           ["admin", "case-studies", ..])     => PermissionCodes.CaseStudiesEdit,
+            ("PUT" or "PATCH", ["admin", "case-studies", ..]) => PermissionCodes.CaseStudiesEdit,
+            ("DELETE",         ["admin", "case-studies", ..]) => PermissionCodes.CaseStudiesDelete,
+
             ("GET",            ["admin", "testimonials", ..]) => PermissionCodes.TestimonialsView,
             ("POST",           ["admin", "testimonials", ..])     => PermissionCodes.TestimonialsEdit,
             ("PUT" or "PATCH", ["admin", "testimonials", ..]) => PermissionCodes.TestimonialsEdit,

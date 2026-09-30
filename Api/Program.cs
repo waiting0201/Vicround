@@ -22,7 +22,7 @@ using VicRound.Api.Services.Admin;
 using VicRound.Api.Services.Dapper;
 
 // seed / import-content / import-legacy —— 初始化環境與內容匯入用，不進 Functions host。
-if (args.Any(a => a is "seed" or "import-content" or "import-legacy" or "check-redirects"))
+if (args.Any(a => a is "seed" or "import-content" or "import-products" or "import-legacy" or "check-redirects"))
 {
     return await SeedCommand.RunAsync(args);
 }

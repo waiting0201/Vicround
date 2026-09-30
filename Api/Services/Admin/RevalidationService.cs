@@ -141,6 +141,11 @@ public static class RevalidationTags
                 tags.Add("site-settings");
                 break;
 
+            // 案例出現在產業頁（每個產業頁都帶 solutions 標籤），沒有自己的頁面。
+            case "case-studies":
+                tags.Add("solutions");
+                break;
+
             // 公司實體沒有自己的頁面，它們出現在別人的 reference block 裡。
             case "milestones" or "locations" or "testimonials" or "partner-brands" or "contact-channels":
                 tags.AddRange(["page:about", "page:contact", "page:partnership", "page:home"]);

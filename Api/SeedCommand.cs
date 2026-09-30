@@ -9,12 +9,14 @@ using VicRound.Api.Data;
 using VicRound.Api.Data.Seeding;
 using VicRound.Api.Data.Seeding.ContentImport;
 using VicRound.Api.Data.Seeding.LegacyImport;
+using VicRound.Api.Data.Seeding.ProductImport;
 using VicRound.Api.Services;
 
 namespace VicRound.Api;
 
 /// <summary>
-/// <c>seed [--migrate]</c>、<c>import-content [--file]</c>、<c>import-legacy [--root]</c> 的執行入口
+/// <c>seed [--migrate]</c>、<c>import-content [--file]</c>、<c>import-products [--root] [--file]</c>、
+/// <c>import-legacy [--root]</c> 的執行入口
 /// （docs/database.md §18.1 的 B 層與 C 層）。
 /// <para>
 /// 刻意做成 CLI 而不是啟動時自動跑：seeder 雖然冪等，但正式環境不該在每次冷啟動時碰資料庫，
@@ -62,6 +64,7 @@ internal static class SeedCommand
 
         services.AddScoped<BootstrapSeeder>();
         services.AddScoped<ContentImportSeeder>();
+        services.AddScoped<ProductImportSeeder>();
         services.AddScoped<LegacyImportSeeder>();
 
         await using var provider = services.BuildServiceProvider();
@@ -93,6 +96,30 @@ internal static class SeedCommand
             await scope.ServiceProvider
                 .GetRequiredService<ContentImportSeeder>()
                 .ImportAsync(await File.ReadAllTextAsync(path));
+        }
+
+        if (args.Contains("import-products", StringComparer.OrdinalIgnoreCase))
+        {
+            // 整理好的文字（product-catalog.json）與客戶交來的原始檔都不進版控——內容含客戶名稱與
+            // 未授權的案例，repo 是公開的。與舊站匯出一樣放在 reference/ 底下（NAS 同步），由 --root 指定。
+            var root = configuration["root"] ?? "reference/product-docs";
+            var path = configuration["file"] ?? Path.Combine(root, "product-catalog.json");
+
+            if (!File.Exists(path))
+            {
+                await Console.Error.WriteLineAsync($"找不到 {path}。");
+                return 1;
+            }
+
+            if (!Directory.Exists(root))
+            {
+                await Console.Error.WriteLineAsync($"找不到產品原始檔目錄 {root}（用 --root 指定）。");
+                return 1;
+            }
+
+            await scope.ServiceProvider
+                .GetRequiredService<ProductImportSeeder>()
+                .ImportAsync(await File.ReadAllTextAsync(path), root);
         }
 
         if (args.Contains("check-redirects", StringComparer.OrdinalIgnoreCase))

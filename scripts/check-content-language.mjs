@@ -11,7 +11,7 @@
  *
  * 用法：`node scripts/check-content-language.mjs`
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,6 +52,42 @@ function walk(dir) {
 }
 
 for (const target of TARGETS) walk(join(ROOT, target));
+
+/**
+ * 產品匯入檔是 `{ "en": {...}, "zh-Hant": {...} }` 的結構，逐行掃抓不到語系歸屬，
+ * 因此解析後沿樹走：`en` 底下的任何字串都不得有中日韓字元。
+ */
+// 不進版控（含客戶資料），CI 上不存在時略過。
+const PRODUCT_CATALOG = 'reference/product-docs/product-catalog.json';
+
+function checkEnglish(node, path) {
+  if (typeof node === 'string') {
+    if (CJK.test(node)) {
+      console.error(`${PRODUCT_CATALOG} ${path} 英文欄位出現中文字元（語言純度）：\n  ${node}`);
+      problems += 1;
+    }
+    return;
+  }
+  if (node && typeof node === 'object') {
+    for (const [key, value] of Object.entries(node)) checkEnglish(value, `${path}.${key}`);
+  }
+}
+
+function walkCatalog(node, path) {
+  if (Array.isArray(node)) {
+    node.forEach((item, index) => walkCatalog(item, `${path}[${index}]`));
+    return;
+  }
+  if (!node || typeof node !== 'object') return;
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'en') checkEnglish(value, `${path}.en`);
+    else walkCatalog(value, `${path}.${key}`);
+  }
+}
+
+if (existsSync(join(ROOT, PRODUCT_CATALOG))) {
+  walkCatalog(JSON.parse(readFileSync(join(ROOT, PRODUCT_CATALOG), 'utf8')), '$');
+}
 
 if (problems > 0) {
   console.error(`\n${problems} 處問題。`);

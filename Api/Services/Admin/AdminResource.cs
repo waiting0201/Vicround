@@ -6,7 +6,7 @@ namespace VicRound.Api.Services.Admin;
 /// 後台的一個資源（＝ `apps/admin/src/lib/resources.ts` 的一個單元、`/api/admin/{slug}`）。
 ///
 /// <para>
-/// 後台是<b>資料驅動</b>的：27 個單元共用同一組 CRUD，差別只在這張表登記的東西
+/// 後台是<b>資料驅動</b>的：28 個單元共用同一組 CRUD，差別只在這張表登記的東西
 /// （哪張實體表、翻譯表怎麼接、哪些欄位是關聯、有沒有子項）。這樣新增一個單元是加一列，
 /// 不是複製一份 handler ——後者保證會有幾支忘了加權限檢查或忘了寫 301。
 /// </para>

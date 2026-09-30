@@ -1,7 +1,7 @@
 namespace VicRound.Api.Common;
 
 /// <summary>
-/// 後台權限碼。值域與 <c>apps/admin/src/lib/resources.ts</c> 的 27 個單元<b>逐字對應</b>，
+/// 後台權限碼。值域與 <c>apps/admin/src/lib/resources.ts</c> 的 28 個單元<b>逐字對應</b>，
 /// 不做單複數轉換——後台畫面、路由表與資料庫的角色設定必須是同一組字串。
 /// </summary>
 public static class PermissionCodes
@@ -48,6 +48,9 @@ public static class PermissionCodes
     public const string LocationsView = "locations.view";
     public const string LocationsEdit = "locations.edit";
     public const string LocationsDelete = "locations.delete";
+    public const string CaseStudiesView = "case-studies.view";
+    public const string CaseStudiesEdit = "case-studies.edit";
+    public const string CaseStudiesDelete = "case-studies.delete";
     public const string TestimonialsView = "testimonials.view";
     public const string TestimonialsEdit = "testimonials.edit";
     public const string TestimonialsDelete = "testimonials.delete";

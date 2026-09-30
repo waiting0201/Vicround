@@ -78,7 +78,9 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
              """, args);
 
         var categoryProducts = products.ToList();
-        var categoryProductSpecs = await ProductSpecsAsync(db, culture, categoryProducts.Select(p => p.Id).ToArray());
+        var categoryProductIds = categoryProducts.Select(p => p.Id).ToArray();
+        var categoryProductSpecs = await ProductSpecsAsync(db, culture, categoryProductIds);
+        var categoryVariants = await VariantsAsync(db, culture, categoryProductIds);
 
         var solutions = await db.QueryAsync<CategoryRow>(
             """
@@ -108,7 +110,12 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
             Specifications = await ContentReaders.SpecificationsAsync(db, "OwnerCategoryId", row.Id, culture),
             Blocks = await ContentReaders.BlocksAsync(db, "OwnerCategoryId", row.Id, culture),
-            Products = categoryProducts.Select(p => ToProductListItem(p, row.Slug, categoryProductSpecs)).ToList(),
+            Products = categoryProducts
+                .Select(p => ToProductListItem(p, row.Slug, categoryProductSpecs) with
+                {
+                    Variants = categoryVariants[p.Id].ToList(),
+                })
+                .ToList(),
             Solutions = solutions.Select(s => new SolutionListItemDto
             {
                 Slug = s.Slug,
@@ -192,22 +199,34 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     {
         var row = await db.QuerySingleOrDefaultAsync<ProductDetailRow>(
             """
-            SELECT e.Id, e.Slug, e.Code, e.Brand, c.Slug AS CategorySlug,
+            SELECT e.Id, e.ParentProductId, e.Slug, e.Code, e.Brand, e.IsNew, c.Slug AS CategorySlug,
+                   COALESCE(ct.Name, cf.Name) AS CategoryName,
                    CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS HeroImageUrl,
                    t.Name, t.Summary, t.Description, t.ApplicationNote,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Products e
             INNER JOIN Categories c ON c.Id = e.CategoryId
+            LEFT JOIN CategoryTranslations ct ON ct.CategoryId = c.Id AND ct.Culture = @Culture
+            LEFT JOIN CategoryTranslations cf ON cf.CategoryId = c.Id AND cf.Culture = @DefaultCulture
             LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
             INNER JOIN ProductTranslations t ON t.ProductId = e.Id AND t.Culture = @Culture
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
-            new { culture, Slug = slug, Sql.Published });
+            new { culture, DefaultCulture = CultureCodes.Default, Slug = slug, Sql.Published });
 
         if (row is null)
         {
             return null;
         }
+
+        // family 頁列出旗下型號；型號頁列出同一 family 的其他型號，並帶回 family 本身供麵包屑使用。
+        var familyId = row.ParentProductId ?? row.Id;
+        var family = (await VariantsAsync(db, culture, [familyId]))[familyId]
+            .Where(v => v.Slug != row.Slug)
+            .ToList();
+        var parent = row.ParentProductId is { } parentId
+            ? (await ProductRefsAsync(db, culture, [parentId])).FirstOrDefault()
+            : null;
 
         // 認證與下載都走各自服務的 static 入口，可見性規則（過期、AccessLevel、private container）
         // 因此只有一份——產品頁不會不小心把 memberOnly 檔案的真實網址漏出去。
@@ -215,8 +234,10 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         {
             Slug = row.Slug,
             CategorySlug = row.CategorySlug,
+            Category = new CategoryRefDto(row.CategorySlug, row.CategoryName),
             Code = row.Code,
             Brand = row.Brand,
+            IsNew = row.IsNew,
             Name = row.Name,
             Summary = row.Summary,
             Description = row.Description,
@@ -228,8 +249,51 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Certifications = await CertificationReadService.ListAsync(db, culture, category: null, productSlug: row.Slug),
             Downloads = await DownloadReadService.ListAsync(
                 db, culture, kindValue: null, productSlug: row.Slug, categorySlug: null, solutionSlug: null),
+            Parent = parent,
+            Variants = family,
         };
     }
+
+    /// <summary>各 family 旗下已發布的型號，一次撈完再依 family 分組。</summary>
+    private static async Task<ILookup<int, ProductRefDto>> VariantsAsync(
+        IDbConnection db, string culture, int[] familyIds)
+    {
+        if (familyIds.Length == 0)
+        {
+            return Array.Empty<(int, ProductRefDto)>().ToLookup(x => x.Item1, x => x.Item2);
+        }
+
+        var rows = await db.QueryAsync<ProductRefRow>(
+            $"""
+             SELECT e.ParentProductId AS OwnerId, e.Slug, c.Slug AS CategorySlug, e.Code, {Sql.Coalesce("Name")}
+             FROM Products e
+             INNER JOIN Categories c ON c.Id = e.CategoryId
+             {Sql.TranslationJoin("ProductTranslations", "ProductId")}
+             WHERE e.ParentProductId IN @Ids AND e.Status = @Published
+             ORDER BY e.SortOrder, e.Id
+             """,
+            new { Ids = familyIds, culture, DefaultCulture = CultureCodes.Default, Sql.Published });
+
+        return rows.ToLookup(r => r.OwnerId, r => new ProductRefDto(r.Slug, r.CategorySlug, r.Code, r.Name));
+    }
+
+    private static async Task<IReadOnlyList<ProductRefDto>> ProductRefsAsync(
+        IDbConnection db, string culture, int[] ids)
+    {
+        var rows = await db.QueryAsync<ProductRefRow>(
+            $"""
+             SELECT e.Id AS OwnerId, e.Slug, c.Slug AS CategorySlug, e.Code, {Sql.Coalesce("Name")}
+             FROM Products e
+             INNER JOIN Categories c ON c.Id = e.CategoryId
+             {Sql.TranslationJoin("ProductTranslations", "ProductId")}
+             WHERE e.Id IN @Ids AND e.Status = @Published
+             """,
+            new { Ids = ids, culture, DefaultCulture = CultureCodes.Default, Sql.Published });
+
+        return rows.Select(r => new ProductRefDto(r.Slug, r.CategorySlug, r.Code, r.Name)).ToList();
+    }
+
+    private sealed record ProductRefRow(int OwnerId, string Slug, string CategorySlug, string? Code, string? Name);
 
     /// <summary>圖庫（<c>ProductImages</c>）。private container 的檔案不會出現在公開端點。</summary>
     private static async Task<IReadOnlyList<ProductImageDto>> ProductImagesAsync(
@@ -395,7 +459,8 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     }
 
     private sealed record ProductDetailRow(
-        int Id, string Slug, string? Code, string? Brand, string CategorySlug, string? HeroImageUrl,
+        int Id, int? ParentProductId, string Slug, string? Code, string? Brand, bool IsNew,
+        string CategorySlug, string? CategoryName, string? HeroImageUrl,
         string? Name, string? Summary, string? Description, string? ApplicationNote,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);
 

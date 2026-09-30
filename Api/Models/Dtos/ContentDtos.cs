@@ -62,15 +62,31 @@ public sealed record ProductListItemDto
     /// </summary>
     public IReadOnlyList<SpecificationRowDto> Specifications { get; init; } = [];
 
+    /// <summary>
+    /// 掛在這個 family 之下的型號（<c>ParentProductId</c>）。只有產品線頁的系列卡會填——
+    /// 卡片要能直接連到型號頁；其他列表維持空陣列，不多打一次查詢。
+    /// </summary>
+    public IReadOnlyList<ProductRefDto> Variants { get; init; } = [];
+
     public bool HasRequestedCulture { get; init; }
 }
+
+/// <summary>產品詳情頁上的產品線（名稱走翻譯 fallback）。</summary>
+public sealed record CategoryRefDto(string Slug, string? Name);
+
+/// <summary>連到另一個產品所需的最少欄位（family ↔ 型號）。</summary>
+public sealed record ProductRefDto(string Slug, string CategorySlug, string? Code, string? Name);
 
 public sealed record ProductDetailDto
 {
     public required string Slug { get; init; }
     public required string CategorySlug { get; init; }
+
+    /// <summary>麵包屑與 <c>Product</c> JSON-LD 的 <c>category</c> 要顯示名稱，不是 slug。</summary>
+    public CategoryRefDto? Category { get; init; }
     public string? Code { get; init; }
     public string? Brand { get; init; }
+    public bool IsNew { get; init; }
     public string? Name { get; init; }
     public string? Summary { get; init; }
     public string? Description { get; init; }
@@ -90,6 +106,30 @@ public sealed record ProductDetailDto
 
     /// <summary>相關下載（<c>DownloadProducts</c>）。<c>memberOnly</c> 的檔案一樣只回 metadata。</summary>
     public IReadOnlyList<DownloadDto> Downloads { get; init; } = [];
+
+    /// <summary>所屬 family；本身就是 family 時為 null。</summary>
+    public ProductRefDto? Parent { get; init; }
+
+    /// <summary>family 頁列出旗下型號；型號頁列出同一 family 的其他型號（不含自己）。</summary>
+    public IReadOnlyList<ProductRefDto> Variants { get; init; } = [];
+}
+
+/// <summary>客戶案例：需求 → 解法 → 成果（database.md §02.1）。</summary>
+public sealed record CaseStudyDto
+{
+    public required string Slug { get; init; }
+    public string? ClientName { get; init; }
+    public string? ProjectName { get; init; }
+    public string? Title { get; init; }
+    public string? Challenge { get; init; }
+    public string? Solution { get; init; }
+
+    /// <summary>客戶尚未提供成果與實品照時為 null。</summary>
+    public string? Result { get; init; }
+    public string? ImageUrl { get; init; }
+
+    /// <summary>案例用到的產品（<c>CaseStudyProducts</c>），供產業頁連到產品頁。</summary>
+    public IReadOnlyList<ProductRefDto> Products { get; init; } = [];
 }
 
 /// <summary>圖庫的一張圖。<c>Width</c>／<c>Height</c> 讓前台先留位，避免版面跳動。</summary>
@@ -124,6 +164,8 @@ public sealed record SolutionDetailDto
     public IReadOnlyList<SpecificationRowDto> Specifications { get; init; } = [];
     public IReadOnlyList<ContentBlockDto> Blocks { get; init; } = [];
     public IReadOnlyList<CategoryListItemDto> Categories { get; init; } = [];
+    /// <summary>客戶案例（<c>CaseStudySolutions</c>，database.md §02.1）。</summary>
+    public IReadOnlyList<CaseStudyDto> CaseStudies { get; init; } = [];
 }
 
 /// <summary>

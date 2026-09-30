@@ -134,6 +134,7 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
                 ShortName = c.ShortName,
                 HasRequestedCulture = c.HasRequestedCulture,
             }).ToList(),
+            CaseStudies = await CaseStudyReader.ForSolutionAsync(db, culture, row.Id),
         };
     }
 

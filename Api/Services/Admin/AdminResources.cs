@@ -3,7 +3,7 @@ using VicRound.Api.Models.Entities;
 namespace VicRound.Api.Services.Admin;
 
 /// <summary>
-/// 27 個後台單元的登記表。<b>slug 與 `apps/admin/src/lib/resources.ts` 逐字對應</b>——
+/// 28 個後台單元的登記表。<b>slug 與 `apps/admin/src/lib/resources.ts` 逐字對應</b>——
 /// 後台畫面、權限碼與這裡是同一組字串，不做單複數轉換。
 /// </summary>
 public static class AdminResources
@@ -125,6 +125,15 @@ public static class AdminResources
         new("locations", typeof(Location), typeof(LocationTranslation), "LocationId",
             SearchColumns: ["City", "CountryCode", "Email"],
             TranslationSearchColumns: ["Name", "AddressLine"]),
+
+        new("case-studies", typeof(CaseStudy), typeof(CaseStudyTranslation), "CaseStudyId",
+            SearchColumns: ["Slug"],
+            TranslationSearchColumns: ["Title", "ClientName", "ProjectName"],
+            Links:
+            [
+                new("productIds", typeof(CaseStudyProduct), "CaseStudyId", "ProductId", HasSortOrder: true),
+                new("solutionIds", typeof(CaseStudySolution), "CaseStudyId", "SolutionId", HasSortOrder: true),
+            ]),
 
         new("testimonials", typeof(Testimonial), typeof(TestimonialTranslation), "TestimonialId",
             TranslationSearchColumns: ["Quote", "AuthorName"]),

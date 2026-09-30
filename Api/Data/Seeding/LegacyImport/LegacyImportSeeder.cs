@@ -428,6 +428,8 @@ internal static class MimeTypes
         ".gif" => "image/gif",
         ".svg" => "image/svg+xml",
         ".pdf" => "application/pdf",
+        ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         ".mp4" => "video/mp4",
         _ => "application/octet-stream",
     };
@@ -436,7 +438,7 @@ internal static class MimeTypes
     {
         ".jpg" or ".jpeg" or ".png" or ".webp" or ".gif" or ".svg" => MediaAssetType.Image,
         ".mp4" => MediaAssetType.Video,
-        ".pdf" => MediaAssetType.Document,
+        ".pdf" or ".docx" or ".pptx" => MediaAssetType.Document,
         _ => MediaAssetType.Other,
     };
 }
