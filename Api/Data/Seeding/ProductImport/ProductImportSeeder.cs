@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -449,14 +450,9 @@ public sealed class ProductImportSeeder(
     /// </summary>
     private async Task<int> UploadAsync(string relativePath, string blobStem, bool isPrivate, CancellationToken cancellationToken)
     {
-        var path = Resolve(relativePath);
-        var extension = Path.GetExtension(path).ToLowerInvariant();
-
-        string sha256;
-        await using (var hashStream = File.OpenRead(path))
-        {
-            sha256 = Convert.ToHexStringLower(await SHA256.HashDataAsync(hashStream, cancellationToken));
-        }
+        var (content, fileName) = await ReadSourceAsync(relativePath, cancellationToken);
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var sha256 = Convert.ToHexStringLower(SHA256.HashData(content));
 
         var key = $"{SourcePrefix}:{(isPrivate ? "private" : "public")}:{sha256}";
         var existing = await db.MediaAssets
@@ -472,10 +468,10 @@ public sealed class ProductImportSeeder(
         // Blob 名稱用 slug 而非原檔名：原檔名有中文、空白與「的副本 的副本」，
         // 會原封不動出現在下載網址裡。
         StoredBlob stored;
-        await using (var content = File.OpenRead(path))
+        await using (var stream = new MemoryStream(content))
         {
             stored = await storage.UploadAsync(
-                content, $"{SourcePrefix}/{blobStem}{extension}", MimeTypes.For(extension), isPrivate, cancellationToken);
+                stream, $"{SourcePrefix}/{blobStem}{extension}", MimeTypes.For(extension), isPrivate, cancellationToken);
         }
 
         var asset = new MediaAsset
@@ -486,8 +482,8 @@ public sealed class ProductImportSeeder(
             IsPrivate = isPrivate,
             Type = MimeTypes.TypeFor(extension),
             MimeType = MimeTypes.For(extension),
-            FileName = Path.GetFileName(path),
-            FileSizeBytes = new FileInfo(path).Length,
+            FileName = fileName,
+            FileSizeBytes = content.Length,
             Sha256 = sha256,
             LegacySourceKey = key,
         };
@@ -497,6 +493,33 @@ public sealed class ProductImportSeeder(
         Count("媒體檔");
 
         return asset.Id;
+    }
+
+    /// <summary>
+    /// 讀來源檔。<c>案例.docx#word/media/image1.png</c> 這種寫法取 Office 檔裡內嵌的圖——
+    /// 客戶的案例成果圖只貼在 Word 裡，沒有另外給檔案。
+    /// </summary>
+    private async Task<(byte[] Content, string FileName)> ReadSourceAsync(string relativePath, CancellationToken cancellationToken)
+    {
+        var hash = relativePath.IndexOf('#');
+        if (hash < 0)
+        {
+            var path = Resolve(relativePath);
+            return (await File.ReadAllBytesAsync(path, cancellationToken), Path.GetFileName(path));
+        }
+
+        var container = Resolve(relativePath[..hash]);
+        var entryName = relativePath[(hash + 1)..];
+
+        using var zip = ZipFile.OpenRead(container);
+        var entry = zip.GetEntry(entryName)
+            ?? throw new FileNotFoundException($"{relativePath[..hash]} 裡沒有 {entryName}。");
+
+        await using var entryStream = entry.Open();
+        using var buffer = new MemoryStream();
+        await entryStream.CopyToAsync(buffer, cancellationToken);
+
+        return (buffer.ToArray(), $"{Path.GetFileNameWithoutExtension(container)}-{Path.GetFileName(entryName)}");
     }
 
     private string Resolve(string relativePath)

@@ -304,48 +304,71 @@ export default async function SolutionPage({ params }: Params) {
                       ['solutions.caseSolution', study.solution],
                       ['solutions.caseResult', study.result],
                     ] as const
-                  ).map(([label, body], index) => (
-                    <div key={label} style={cardStyle}>
-                      <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <span
-                        style={{
-                          font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
-                          color: 'var(--page-fg)',
-                        }}
-                      >
-                        {t(label)}
-                      </span>
-                      {body ? (
-                        <p
+                  ).map(([label, body], index) => {
+                    // 成果卡：客戶給的案例圖放這裡（實品照或案例海報）；圖與文字都還沒有才顯示待補。
+                    const image = label === 'solutions.caseResult' ? study.imageUrl : null;
+
+                    return (
+                      <div key={label} style={cardStyle}>
+                        <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: '#6436ef' }}>
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span
                           style={{
-                            margin: 0,
-                            font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                            color: 'var(--page-muted)',
-                            textWrap: 'pretty',
+                            font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
+                            color: 'var(--page-fg)',
                           }}
                         >
-                          {body}
-                        </p>
-                      ) : (
-                        // 成果還沒到：確認稿的待補虛線卡語彙，不留一個空白格。
-                        <p
-                          style={{
-                            margin: 0,
-                            padding: '20px 16px',
-                            border: '1px dashed rgba(100,54,239,0.4)',
-                            borderRadius: 14,
-                            textAlign: 'center',
-                            font: "500 0.875rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
-                            color: 'var(--page-faint)',
-                          }}
-                        >
-                          {t('solutions.caseResultPending')}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                          {t(label)}
+                        </span>
+                        {image ? (
+                          // 海報字很密，卡片裡只是縮圖——點開看原圖。
+                          <a href={image} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}
+                            <img
+                              src={image}
+                              alt={study.title ?? t(label)}
+                              loading="lazy"
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                height: 'auto',
+                                borderRadius: 14,
+                                border: '1px solid var(--page-border)',
+                              }}
+                            />
+                          </a>
+                        ) : null}
+                        {body ? (
+                          <p
+                            style={{
+                              margin: 0,
+                              font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
+                              color: 'var(--page-muted)',
+                              textWrap: 'pretty',
+                            }}
+                          >
+                            {body}
+                          </p>
+                        ) : image ? null : (
+                          // 成果還沒到：確認稿的待補虛線卡語彙，不留一個空白格。
+                          <p
+                            style={{
+                              margin: 0,
+                              padding: '20px 16px',
+                              border: '1px dashed rgba(100,54,239,0.4)',
+                              borderRadius: 14,
+                              textAlign: 'center',
+                              font: "500 0.875rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
+                              color: 'var(--page-faint)',
+                            }}
+                          >
+                            {t('solutions.caseResultPending')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
