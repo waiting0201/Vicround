@@ -410,9 +410,9 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
      回得出 241 筆，沒驗站台真的會轉 —— 而當時 middleware 的 matcher 正把
      238 條 `.html` 擋在外面，全部 404
 6. ~~Account API 與會員專區~~ ✅ 2026-09-11
-6b. 客戶產品資料（2026-09-30 已匯入本機）：**待客戶校稿 database.md §19 第 13 項的 9 處疑點**，
-   並補上實品照與案例成果；確認後對正式庫跑 `import-products`（需先把原始檔放進
-   `reference/product-docs/`，並指向正式 Blob）
+6b. ~~客戶產品資料匯入正式站~~ ✅ 2026-09-30（程式經 CI 上線並套用 `AddCaseStudies`；
+   `import-products` 對正式 DB 與 `stvicroundprod` 實跑，7 個產品、4 則案例、GRS 證號皆已驗證；
+   限會員報告直連私有容器回 404）。**仍待客戶校稿 §19 第 13 項的 9 處疑點**、補實品照與案例成果
 7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
    （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
    變更密碼與新增樣品申請、寄信管道（會員信 + 詢問單通知信與回執）
