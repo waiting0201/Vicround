@@ -334,7 +334,6 @@ export default async function SolutionPage({ params }: Params) {
                                 width: '100%',
                                 height: 'auto',
                                 borderRadius: 14,
-                                border: '1px solid var(--page-border)',
                               }}
                             />
                           </a>
