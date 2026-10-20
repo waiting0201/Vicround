@@ -21,6 +21,9 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <!-- Microsoft.Data.SqlClient 6.1.1 帶進的 9.0.4 有 CVE-2026-84008／CVE-2026-70162（NU1902/NU1903，
+         TreatWarningsAsErrors 下 CI restore 直接失敗）。SqlClient 升版帶進修補版後即可拿掉。 -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
   <ItemGroup>
     <!-- C 層匯入的來源：客戶確認稿（database.md §18.1）。跟著 build 複製，
