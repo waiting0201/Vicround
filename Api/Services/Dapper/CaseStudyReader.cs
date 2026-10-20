@@ -23,7 +23,7 @@ internal static class CaseStudyReader
             $"""
              SELECT e.Id, e.Slug,
                     CASE WHEN m.IsPrivate = 1 OR m.IsArchived = 1 THEN NULL ELSE m.Url END AS ImageUrl,
-                    {Sql.Coalesce("ClientName")}, {Sql.Coalesce("ProjectName")}, {Sql.Coalesce("Title")},
+                    {Sql.Coalesce("ClientProfile")}, {Sql.Coalesce("ProjectName")}, {Sql.Coalesce("Title")},
                     {Sql.Coalesce("Challenge")}, {Sql.Coalesce("Solution")}, {Sql.Coalesce("Result")}
              FROM CaseStudySolutions x
              INNER JOIN CaseStudies e ON e.Id = x.CaseStudyId AND e.Status = @Published
@@ -55,7 +55,7 @@ internal static class CaseStudyReader
         return rows.Select(r => new CaseStudyDto
         {
             Slug = r.Slug,
-            ClientName = r.ClientName,
+            ClientProfile = r.ClientProfile,
             ProjectName = r.ProjectName,
             Title = r.Title,
             Challenge = r.Challenge,
@@ -67,7 +67,7 @@ internal static class CaseStudyReader
     }
 
     private sealed record CaseStudyRow(
-        int Id, string Slug, string? ImageUrl, string? ClientName, string? ProjectName, string? Title,
+        int Id, string Slug, string? ImageUrl, string? ClientProfile, string? ProjectName, string? Title,
         string? Challenge, string? Solution, string? Result);
 
     private sealed record CaseStudyProductRow(int CaseStudyId, string Slug, string CategorySlug, string? Code, string? Name);

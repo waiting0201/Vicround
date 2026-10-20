@@ -384,7 +384,7 @@ public sealed class ProductImportSeeder(
                 caseStudy.Translations.Add(new CaseStudyTranslation
                 {
                     Culture = culture,
-                    ClientName = text.ClientName,
+                    ClientProfile = text.ClientProfile,
                     ProjectName = text.ProjectName,
                     Title = text.Title,
                     Challenge = text.Challenge,
@@ -623,5 +623,5 @@ public sealed class ProductImportSeeder(
     }
 
     private sealed record CaseStudyText(
-        string? ClientName, string? ProjectName, string Title, string Challenge, string Solution, string? Result);
+        string? ClientProfile, string? ProjectName, string Title, string Challenge, string Solution, string? Result);
 }

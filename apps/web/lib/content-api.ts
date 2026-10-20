@@ -91,7 +91,7 @@ export type ProductRef = { slug: string; categorySlug: string; code: string | nu
 /** 客戶案例：需求 → 解法 → 成果（database.md §02.1）。掛在產業頁，`products` 是案例用到的產品。 */
 export type CaseStudy = {
   slug: string;
-  clientName: string | null;
+  clientProfile: string | null;
   projectName: string | null;
   title: string | null;
   challenge: string | null;

@@ -10,7 +10,7 @@ namespace VicRound.Api.Models.Entities;
 /// </summary>
 public class CaseStudy : SluggedEntity
 {
-    /// <summary>實品照或案例海報。</summary>
+    /// <summary>實品照或案例海報。不得出現客戶的品牌、Logo 或圖案（OEM／ODM 成品照一律不用）。</summary>
     public int? MediaAssetId { get; set; }
     public MediaAsset? MediaAsset { get; set; }
 
@@ -24,8 +24,11 @@ public class CaseStudyTranslation : SeoTranslation
     public int CaseStudyId { get; set; }
     public CaseStudy? CaseStudy { get; set; }
 
-    /// <summary>具名需客戶書面授權（Logo／品牌），未取得時留白、改寫代稱於 <c>Title</c>。</summary>
-    public string? ClientName { get; set; }
+    /// <summary>
+    /// 客戶類型（「國際電競品牌」「電子紙模組製造商」）。<b>不放客戶名稱</b>：VicRound 對 OEM／ODM
+    /// 客戶有保密義務，案例一律不具名（2026-10-20 決定，取代原本的 <c>ClientName</c>）。
+    /// </summary>
+    public string? ClientProfile { get; set; }
     public string? ProjectName { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Challenge { get; set; } = string.Empty;

@@ -26,7 +26,7 @@ public class CaseStudyTranslationConfiguration : TranslationConfiguration<CaseSt
 
     protected override void ConfigureTranslation(EntityTypeBuilder<CaseStudyTranslation> builder)
     {
-        builder.Property(t => t.ClientName).HasMaxLength(160);
+        builder.Property(t => t.ClientProfile).HasMaxLength(160);
         builder.Property(t => t.ProjectName).HasMaxLength(200);
         builder.Property(t => t.Title).HasMaxLength(300).IsRequired();
         builder.Property(t => t.Challenge).HasMaxLength(2000).IsRequired();

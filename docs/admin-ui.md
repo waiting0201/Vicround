@@ -242,7 +242,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 永續 | 認證管理 | `certifications` | A | 同時餵 Sustainability／About／Technologies／CertificationDialog（四處共用），編輯時提示「這筆資料同時顯示在 4 個頁面」 |
 | 公司 | 里程碑 | `milestones` | B | 依 `Year`／`Month` 排序，抽屜內另有「上移／下移」（見 4.4） |
 | 公司 | 據點 | `locations` | B | |
-| 公司 | 客戶案例 | `case-studies` | A | 需求／解法／成果三段；關聯產品與產業；`ClientName` 可留空（未取得具名授權時）（2026-09-30 新增） |
+| 公司 | 客戶案例 | `case-studies` | A | 需求／解法／成果三段；關聯產品與產業；**一律不具名**：只填客戶類型（`ClientProfile`），網址代稱、內文、圖片與檔名都不得出現客戶名稱或客戶的品牌／Logo（2026-09-30 新增，2026-10-20 改為不具名） |
 | 公司 | 客戶見證 | `testimonials` | B | `AuthorName` 可留空（未取得具名授權時） |
 | 公司 | 合作品牌 | `partner-brands` | B | |
 | 公司 | 聯絡管道 | `contact-channels` | B | |

@@ -154,7 +154,7 @@ for hreflang).
 > `specifications`、`images`、`certifications`、`downloads`、
 > **`parent`**（型號才有：family 的 slug／categorySlug／code／name）、**`variants`**（family 頁＝旗下
 > 型號；型號頁＝同 family 的其他型號）。`GET /v1/categories/{slug}` 的每張系列卡也帶 `variants`。
-> **客戶案例在產業頁**：`GET /v1/solutions/{slug}` 回 `caseStudies`（`clientName`／`projectName`／
+> **客戶案例在產業頁**：`GET /v1/solutions/{slug}` 回 `caseStudies`（`clientProfile`（不具名的客戶類型）／`projectName`／
 > `title`／`challenge`／`solution`／`result`／`imageUrl`／`products[]`，`result` 未提供時為 null）。
 > 規格裡欄名為「Cross-section／剖面結構」的那一列，前台會以斜線切層畫成剖面色帶。
 

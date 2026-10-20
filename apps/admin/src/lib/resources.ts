@@ -1271,15 +1271,15 @@ const caseStudies: ResourceDef = {
   hasTranslations: true,
   hasSeo: true,
   description:
-    '一則案例分成「客戶需求 → 我們的解決方案 → 最終成果」三段，會出現在勾選的產業解決方案頁。客戶名稱與 Logo 要先取得客戶書面授權；沒有授權就把客戶名稱留空，在標題用「知名電競品牌」這類代稱。',
+    '一則案例分成「客戶需求 → 我們的解決方案 → 最終成果」三段，會出現在勾選的產業解決方案頁。對客戶有保密義務：任何欄位（含網址代稱、圖檔名稱）都不寫客戶名稱或客戶的產品型號，改用「國際電競品牌」這類描述；照片不得出現客戶的品牌、Logo 或圖案。',
   columns: [
     { name: 'title', label: '案例', fromTranslation: true },
-    { name: 'clientName', label: '客戶', fromTranslation: true, width: '10rem' },
+    { name: 'clientProfile', label: '客戶類型', fromTranslation: true, width: '10rem' },
     STATUS_COLUMN,
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。' },
+    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。不可出現客戶的品牌、Logo 或圖案——OEM／ODM 成品照不能用，檔名也不要帶客戶名稱。' },
     {
       name: 'productIds',
       label: '關聯產品',
@@ -1302,7 +1302,7 @@ const caseStudies: ResourceDef = {
   ],
   translationFields: [
     { name: 'title', label: '標題', type: 'text', scope: 'translation', required: true, maxLength: 300, wide: true },
-    { name: 'clientName', label: '客戶名稱', type: 'text', scope: 'translation', maxLength: 160, hint: '未取得具名授權時留空。' },
+    { name: 'clientProfile', label: '客戶類型', type: 'text', scope: 'translation', maxLength: 160, hint: '寫客戶是哪一類公司，例如「國際電競品牌」「室內設計公司」。不可寫客戶名稱。' },
     { name: 'projectName', label: '專案名稱', type: 'text', scope: 'translation', maxLength: 200 },
     { name: 'challenge', label: '客戶需求', type: 'textarea', scope: 'translation', required: true, maxLength: 2000, rows: 5, wide: true },
     { name: 'solution', label: '我們的解決方案', type: 'textarea', scope: 'translation', required: true, maxLength: 2000, rows: 5, wide: true },

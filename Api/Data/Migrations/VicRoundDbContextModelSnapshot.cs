@@ -541,7 +541,7 @@ namespace VicRound.Api.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("ClientName")
+                    b.Property<string>("ClientProfile")
                         .HasMaxLength(160)
                         .HasColumnType("nvarchar(160)");
 

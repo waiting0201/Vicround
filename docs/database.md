@@ -331,6 +331,10 @@ CHECK 約束與 filtered index 見 [0.6](#06-owner-triple-模式多型-owner)。
 - **呈現位置是產業頁**（2026-09-30 決定）：案例講的是某個產業的課題怎麼被解決，放在
   `/solutions/{slug}`；產品頁不顯示。`CaseStudySolutions` 決定出現在哪幾個產業頁，
   `CaseStudyProducts` 記錄案例用到的產品，產業頁上的案例據此連到產品頁。
+- **一律不具名**（2026-10-20 決定）：VicRound 對 OEM／ODM 客戶有保密義務，不能揭露客戶名稱，
+  也不能展示帶有客戶圖案或 Logo 的成品。所以沒有客戶名稱欄位（原 `ClientName` 已由
+  `ReplaceCaseStudyClientName` 刪除），改用不具名的 `ClientProfile`；`Slug`（會出現在 HTML）、
+  `ProjectName`、內文與圖檔名稱同樣不得出現客戶名稱或客戶的產品型號。
 - 判準 1：同一則案例可掛在多個產業頁，並關聯多個產品。
 - 形狀不同：`Testimonials` 是一句引言＋署名，案例是有結構的三段敘事與實品照。
 
@@ -341,8 +345,8 @@ CHECK 約束與 filtered index 見 [0.6](#06-owner-triple-模式多型-owner)。
 | `MediaAssetId` | `int NULL` FK→`MediaAssets` | 實品照或案例海報 |
 | `Status` `SortOrder` + 三時間戳 | | |
 
-`CaseStudyTranslations(CaseStudyId, Culture)`：`ClientName nvarchar(160) NULL`（**具名需客戶書面
-授權**，未取得時留空）、`ProjectName nvarchar(200)`、`Title nvarchar(300)`、
+`CaseStudyTranslations(CaseStudyId, Culture)`：`ClientProfile nvarchar(160) NULL`（**客戶類型**，
+如「國際電競品牌」）、`ProjectName nvarchar(200)`、`Title nvarchar(300)`、
 `Challenge nvarchar(2000)`、`Solution nvarchar(2000)`、`Result nvarchar(2000) NULL`（客戶尚未
 提供成果時為 NULL，前台整段不顯示）、+ SEO 四欄。
 
@@ -1563,5 +1567,5 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
 12. **Floating Button 的「AI Agent」** — 兩版 Sitemap 都有列但完全未定義，本版不建模。
 13. **客戶 2026-09 產品資料的疑點**（`import-products` 已依指示**照原檔匯入**，待客戶校稿）——
     共 9 項：防焰結果與案例說法矛盾、部分測試報告與專利不在盈絲名下、REACH 項數不一、
-    一則案例檔放錯、尺寸三處不一、供應商證書過期、具名客戶待授權、案例圖疑為渲染圖。**明細含客戶與供應商資料，
+    一則案例檔放錯、尺寸三處不一、供應商證書過期、~~具名客戶待授權~~（2026-10-20 客戶回覆：案例一律不具名，已改）、案例圖疑為渲染圖。**明細含客戶與供應商資料，
     不進公開 repo**，見 `reference/product-docs/資料疑點.md`（NAS 同步）。

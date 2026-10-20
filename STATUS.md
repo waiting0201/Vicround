@@ -413,6 +413,10 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
 6b. ~~客戶產品資料匯入正式站~~ ✅ 2026-09-30（程式經 CI 上線並套用 `AddCaseStudies`；
    `import-products` 對正式 DB 與 `stvicroundprod` 實跑，7 個產品、4 則案例、GRS 證號皆已驗證；
    限會員報告直連私有容器回 404）。**仍待客戶校稿 §19 第 13 項的 9 處疑點**、補實品照與案例成果
+6c. 客戶案例改為不具名 🔧 2026-10-20：客戶對 OEM／ODM 客戶有保密義務，不能揭露客戶名稱、
+   不能展示帶客戶 Logo 的成品。程式已改（`ClientName` → 不具名的 `ClientProfile`，migration
+   `ReplaceCaseStudyClientName` 套用時就清掉已存的名稱）。**正式站資料另需清理**：四則案例的
+   slug、標題與內文裡的客戶產品名、帶客戶 Logo 的成品照，以及檔名帶客戶名的三個 Blob
 7. ~~把前台剩下的五個缺口補完~~ ✅ 2026-09-12：Header 詢問 dialog 真的送出、站內搜尋
    （端點 + `/{locale}/search`）、會員信件流程三頁（verify／forgot／reset）、會員專區的
    變更密碼與新增樣品申請、寄信管道（會員信 + 詢問單通知信與回執）

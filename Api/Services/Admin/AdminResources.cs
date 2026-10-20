@@ -128,7 +128,7 @@ public static class AdminResources
 
         new("case-studies", typeof(CaseStudy), typeof(CaseStudyTranslation), "CaseStudyId",
             SearchColumns: ["Slug"],
-            TranslationSearchColumns: ["Title", "ClientName", "ProjectName"],
+            TranslationSearchColumns: ["Title", "ClientProfile", "ProjectName"],
             Links:
             [
                 new("productIds", typeof(CaseStudyProduct), "CaseStudyId", "ProductId", HasSortOrder: true),

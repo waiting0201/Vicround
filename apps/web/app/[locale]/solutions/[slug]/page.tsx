@@ -217,7 +217,7 @@ export default async function SolutionPage({ params }: Params) {
                 }}
               >
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {study.clientName ? (
+                  {study.clientProfile ? (
                     <span
                       style={{
                         borderRadius: 999,
@@ -229,7 +229,7 @@ export default async function SolutionPage({ params }: Params) {
                         color: '#6436ef',
                       }}
                     >
-                      {study.clientName}
+                      {study.clientProfile}
                     </span>
                   ) : null}
                   {study.projectName ? (

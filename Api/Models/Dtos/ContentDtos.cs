@@ -118,7 +118,8 @@ public sealed record ProductDetailDto
 public sealed record CaseStudyDto
 {
     public required string Slug { get; init; }
-    public string? ClientName { get; init; }
+    /// <summary>不具名的客戶類型（「國際電競品牌」）；案例一律不揭露客戶名稱。</summary>
+    public string? ClientProfile { get; init; }
     public string? ProjectName { get; init; }
     public string? Title { get; init; }
     public string? Challenge { get; init; }
