@@ -357,6 +357,12 @@ Join：`CaseStudyProducts(CaseStudyId, ProductId, SortOrder)`、
 （`ParentProductId`）。`GET /v1/products/{slug}` 回 `parent` 與同一 family 的其他型號
 （`variants`）；`GET /v1/categories/{slug}` 的系列卡帶 `variants`，卡片可以直接連到型號頁。
 
+**Family 依客戶分類重建**（2026-10-20）：確認稿的 family（AG／AF／PV…、CF／SG／EM…、VR-AC 110／240／360）
+是設計期的佔位內容，與盈絲實際產品對不上。第二批產品資料（83 項）改依客戶產品清單的「分類」欄重建——
+光學膜 12 個、紡織與發泡 3 個（電競／辦公／回收材料），吸音沿用「吸音毛氈板」。佔位 family 改為**草稿**
+（不刪），由 `import-products` 的 `retire` 清單處理。family 的 `ProductSolutions` 是旗下產品的聯集
+（產品列表的產業篩選只看 family 層）；旗下全是草稿的 family 也設草稿，不顯示空卡片。
+
 ---
 
 ## 03 產業解決方案
@@ -1404,6 +1410,13 @@ C 層另有兩支：`ContentImportSeeder`（`import-content`，確認稿文案�
 名稱與尚未取得授權的案例，而 GitHub repo 是公開的（經 `scripts/sync-nas-assets.sh` 同步到 NAS）。冪等鍵：實體用 `Slug`、媒體用 `LegacySourceKey = product-docs:{public|private}:{sha256}`
 （同一份 PDF 在客戶的兩個資料夾各放一份，只會存一次）。`MemberOnly` 的報告進私有容器。
 認證上的 `[Pending client input]` 佔位字視為「缺」，會被真實資料填上；其餘一律不覆寫。
+產品、下載、案例可帶 `status: "Draft"`（開發中或資料不齊的產品，2026-10-20）；`retire` 列出的佔位 family
+在匯入時改為草稿，還掛在它們底下的既有型號搬到 JSON 指定的新 family——只搬「還掛在佔位 family」的，
+編輯者在後台調整過的不動。
+
+**不上站的素材**（2026-10-20 整理第二批時確立）：客戶資料夾裡標「內部教育訓練」的案例海報、內文／檔名／
+資料夾名帶客戶名稱的內測與檢驗報告、印有買方名稱的第三方報告、圖片裡有客戶品牌的 EDM。這些不建下載，
+也不給會員下載；整理時以「從案例表單收集的客戶名稱」對所有要上傳的檔案做全文掃描。
 
 B 層**只補缺、不覆寫**——編輯者改過的內容不能被 seeder 蓋掉。
 

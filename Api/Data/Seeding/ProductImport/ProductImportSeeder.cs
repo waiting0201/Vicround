@@ -23,6 +23,11 @@ namespace VicRound.Api.Data.Seeding.ProductImport;
 /// 已存在的產品只補上缺的關聯，編輯者在後台改過的文字不會被重跑蓋掉。唯一的例外是認證上的
 /// <c>[Pending client input]</c> 佔位字——那本來就是「缺」，拿到真實資料就該填上。
 /// </para>
+/// <para>
+/// <c>retire</c> 列出確認稿時期的佔位 family（2026-10-20 改依客戶分類重建）：匯入時改為草稿，
+/// 原本掛在它們底下的產品搬到 JSON 指定的新 family。同樣只動「還是佔位狀態」的資料——
+/// 已經是草稿的不碰，掛在非佔位 family 底下的產品也不搬。
+/// </para>
 /// </summary>
 public sealed class ProductImportSeeder(
     VicRoundDbContext db,
@@ -43,12 +48,14 @@ public sealed class ProductImportSeeder(
 
     private readonly Dictionary<string, int> counters = [];
     private string root = string.Empty;
+    private HashSet<string> retired = [];
 
     public async Task ImportAsync(string catalogJson, string sourceRoot, CancellationToken cancellationToken = default)
     {
         root = sourceRoot;
         var catalog = JsonSerializer.Deserialize<Catalog>(catalogJson, JsonOptions)
             ?? throw new InvalidOperationException("product-catalog.json 是空的。");
+        retired = catalog.Retire.ToHashSet(StringComparer.Ordinal);
 
         // 產品先進，下載、案例、認證的關聯才連得到。
         foreach (var family in catalog.Families)
@@ -60,6 +67,9 @@ public sealed class ProductImportSeeder(
         {
             await ImportProductAsync(product, cancellationToken);
         }
+
+        // 產品都搬到新 family 之後才下架佔位 family，免得中途有型號掛在草稿底下。
+        await RetireFamiliesAsync(cancellationToken);
 
         foreach (var download in catalog.Downloads)
         {
@@ -113,9 +123,9 @@ public sealed class ProductImportSeeder(
                 Code = source.Code,
                 Brand = source.Brand,
                 IsNew = source.IsNew,
-                Status = ContentStatus.Published,
+                Status = source.Status,
                 SortOrder = source.SortOrder,
-                PublishedAt = DateTime.UtcNow,
+                PublishedAt = PublishedAtFor(source.Status),
                 HeroMediaAssetId = source.Hero is null ? null : await UploadAsync(source.Hero, $"products/{source.Slug}", false, cancellationToken),
             };
 
@@ -159,8 +169,12 @@ public sealed class ProductImportSeeder(
 
             db.Products.Add(product);
             await db.SaveChangesAsync(cancellationToken);
-            Count("產品");
+            Count(source.Status == ContentStatus.Draft ? "產品（草稿）" : "產品");
             Count("規格列", sort);
+        }
+        else if (source.Parent is not null)
+        {
+            await MoveOffRetiredFamilyAsync(product, source.Parent, cancellationToken);
         }
 
         // 關聯不論產品是否新建都補：後台若刪掉了某條關聯，這裡會再加回來——
@@ -204,6 +218,59 @@ public sealed class ProductImportSeeder(
         db.ChangeTracker.Clear();
     }
 
+    /// <summary>
+    /// 既有產品若還掛在佔位 family 底下，搬到 JSON 指定的 family。掛在其他 family 的不動——
+    /// 那可能是編輯者在後台調整過的。
+    /// </summary>
+    private async Task MoveOffRetiredFamilyAsync(Product product, string parentSlug, CancellationToken cancellationToken)
+    {
+        var currentParent = product.ParentProductId is { } currentId
+            ? await db.Products.Where(p => p.Id == currentId).Select(p => p.Slug).SingleAsync(cancellationToken)
+            : null;
+
+        if (currentParent == parentSlug || (currentParent is not null && !retired.Contains(currentParent)))
+        {
+            return;
+        }
+
+        product.ParentProductId = await db.Products
+            .Where(p => p.Slug == parentSlug)
+            .Select(p => (int?)p.Id)
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"{product.Slug}：找不到 family {parentSlug}。");
+        Count("改掛 family");
+    }
+
+    private async Task RetireFamiliesAsync(CancellationToken cancellationToken)
+    {
+        if (retired.Count == 0)
+        {
+            return;
+        }
+
+        var families = await db.Products.AsTracking()
+            .Where(p => retired.Contains(p.Slug) && p.ParentProductId == null && p.Status == ContentStatus.Published)
+            .ToListAsync(cancellationToken);
+
+        foreach (var family in families)
+        {
+            if (await db.Products.AnyAsync(p => p.ParentProductId == family.Id && p.Status == ContentStatus.Published, cancellationToken))
+            {
+                logger.LogWarning("佔位 family {Slug} 底下還有已發布的型號，先不下架。", family.Slug);
+                continue;
+            }
+
+            family.Status = ContentStatus.Draft;
+            Count("下架佔位 family");
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+    }
+
+    private static DateTime? PublishedAtFor(ContentStatus status) =>
+        status == ContentStatus.Published ? DateTime.UtcNow : null;
+
     // ── 下載（規格書、測試報告、證書、型錄） ────────────────────────────────
 
     private async Task ImportDownloadAsync(DownloadSource source, CancellationToken cancellationToken)
@@ -229,8 +296,8 @@ public sealed class ProductImportSeeder(
                 FileExtension = extension.TrimStart('.'),
                 FileSizeBytes = new FileInfo(Resolve(source.File)).Length,
                 DocumentCulture = source.Culture,
-                Status = ContentStatus.Published,
-                PublishedAt = DateTime.UtcNow,
+                Status = source.Status,
+                PublishedAt = PublishedAtFor(source.Status),
             };
 
             foreach (var (culture, text) in source.Texts())
@@ -373,9 +440,9 @@ public sealed class ProductImportSeeder(
             caseStudy = new CaseStudy
             {
                 Slug = source.Slug,
-                Status = ContentStatus.Published,
+                Status = source.Status,
                 SortOrder = source.SortOrder,
-                PublishedAt = DateTime.UtcNow,
+                PublishedAt = PublishedAtFor(source.Status),
                 MediaAssetId = source.Image is null ? null : await UploadAsync(source.Image, $"case-studies/{source.Slug}", false, cancellationToken),
             };
 
@@ -547,6 +614,9 @@ public sealed class ProductImportSeeder(
         public List<DownloadSource> Downloads { get; set; } = [];
         public List<CertificationSource> Certifications { get; set; } = [];
         public List<CaseStudySource> CaseStudies { get; set; } = [];
+
+        /// <summary>要下架的佔位 family slug。</summary>
+        public List<string> Retire { get; set; } = [];
     }
 
     /// <summary>每個來源物件都有 <c>en</c> 與 <c>zh-Hant</c> 兩份文字。</summary>
@@ -570,6 +640,7 @@ public sealed class ProductImportSeeder(
         public string? Code { get; set; }
         public string? Brand { get; set; }
         public bool IsNew { get; set; }
+        public ContentStatus Status { get; set; } = ContentStatus.Published;
         public int SortOrder { get; set; }
         public string? Hero { get; set; }
         public List<string> Solutions { get; set; } = [];
@@ -592,6 +663,7 @@ public sealed class ProductImportSeeder(
         public string Slug { get; set; } = string.Empty;
         public DownloadKind Kind { get; set; }
         public DownloadAccessLevel Access { get; set; }
+        public ContentStatus Status { get; set; } = ContentStatus.Published;
         public string? Version { get; set; }
         public DateOnly? Date { get; set; }
         public DateOnly? ValidUntil { get; set; }
@@ -619,6 +691,7 @@ public sealed class ProductImportSeeder(
         public List<string> Products { get; set; } = [];
         public List<string> Solutions { get; set; } = [];
         public string? Image { get; set; }
+        public ContentStatus Status { get; set; } = ContentStatus.Published;
         public int SortOrder { get; set; }
     }
 
