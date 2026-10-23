@@ -144,9 +144,12 @@ Communication Services 的 SDK，是因為 ACS Email 本身就提供 SMTP relay�
 | `Mail:From` / `Mail:FromName` | 寄件位址與顯示名稱（預設 `VicRound`） |
 | `Mail:UseStartTls` | 預設 `true`，設 `false` 才關掉 |
 
-另外需要 **`SiteSettings` 的 `site.baseUrl`**（後台可改，設定檔的 `Site:BaseUrl` 是備援）：
-信裡的連結是絕對網址，沒有它就**不寄**並把連結寫進遙測——寧可不寄，也不要寄出一封
-連結是壞的信。正式網域換成 `www.vicround.com` 那天，改這一列即可，不必重新部署。
+另外需要 **`Site:BaseUrl`**（`SiteSettings` 的 `site.baseUrl` 若有值會優先，但站台設定
+已不開放後台編輯，2026-10-23）：信裡的連結是絕對網址，沒有它就**不寄**並把連結寫進
+遙測——寧可不寄，也不要寄出一封連結是壞的信。
+
+同理，發布後通知前台更新快取的 webhook 網址設在 **`Revalidate:WebhookUrl`**（密鑰是
+`Revalidate:Secret`），`SiteSettings` 的 `revalidate.webhookUrl` 有值時優先。
 
 寄信失敗永不讓業務動作失敗：帳號已經建好、詢問單已經落庫，失敗只記 Error。
 

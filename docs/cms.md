@@ -39,7 +39,7 @@ The admin app talks only to `/api/admin/**`; it never queries SQL directly.
 | 永續 | **Certifications 管理**（發證機構、證號、效期、範疇、證書 PDF；同時餵 Sustainability、About、Technologies 的 Product Compliance 表與 CertificationDialog） |
 | 公司 | Milestones／Locations／Testimonials／PartnerBrands／ContactChannels／ProcessFlows |
 | 營運 | **Members 審核佇列**（PendingApproval → Approve／Reject＋理由／Suspend）／**Sample requests 看板**（狀態 + carrier/tracking）／Contact inquiries triage／BusinessDomainRules |
-| 站台 | Redirects／SiteSettings／Media library／Users（導覽選單固定、不做後台，見 admin-ui.md §5.7） |
+| 站台 | Redirects／Media library／Users（導覽選單與站台設定不做後台，見 admin-ui.md §5.7） |
 
 **Reference block 的編輯體驗**：插入「認證清單」時編輯者是**選分類與數量**，不是手抄一遍
 ISO 14001 —— block 只存查詢參數，資料仍來自 `Certifications`。這是內容不會兩處不同步的原因，

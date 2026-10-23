@@ -10,14 +10,14 @@ namespace VicRound.Api.Common;
 /// 膨脹成好幾 KB，而且改權限不必等所有人重新登入。
 /// </para>
 /// <para>
-/// 分工照 docs/cms.md：<c>Editor</c> 管內容，<c>Admin</c> 另外管使用者、轉址與站台設定
+/// 分工照 docs/cms.md：<c>Editor</c> 管內容，<c>Admin</c> 另外管使用者、轉址與封鎖網域
 /// （也就是後台 `resources.ts` 標了 <c>adminOnly</c> 的那幾個單元，加上轉址）。
 /// </para>
 /// </summary>
 public static class AdminPermissions
 {
     /// <summary>Editor 碰不到的單元；其餘一律可讀可寫。</summary>
-    private static readonly string[] AdminOnlyResources = ["users", "site-settings", "redirects", "business-domains"];
+    private static readonly string[] AdminOnlyResources = ["users", "redirects", "business-domains"];
 
     private static readonly string[] All = typeof(PermissionCodes)
         .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)

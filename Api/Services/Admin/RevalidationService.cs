@@ -41,10 +41,15 @@ public sealed class RevalidationService(
             return;
         }
 
-        var url = await db.SiteSettings
+        // 資料庫有值優先（既有環境），沒有就看部署設定——站台設定已不開放後台編輯（2026-10-23）。
+        var stored = await db.SiteSettings
             .Where(setting => setting.Key == "revalidate.webhookUrl")
             .Select(setting => setting.Value)
             .FirstOrDefaultAsync(ct);
+
+        var url = string.IsNullOrWhiteSpace(stored)
+            ? configuration["Revalidate:WebhookUrl"] ?? configuration["VICROUND_REVALIDATE_WEBHOOK_URL"]
+            : stored;
 
         var secret = configuration["Revalidate:Secret"] ?? configuration["VICROUND_REVALIDATE_SECRET"];
 
@@ -131,10 +136,6 @@ public static class RevalidationTags
 
             case "process-flows":
                 tags.AddRange(["technologies", "page:technologies", "page:partnership", "page:contact"]);
-                break;
-
-            case "site-settings":
-                tags.Add("site-settings");
                 break;
 
             // 案例出現在產業頁（每個產業頁都帶 solutions 標籤），沒有自己的頁面。

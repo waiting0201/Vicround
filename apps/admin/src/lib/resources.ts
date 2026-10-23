@@ -17,7 +17,6 @@ import {
   REDIRECT_STATUS_OPTIONS,
   ROLE_OPTIONS,
   SAMPLE_REQUEST_STATUS_OPTIONS,
-  SETTING_VALUE_KIND_OPTIONS,
   type Option,
 } from './enums';
 import { CATEGORY_BLOCKS, PAGE_LAYOUTS, SOLUTION_BLOCKS, type BlockLayout, type FieldCopy } from './page-layouts';
@@ -121,8 +120,7 @@ export type ScreenKind =
   | 'ordered' // 清單本身就是排序（拖曳／上下移），不分頁
   | 'queue' // 審核佇列（會員）
   | 'board' // 看板（樣品申請）
-  | 'inbox' // 收件匣（詢問單）
-  | 'settings'; // 單一設定表單
+  | 'inbox'; // 收件匣（詢問單）
 
 export type ResourceDef = {
   /** 路由片段，同時是 Admin API 的 `{type}`。 */
@@ -229,7 +227,7 @@ const SEO_FIELDS: FieldDef[] = [
     maxLength: 400,
     rows: 2,
     wide: true,
-    hint: 'Google 搜尋結果標題下面那兩三行說明文字。留空就顯示「站台設定」裡的全站預設說明；每頁自己填一段更貼切的話比較容易吸引人點進來，80–160 個字元最理想。',
+    hint: 'Google 搜尋結果標題下面那兩三行說明文字。留空會改用這一筆的摘要或橫幅說明；自己填一段更貼切的話比較容易吸引人點進來，80–160 個字元最理想。',
   },
   {
     name: 'seoKeywords',
@@ -239,14 +237,6 @@ const SEO_FIELDS: FieldDef[] = [
     maxLength: 400,
     wide: true,
     hint: '內部備忘用，目前搜尋引擎排名已經不看這欄，留空不會影響曝光。',
-  },
-  {
-    name: 'ogImageMediaAssetId',
-    label: '社群分享縮圖（OG 圖片）',
-    type: 'media',
-    scope: 'translation',
-    accept: IMAGE_ACCEPT,
-    hint: '把這一頁的網址貼到 LINE、Facebook、LinkedIn 時跳出來的那張圖。留空就用「站台設定」裡的全站預設圖，建議尺寸 1200×630。',
   },
 ];
 
@@ -1731,31 +1721,6 @@ const redirects: ResourceDef = {
   translationFields: [],
 };
 
-const siteSettings: ResourceDef = {
-  type: 'site-settings',
-  label: '站台設定',
-  singular: '設定',
-  screen: 'settings',
-  titleField: 'key',
-  adminOnly: true,
-  hasTranslations: true,
-  description:
-    '整站共用的設定：搜尋結果怎麼顯示、公司基本資料、流量分析，以及系統寄信要用的網址。改完按右上角「儲存變更」；影響搜尋結果的部分會在下一次有人開啟該頁時生效。',
-  columns: [
-    { name: 'key', label: '設定鍵', type: 'code', width: '18rem' },
-    { name: 'value', label: '值' },
-    { name: 'valueKind', label: '型別', type: 'badge', options: SETTING_VALUE_KIND_OPTIONS, width: '7rem' },
-    { name: 'isLocalized', label: '分語系', type: 'boolean', width: '6rem' },
-  ],
-  baseFields: [
-    { name: 'key', label: '設定鍵', type: 'text', scope: 'base', required: true, maxLength: 100, readOnly: true },
-    { name: 'valueKind', label: '型別', type: 'select', scope: 'base', options: SETTING_VALUE_KIND_OPTIONS },
-    { name: 'isLocalized', label: '分語系', type: 'boolean', scope: 'base' },
-    { name: 'value', label: '值', type: 'textarea', scope: 'base', rows: 3, wide: true },
-  ],
-  translationFields: [{ name: 'value', label: '值', type: 'textarea', scope: 'translation', rows: 3, wide: true }],
-};
-
 /**
  * 媒體檔案。
  *
@@ -1895,7 +1860,6 @@ export const RESOURCES: ResourceDef[] = [
   contactInquiries,
   businessDomains,
   redirects,
-  siteSettings,
   media,
   users,
 ];

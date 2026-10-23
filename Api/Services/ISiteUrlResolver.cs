@@ -17,9 +17,9 @@ public interface ISiteUrlResolver
 /// 以 <c>SiteSettings["site.baseUrl"]</c> 為準、設定檔的 <c>Site:BaseUrl</c> 為備援。
 ///
 /// <para>
-/// <b>放 SiteSettings 而不是只放 App Settings</b>：正式網域要換成 www.vicround.com 時，
-/// 這是編輯者在後台就能改的一列，不必為了換個網址重新部署
-/// ——與 <c>revalidate.webhookUrl</c> 同樣的理由，兩者也放在同一張表。
+/// 站台設定已不開放後台編輯（2026-10-23）：正式環境請設 <c>Site:BaseUrl</c>；
+/// 資料表那一列只是讓既有環境不必改設定就能沿用。<c>revalidate.webhookUrl</c> 同理
+/// （<c>Revalidate:WebhookUrl</c>）。
 /// </para>
 /// </summary>
 public sealed class SiteUrlResolver(VicRoundDbContext db, IConfiguration configuration) : ISiteUrlResolver

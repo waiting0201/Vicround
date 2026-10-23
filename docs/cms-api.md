@@ -271,7 +271,7 @@ GET    /api/admin/auth/me                ✅
 編輯時留空表示不變更、填了就等於替對方重設密碼並輪替 `SecurityStamp`。
 
 **權限**：token 只帶角色，81 個權限碼在伺服器端展開（`Api/Common/AdminPermissions.cs`）——
-`Admin` 是超級使用者，`Editor` 除了 `users` / `site-settings` / `redirects` / `business-domains`
+`Admin` 是超級使用者，`Editor` 除了 `users` / `redirects` / `business-domains`
 之外都可讀寫。塞進 token 會讓它膨脹好幾 KB，而且改權限得等所有人重新登入。
 
 All other `/api/admin/**` calls require `Authorization: Bearer <accessToken>`; `fn-admin`
@@ -313,7 +313,7 @@ categories | products | solutions | articles | article-tags | authors |
 pages | content-blocks | faq-categories | faq-items | exhibitions |
 certifications | downloads | process-flows | milestones | locations |
 case-studies | testimonials | partner-brands | contact-channels | redirects |
-media | site-settings | users | members | sample-requests |
+media | users | members | sample-requests |
 contact-inquiries | business-domains
 ```
 

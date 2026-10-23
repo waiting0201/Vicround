@@ -141,10 +141,6 @@ public sealed partial class AppRouter
             ("PUT" or "PATCH", ["admin", "redirects", ..]) => PermissionCodes.RedirectsEdit,
             ("DELETE",         ["admin", "redirects", ..]) => PermissionCodes.RedirectsDelete,
 
-            ("GET",            ["admin", "site-settings", ..]) => PermissionCodes.SiteSettingsView,
-            ("POST",           ["admin", "site-settings", ..])     => PermissionCodes.SiteSettingsEdit,
-            ("PUT" or "PATCH", ["admin", "site-settings", ..]) => PermissionCodes.SiteSettingsEdit,
-            ("DELETE",         ["admin", "site-settings", ..]) => PermissionCodes.SiteSettingsDelete,
 
             ("GET",            ["admin", "media", ..]) => PermissionCodes.MediaView,
             ("POST",           ["admin", "media", ..])     => PermissionCodes.MediaEdit,

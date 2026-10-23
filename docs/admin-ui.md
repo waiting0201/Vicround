@@ -81,7 +81,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
   要嘛擠。
 - **使用者選單**：把現有「登出」文字按鈕換成一顆頭像／姓名縮寫的 `IconButton`
   或簡易下拉，內容含「顯示登入者 Email」「登出」。`adminOnly` 選單項目
-  （`site-settings`、`users`）在 Editor 角色登入時於側欄整條隱藏，不是顯示但
+  （`users`、`redirects`、`business-domains`）在 Editor 角色登入時於側欄整條隱藏，不是顯示但
   disabled——不存在的選單比看得到按不動更少困惑。下拉選單開啟時套用
   `admin-pop-in`（見 2.6）微幅淡入位移，避免選單「憑空跳出」。
 - **側欄分區可收合（accordion）**：六個分區的標題本身是一顆按鈕，按了把整段收起來。
@@ -115,7 +115,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 - **清單型畫面**（Table 為主體）：內容區**不設 max-width**，跟著側欄以外的可用寬度
   走（`flex-1`）。表格欄位多（Products 有 Slug/Code/Brand/Category/Status/Featured…），
   限制寬度只會逼欄位換行。
-- **表單型畫面**（編輯頁的「基本資料」卡、site-settings）：單一 `Card` 內容寬度
+- **表單型畫面**（編輯頁的「基本資料」卡）：單一 `Card` 內容寬度
   上限抓 **720px**，超過這個寬度一行字太長，掃描表單欄位會變慢。多欄表單（例如
   Slug + Status 並排）用 `grid grid-cols-2 gap-4`，仍在 720px 容器內。
 - **間距**：一律用 `ds/tokens/spacing.css` 的 4px 基準刻度，但只取小尺寸——
@@ -216,7 +216,6 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | **D. 排序清單（樹狀）** | 依 `Location` 分頁 + `ParentId` 樹狀縮排 + 抽屜編輯（含語系） | 唯一有 `ParentId` 自關聯又要跨分頁管理的實體 |
 | **E. 審核佇列** | 篩選表格（預設顯示待處理）+ 獨立詳情頁 + 狀態動作按鈕 | 有審核／處理狀態機的營運資料 |
 | **F. 看板** | 依狀態分欄的卡片牆 + 獨立詳情頁 | 有多階段履行流程（不只是「審核／不審核」二選一）的營運資料 |
-| **G. 單一設定表單** | 沒有列表，整頁就是分區表單 | 只有 `site-settings` 這一種（key-value 表，不是列表） |
 
 > **沒有「媒體庫」這種畫面。** 檔案一律從用到它的欄位直接上傳（`FieldControl` 的
 > `MediaControl`／`MediaListControl`），上傳完就綁在那一格。理由是編輯者要的從來
@@ -251,10 +250,9 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 營運 | 樣品申請 | `sample-requests` | F | 見 5.6 |
 | 營運 | 詢問單 | `contact-inquiries` | E | 見 5.5 |
 | 站台 | 轉址（301） | `redirects` | C | `FromPath`／`ToPath`／`StatusCode`，見 5.8 的碰撞檢查提示 |
-| 站台 | 站台設定 | `site-settings` | G | `adminOnly` |
 | 站台 | 後台使用者 | `users` | C | `adminOnly`；抽屜內是「角色勾選 + 帳號啟用開關」，不含密碼欄位（密碼由使用者自己在登入後修改，Admin 不代改密碼） |
 
-型別 A 共 10 個、型別 B 共 8 個、型別 C 共 2 個、型別 D／E／F／G 各 1–2 個，
+型別 A 共 10 個、型別 B 共 8 個、型別 C 共 2 個、型別 D／E／F 各 1–2 個，
 合計 25 個，與 `ALL_ITEMS.length` 一致。
 
 **側欄沒有入口、但畫面還在的**（`lib/menu.ts` 的 `MENULESS_TYPES`）：
@@ -468,13 +466,18 @@ props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節�
   子清單（比照 5.4 子清單樣式，但這裡多數欄位唯讀，因為明細是會員送出時的快照）、
   `InternalNote`（後台限定，`Textarea`）。
 
-### 5.7 導覽選單：不做後台（2026-10-23 決定）
+### 5.7 導覽選單與站台設定：不做後台（2026-10-23 決定）
 
 Header／Footer／法律連結／社群連結／熱門搜尋這五組導覽是**固定的**，後台不提供編輯畫面，
 Admin API 也沒有 `navigation` 單元。資料仍在 `NavigationItems`（由 `BootstrapSeeder`
 依 `SeedData.Navigation` 建立），前台照常從 `GET /api/v1/navigation` 讀——mega menu 裡
 產品線、產業的名稱與網址是 `Ref*Id` 解析出來的，在「產品線」「應用解決方案」改名或改 slug
 仍會跟著變。要調整導覽結構就改 `SeedData.cs`；seeder 只補缺不覆寫，既有列要另外處理。
+
+「站台設定」（`SiteSettings`）同樣拿掉了畫面與 Admin API 單元。盤點時 9 個鍵只有 3 個有程式讀：
+`site.baseUrl`、`revalidate.webhookUrl`（兩者改以部署設定 `Site:BaseUrl`／`Revalidate:WebhookUrl`
+為主，資料表有值時優先）與 `privacy.policyVersion`（隱私權改版時一起改）。SEO 預設、GTM、
+公司資訊幾個鍵從來沒接上前台；前台的預設值在 `apps/web/lib/site.ts`。
 
 ### 5.8 型別 C 的補充：`redirects` 的碰撞提示
 

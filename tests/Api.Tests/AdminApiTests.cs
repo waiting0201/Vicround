@@ -176,13 +176,12 @@ public class AdminApiTests
         Assert.DoesNotContain("template", pages.EditableFields!);
     }
 
-    /// <summary>Editor 管內容，Admin 另外管使用者、轉址與站台設定（docs/cms.md）。</summary>
+    /// <summary>Editor 管內容，Admin 另外管使用者、轉址與封鎖網域（docs/cms.md）。</summary>
     [Theory]
     [InlineData("categories.edit", true)]
     [InlineData("articles.delete", true)]
     [InlineData("members.edit", true)]
     [InlineData("users.view", false)]
-    [InlineData("site-settings.edit", false)]
     [InlineData("redirects.edit", false)]
     public void Editor的權限範圍(string code, bool allowed) =>
         Assert.Equal(allowed, AdminPermissions.Allows([RoleNames.Editor], code));

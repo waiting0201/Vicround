@@ -169,7 +169,7 @@ Container／卡片），不自創第二套視覺：
 **寄信管道已接上**（2026-09-12）：`SmtpEmailSender`（SMTP，一套涵蓋 ACS relay／SendGrid／
 M365／自架主機）+ 三個 notifier —— `EmailMemberNotifier`（驗證、重設密碼、審核結果）、
 `InquiryNotifier`（詢問單）、`SampleRequestNotifier`（樣品申請的送出與狀態變動）。
-信裡的連結需要 `SiteSettings.site.baseUrl`；**沒設定 `Mail:Host`/`Mail:From` 或 base URL 時
+信裡的連結需要 `Site:BaseUrl`（設定檔）；**沒設定 `Mail:Host`/`Mail:From` 或 base URL 時
 不寄、不擋、只記 Warning**，本機與未配置的環境照樣能把流程走完。10 封信的清單與設定鍵見
 [docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」。
 

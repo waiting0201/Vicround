@@ -398,21 +398,8 @@ export const MEDIA_TYPE_LABEL: Record<MediaAssetType, string> = {
 
 export const MEDIA_TYPE_OPTIONS = options(MEDIA_TYPE_LABEL);
 
-export type SettingValueKind = 'text' | 'html' | 'url' | 'number' | 'boolean' | 'json';
-
-export const SETTING_VALUE_KIND_LABEL: Record<SettingValueKind, string> = {
-  text: '文字',
-  html: 'HTML',
-  url: '網址',
-  number: '數字',
-  boolean: '開關',
-  json: 'JSON',
-};
-
-export const SETTING_VALUE_KIND_OPTIONS = options(SETTING_VALUE_KIND_LABEL);
-
-/** 後台角色。`Editor` 管內容，`Admin` 另外管使用者、轉址與站台設定。 */
+/** 後台角色。`Editor` 管內容，`Admin` 另外管使用者、轉址與封鎖網域。 */
 export const ROLE_OPTIONS: Option[] = [
-  { value: 'Admin', label: 'Admin（含使用者與站台設定）' },
+  { value: 'Admin', label: 'Admin（含使用者與轉址）' },
   { value: 'Editor', label: 'Editor（內容編輯與發布）' },
 ];

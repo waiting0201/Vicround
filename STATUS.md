@@ -61,7 +61,7 @@ mockup 新增 `product-detail.dc.html`（6 個產品可切換），三個產品�
 **註冊 → 驗證 → 核准 → 申請樣品 → 出貨整條流程已端到端跑通**。會寄信的端點都有限流
 （IP 10 次／Email 3 次，每 15 分鐘）——信真的會寄出之後，沒有限流等於給人一個洗別人信箱的工具。
 設定鍵見 [docs/azure-deployment.md](docs/azure-deployment.md) 的「寄信」；沒設定時不寄、不擋、只記 Warning。
-⚠️ 正式環境仍待設定 SMTP 與 `SiteSettings.site.baseUrl`。
+⚠️ 正式環境仍待設定 SMTP 與 `Site:BaseUrl`。
 
 **正式環境已經跑起來**（2026-09-08）：前台 `https://green-desert-0eeb2ce1e.3.azurestaticapps.net`、
 API `https://func-vicround-prod.azurewebsites.net/api`，後台在 `/admin`（經同源代理打 Admin API）。
@@ -260,7 +260,6 @@ apps/web/
 | 收件匣 | contact-inquiries | `InquiriesScreen` + `InquiryDetail` |
 | 看板 | sample-requests | `SampleRequestsScreen` + `SampleRequestDetail`（只列合法的下一個狀態，不做拖曳） |
 | 轉址 | redirects | `RedirectsScreen`（存檔前先算轉址鏈與環，鏈會自動壓平成最終目標） |
-| 站台設定 | site-settings | `SettingsScreen`（依 key 前綴自動分區，分語系設定另有語系分頁） |
 
 ### 瀏覽器驗收（2026-09-15）
 
@@ -374,7 +373,7 @@ mediaList／子表（關聯產業原樣存檔不會被清掉）。
 | ⛔ 公司歷程（Milestones） | 等客戶提供 | 確認稿是「[Add …]」佔位文字且無年份，`Milestones.Year` 必填，因此沒有建列 |
 | ⛔ 規格書檔案（Downloads） | 等客戶提供 | 3 份規格書沒有實際檔案，`Downloads.MediaAssetId` 必填，因此沒有建列 |
 | ⛔ 正式環境的 SMTP 設定 | 等客戶提供郵件主機／帳號 | 程式已就緒（本機實測通過），正式環境未設 `Mail:*` 之前信寄不出去，只會記 Warning |
-| ⛔ `SiteSettings.site.baseUrl` | 等正式網域定案 | 信裡的連結需要絕對網址；沒設就不寄信（寧可不寄，也不要寄出壞連結） |
+| ⛔ `Site:BaseUrl` | 等正式網域定案 | 信裡的連結需要絕對網址；沒設就不寄信（寧可不寄，也不要寄出壞連結） |
 | ⛔ 繁中文案校稿 | 等客戶 | 翻譯表的 zh-Hant 為暫譯；校稿在後台改，不動程式 |
 | ⛔ 訓練型 AI 爬蟲政策 | 等客戶決策 | `app/robots.ts` 目前只放行檢索型，訓練型不列 |
 

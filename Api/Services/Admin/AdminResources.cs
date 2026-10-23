@@ -188,11 +188,6 @@ public static class AdminResources
         new("redirects", typeof(Redirect), OrderBy: "FromPath",
             SearchColumns: ["FromPath", "ToPath", "Notes"]),
 
-        new("site-settings", typeof(SiteSetting), typeof(SiteSettingTranslation), "SettingKey",
-            OrderBy: "[Key]",
-            SearchColumns: ["Key", "Value"],
-            TranslationSearchColumns: ["Value"]),
-
         new("media", typeof(MediaAsset), typeof(MediaAssetTranslation), "MediaAssetId",
             OrderBy: "CreatedAt DESC",
             SearchColumns: ["FileName", "BlobPath", "MimeType"],

@@ -18,7 +18,6 @@ import { OrderedScreen } from '@/screens/OrderedScreen';
 import { RedirectsScreen } from '@/screens/RedirectsScreen';
 import { SampleRequestDetail } from '@/screens/SampleRequestDetail';
 import { SampleRequestsScreen } from '@/screens/SampleRequestsScreen';
-import { SettingsScreen } from '@/screens/SettingsScreen';
 
 /**
  * 後台路由。`basename` 是 `/admin` —— 後台掛在公開站底下，
@@ -50,8 +49,6 @@ function listElement(resource: ResourceDef) {
       return <SampleRequestsScreen resource={resource} />;
     case 'inbox':
       return <InquiriesScreen resource={resource} />;
-    case 'settings':
-      return <SettingsScreen resource={resource} />;
     case 'collection':
     default:
       return resource.type === 'redirects' ? (

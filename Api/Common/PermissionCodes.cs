@@ -78,9 +78,6 @@ public static class PermissionCodes
     public const string RedirectsView = "redirects.view";
     public const string RedirectsEdit = "redirects.edit";
     public const string RedirectsDelete = "redirects.delete";
-    public const string SiteSettingsView = "site-settings.view";
-    public const string SiteSettingsEdit = "site-settings.edit";
-    public const string SiteSettingsDelete = "site-settings.delete";
     public const string MediaView = "media.view";
     public const string MediaEdit = "media.edit";
     public const string MediaDelete = "media.delete";
