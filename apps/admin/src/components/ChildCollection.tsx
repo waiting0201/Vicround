@@ -19,6 +19,10 @@ function cultureLabel(culture: string): string {
  * </p>
  *
  * <p>
+ * `fixed` 的集合（版塊）結構已定版：不給新增、刪除、排序，只改既有項目的內容。
+ * </p>
+ *
+ * <p>
  * 子項也有自己的翻譯列，這裡跟著母體目前選的語系走；換語系時上方分頁一切，
  * 下面的子項就一起換，不會出現母體是中文、規格列還停在英文的畫面。
  * </p>
@@ -97,14 +101,16 @@ export function ChildCollection({
       title={definition.label}
       description={definition.description}
       actions={
-        <Button size="sm" icon={<Icon name="plus" size={14} />} onClick={add}>
-          新增一列
-        </Button>
+        definition.fixed ? undefined : (
+          <Button size="sm" icon={<Icon name="plus" size={14} />} onClick={add}>
+            新增一列
+          </Button>
+        )
       }
     >
       {items.length === 0 ? (
         <p className="py-4 text-center text-sm text-[var(--fg-2)]">
-          還沒有{definition.label}。按右上角新增一列。
+          {definition.fixed ? `這一頁沒有${definition.label}。` : `還沒有${definition.label}。按右上角新增一列。`}
         </p>
       ) : (
         <ol className="flex flex-col gap-4">
@@ -115,20 +121,24 @@ export function ChildCollection({
             >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
-                  <Icon name="grip-vertical" size={14} className="text-[var(--fg-3)]" />
-                  <Badge tone="neutral">第 {index + 1} 列</Badge>
+                  {!definition.fixed && <Icon name="grip-vertical" size={14} className="text-[var(--fg-3)]" />}
+                  <Badge tone="neutral">
+                    第 {index + 1} {definition.fixed ? '塊' : '列'}
+                  </Badge>
                 </span>
-                <span className="flex items-center gap-1">
-                  <IconButton icon="chevron-up" label="上移" size="sm" onClick={() => move(index, -1)} disabled={index === 0} />
-                  <IconButton
-                    icon="chevron-down"
-                    label="下移"
-                    size="sm"
-                    onClick={() => move(index, 1)}
-                    disabled={index === items.length - 1}
-                  />
-                  <IconButton icon="trash-2" label="刪除這一列" size="sm" className="hover:text-[var(--danger-500)]" onClick={() => remove(index)} />
-                </span>
+                {!definition.fixed && (
+                  <span className="flex items-center gap-1">
+                    <IconButton icon="chevron-up" label="上移" size="sm" onClick={() => move(index, -1)} disabled={index === 0} />
+                    <IconButton
+                      icon="chevron-down"
+                      label="下移"
+                      size="sm"
+                      onClick={() => move(index, 1)}
+                      disabled={index === items.length - 1}
+                    />
+                    <IconButton icon="trash-2" label="刪除這一列" size="sm" className="hover:text-[var(--danger-500)]" onClick={() => remove(index)} />
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-4">

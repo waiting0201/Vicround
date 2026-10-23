@@ -232,7 +232,7 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 內容 | 產品 | `products` | A | 含 `SpecificationRows`／`ProductImages` 子區塊（見 5.4） |
 | 內容 | 產業解決方案 | `solutions` | A | |
 | 內容 | 文章 | `articles` | A | 清單需要「News／Insight／技術文章」`Type` 篩選（決定 URL 前綴，改值要走 301 提示，同 slug） |
-| 內容 | 頁面與版塊 | `pages` | A | 編輯頁另有「版塊」子區塊，見 5.4 |
+| 內容 | 頁面與版塊 | `pages` | A | 編輯頁另有「版塊」子區塊，見 5.4。**版塊結構固定**（前台定版，2026-10-23 決定）：只改文字與圖片，不能增刪排序 |
 | 資源 | 展會 | `exhibitions` | A | 日期驅動可見性，清單要能看「即將登場／已結束」 |
 | 資源 | FAQ 分類 | `faq-categories` | B | |
 | 資源 | FAQ 題目 | `faq-items` | A | `Ref*` 關聯欄位（見 5.3 的關聯選擇器） |
@@ -396,6 +396,11 @@ props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節�
   Article ↔ Products）。**不做 tag-input 元件**——那需要處理鍵盤事件、
   autocomplete、多選狀態三件事疊在一起，複雜度不對稱地高於「勾選清單」，
   而後台的多對多選項數量都在可勾選範圍內（最多幾十個）。
+- **版塊不開放增刪排序**（2026-10-23 決定）：前台設計已定版，後台的「版塊」子區塊是
+  `fixed`——沒有新增／上下移／刪除，類型唯讀，錨點、底色、`SettingsJson` 不出現在表單上，
+  只改文字與圖片。後端以 `AdminChild.EditableFields` 白名單強制，送來的 id 必須正好是現有
+  那幾塊，且**就地更新**（整組刪掉重建會把 `ContentBlockItems` 一起 CASCADE 掉）。
+  下一條的參數表單因此暫不實作。
 - **Reference block**（`docs/database.md §09`，例如「插入認證清單」）：編輯者選
   分類與數量，**不是**打開一個文字編輯器貼證書內容。UI 是一個
   `Select`（block 類型）+ 依類型變化的參數表單（例如 `CertificationList` 選

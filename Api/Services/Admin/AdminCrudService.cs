@@ -582,6 +582,12 @@ public sealed class AdminCrudService(
 
     private async Task ReplaceChildrenAsync(AdminChild child, object ownerKey, JsonElement items, CancellationToken ct)
     {
+        if (child.EditableFields is not null)
+        {
+            await UpdateFixedChildrenAsync(child, ownerKey, items, ct);
+            return;
+        }
+
         var childType = Meta(child.Entity);
         await DeleteWhereAsync(childType, child.OwnerFk, ownerKey, ct);
 
@@ -630,6 +636,76 @@ public sealed class AdminCrudService(
                 SetProperty(line, nameof(Translation.Culture), translation.Name);
                 AdminMapper.Apply(line, Meta(child.Translation), translation.Value);
                 collection.Add(line);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 結構固定的子項（見 <see cref="AdminChild"/>）：送來的列必須正好是現有那幾列，一列都不能多或少。
+    /// 基底欄位只套白名單，翻譯逐語系就地改寫。
+    /// </summary>
+    private async Task UpdateFixedChildrenAsync(AdminChild child, object ownerKey, JsonElement items, CancellationToken ct)
+    {
+        var childType = Meta(child.Entity);
+
+#pragma warning disable EF1002 // 識別字全部來自模型中繼資料，見 DeleteWhereAsync
+        var existing = (await db.Database.SqlQueryRaw<int>(
+                $"SELECT [{KeyColumn(childType)}] AS [Value] FROM {Table(childType)} WHERE [{ColumnOf(childType, child.OwnerFk)}] = {{0}}",
+                ownerKey)
+            .ToListAsync(ct))
+            .ToHashSet();
+#pragma warning restore EF1002
+
+        var sent = items.EnumerateArray()
+            .Select(item => item.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number && id.TryGetInt32(out var value)
+                ? value
+                : (int?)null)
+            .ToList();
+
+        if (sent.Any(id => id is null) || sent.Count != existing.Count || !existing.SetEquals(sent.Select(id => id!.Value)))
+        {
+            throw AppException.BadRequest(
+                ErrorCodes.ValidationFormat, $"{child.Field}：版面已定版，只能修改既有項目的內容，不能新增、刪除或排序。");
+        }
+
+        foreach (var item in items.EnumerateArray())
+        {
+            var row = await db.FindAsync(child.Entity, [item.GetProperty("id").GetInt32()], ct)
+                ?? throw new InvalidOperationException($"{child.Entity.Name} 在查詢後消失了。");
+
+            var allowed = child.EditableFields!
+                .Where(field => item.TryGetProperty(field, out _))
+                .ToDictionary(field => field, field => item.GetProperty(field));
+            AdminMapper.Apply(row, childType, JsonSerializer.SerializeToElement(allowed));
+
+            if (child.Translation is null
+                || !item.TryGetProperty("translations", out var translations)
+                || translations.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            var collectionEntry = db.Entry(row).Collection("Translations");
+            await collectionEntry.LoadAsync(ct);
+            var collection = (System.Collections.IList)collectionEntry.CurrentValue!;
+
+            foreach (var translation in translations.EnumerateObject())
+            {
+                if (!CultureCodes.All.Contains(translation.Name))
+                {
+                    continue;
+                }
+
+                var line = collection.Cast<Translation>().FirstOrDefault(existingLine => existingLine.Culture == translation.Name);
+
+                if (line is null)
+                {
+                    line = (Translation)Activator.CreateInstance(child.Translation)!;
+                    line.Culture = translation.Name;
+                    collection.Add(line);
+                }
+
+                AdminMapper.Apply(line, Meta(child.Translation), translation.Value);
             }
         }
     }

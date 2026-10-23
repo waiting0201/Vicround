@@ -8,6 +8,9 @@ namespace VicRound.Api.Services.Admin;
 /// </summary>
 public static class AdminResources
 {
+    /// <summary>版塊只改得到內容：前台版面已定版，類型、錨點、底色、查詢條件與順序都不開放。</summary>
+    private static readonly string[] BlockEditableFields = ["mediaAssetId"];
+
     private static readonly AdminResource[] Registry =
     [
         // ── 內容 ────────────────────────────────────────────────────────────
@@ -19,7 +22,7 @@ public static class AdminResources
                 new("specifications", typeof(SpecificationRow), "OwnerCategoryId",
                     typeof(SpecificationRowTranslation), "SpecificationRowId"),
                 new("blocks", typeof(ContentBlock), "OwnerCategoryId",
-                    typeof(ContentBlockTranslation), "ContentBlockId"),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
             ],
             RoutePrefix: "/products"),
 
@@ -49,7 +52,7 @@ public static class AdminResources
                 new("specifications", typeof(SpecificationRow), "OwnerSolutionId",
                     typeof(SpecificationRowTranslation), "SpecificationRowId"),
                 new("blocks", typeof(ContentBlock), "OwnerSolutionId",
-                    typeof(ContentBlockTranslation), "ContentBlockId"),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
             ],
             RoutePrefix: "/solutions"),
 
@@ -71,7 +74,7 @@ public static class AdminResources
             Children:
             [
                 new("blocks", typeof(ContentBlock), "OwnerPageId",
-                    typeof(ContentBlockTranslation), "ContentBlockId"),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
             ]),
 
         // ── 資源 ────────────────────────────────────────────────────────────

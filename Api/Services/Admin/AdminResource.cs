@@ -59,10 +59,17 @@ public sealed record AdminLink(
 /// <summary>
 /// 子項集合：規格列、版塊、製程步驟。跟著母體一起送出（`ChildCollection.tsx` 的註解說明了理由），
 /// 因此這裡也是整組換掉。
+///
+/// <para>
+/// 給了 <paramref name="EditableFields"/> 就是<b>結構固定</b>的集合（版塊——前台版面已定版）：
+/// 不能增刪、不能排序，基底欄位只寫得進這份白名單（camelCase），翻譯欄位照常可改。
+/// 這種集合是就地更新，不是整組換掉——版塊底下還掛著 <c>ContentBlockItems</c>，刪掉重建會把它們一起 CASCADE 掉。
+/// </para>
 /// </summary>
 public sealed record AdminChild(
     string Field,
     Type Entity,
     string OwnerFk,
     Type? Translation = null,
-    string? TranslationFk = null);
+    string? TranslationFk = null,
+    string[]? EditableFields = null);

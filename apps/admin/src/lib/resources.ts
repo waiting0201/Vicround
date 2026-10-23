@@ -1,6 +1,5 @@
 import {
   ARTICLE_TYPE_OPTIONS,
-  BLOCK_TONE_OPTIONS,
   BLOCK_TYPE_OPTIONS,
   BUSINESS_DOMAIN_RULE_OPTIONS,
   CATEGORY_TYPE_OPTIONS,
@@ -165,6 +164,11 @@ export type ChildCollectionDef = {
   description: string;
   baseFields: FieldDef[];
   translationFields: FieldDef[];
+  /**
+   * 結構固定：不能新增、刪除、排序，只改既有項目的內容。後端對應的是
+   * `AdminChild.EditableFields`，送出增刪或換序的陣列會被擋下。
+   */
+  fixed?: boolean;
 };
 
 /* --------------------------------------------------------------------------
@@ -707,37 +711,19 @@ const pages: ResourceDef = {
     {
       key: 'blocks',
       label: '版塊',
+      fixed: true,
       description:
-        '這頁由上而下的內容區塊。有兩種：「內容版塊」（長文、圖庫、CTA…）直接在下面填文字；「認證清單」「里程碑時間軸」這類「參照版塊」不用填文字，資料自動來自對應的管理畫面（例如改認證內容請去「認證管理」，這裡只設定要抓哪個分類、顯示幾筆）。',
+        '這頁由上而下的內容區塊。前台版面已定版，這裡只能修改文字與圖片，不能新增、刪除或調整順序。「認證清單」「里程碑時間軸」這類參照版塊的資料來自對應的管理畫面（例如改認證內容請去「認證管理」）。',
       baseFields: [
         {
           name: 'blockType',
           label: '版塊類型',
           type: 'select',
           scope: 'base',
-          required: true,
           options: BLOCK_TYPE_OPTIONS,
-          hint: '選到「清單」「時間軸」這類名稱的版塊時，內容不是自己打字，而是自動抓對應管理畫面的資料（見上方說明）。',
+          readOnly: true,
         },
-        {
-          name: 'anchor',
-          label: '錨點',
-          type: 'text',
-          scope: 'base',
-          maxLength: 64,
-          hint: '網址加 #esg 這種頁內定位用的英文代號，同一頁內不可以重複，例：esg。非必填。',
-        },
-        { name: 'tone', label: '底色', type: 'select', scope: 'base', options: BLOCK_TONE_OPTIONS, hint: '這個版塊要用深色還是淺色底，留空跟隨前一個版塊。' },
         { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
-        {
-          name: 'settingsJson',
-          label: '查詢條件（JSON）',
-          type: 'json',
-          scope: 'base',
-          wide: true,
-          hint: '只有「參照版塊」（清單、時間軸類）需要填，用來設定要抓哪些資料，例如認證清單要抓的分類、要顯示幾筆。一般文字版塊不要動這裡；格式打錯會讓版塊在前台完全顯示不出來，且不會提示要修哪裡。這欄不會被翻譯，不要放任何中英文展示文字。',
-        },
-        SORT_FIELD,
       ],
       translationFields: [
         { name: 'eyebrow', label: '眉標', type: 'text', scope: 'translation', maxLength: 120 },

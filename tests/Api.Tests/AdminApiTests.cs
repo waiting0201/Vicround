@@ -122,10 +122,32 @@ public class AdminApiTests
                 {
                     problems.Add($"{resource.Slug}.{child.Field}");
                 }
+
+                // 白名單是 camelCase；拼錯的欄位會被默默略過，等於那一欄永遠存不進去。
+                foreach (var field in child.EditableFields ?? [])
+                {
+                    if (entity?.FindProperty(AdminMapper.Pascal(field)) is null)
+                    {
+                        problems.Add($"{resource.Slug}.{child.Field}.{field}");
+                    }
+                }
             }
         }
 
         Assert.Empty(problems);
+    }
+
+    /// <summary>前台版面已定版：三個掛版塊的單元都只能改內容，不能增刪排序（否則存檔會把 ContentBlockItems 一起刪掉）。</summary>
+    [Fact]
+    public void 版塊是結構固定的子項()
+    {
+        var blocks = AdminResources.All
+            .SelectMany(resource => resource.ChildFields)
+            .Where(child => child.Entity == typeof(ContentBlock))
+            .ToList();
+
+        Assert.Equal(3, blocks.Count);
+        Assert.All(blocks, child => Assert.NotNull(child.EditableFields));
     }
 
     /// <summary>Editor 管內容，Admin 另外管使用者、轉址與站台設定（docs/cms.md）。</summary>
