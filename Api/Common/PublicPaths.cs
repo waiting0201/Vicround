@@ -37,8 +37,15 @@ public static class PublicPaths
 
     public static string Solution(string slug) => $"/solutions/{slug}";
 
-    /// <summary>Downloads 是 Addressable——只有清單頁的錨點，沒有自己的頁面。</summary>
+    /// <summary>
+    /// Downloads 是 Addressable——只有清單頁的錨點，沒有自己的頁面。這條只對<b>全域文件</b>成立：
+    /// 掛在產品上的文件不在下載中心，它的位置是 <see cref="ProductDownloads"/>。
+    /// </summary>
     public static string Download(string slug) => $"/resources/downloads#{slug}";
+
+    /// <summary>產品頁的「下載」區塊（產品文件的所在地）。</summary>
+    public static string ProductDownloads(string categorySlug, string productSlug) =>
+        $"{Product(categorySlug, productSlug)}#downloads";
 
     /// <summary>FAQ 也是 Addressable——每一題只有清單頁上的錨點。</summary>
     public static string FaqItem(string slug) => $"/resources/faq#{slug}";

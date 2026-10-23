@@ -97,8 +97,6 @@ public static class AdminResources
             Links:
             [
                 new("productIds", typeof(DownloadProduct), "DownloadId", "ProductId", HasSortOrder: true),
-                new("categoryIds", typeof(DownloadCategory), "DownloadId", "CategoryId", HasSortOrder: true),
-                new("solutionIds", typeof(DownloadSolution), "DownloadId", "SolutionId", HasSortOrder: true),
             ],
             RoutePrefix: "/resources/downloads"),
 

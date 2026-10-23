@@ -1491,24 +1491,6 @@ namespace VicRound.Api.Data.Migrations
                     b.ToTable("DownloadArticles", (string)null);
                 });
 
-            modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadCategory", b =>
-                {
-                    b.Property<int>("DownloadId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("DownloadId", "CategoryId");
-
-                    b.HasIndex(new[] { "CategoryId", "DownloadId" }, "IX_DownloadCategories_Reverse");
-
-                    b.ToTable("DownloadCategories", (string)null);
-                });
-
             modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadCertification", b =>
                 {
                     b.Property<int>("DownloadId")
@@ -1540,24 +1522,6 @@ namespace VicRound.Api.Data.Migrations
                     b.HasIndex(new[] { "ProductId", "DownloadId" }, "IX_DownloadProducts_Reverse");
 
                     b.ToTable("DownloadProducts", (string)null);
-                });
-
-            modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadSolution", b =>
-                {
-                    b.Property<int>("DownloadId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SolutionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("DownloadId", "SolutionId");
-
-                    b.HasIndex(new[] { "SolutionId", "DownloadId" }, "IX_DownloadSolutions_Reverse");
-
-                    b.ToTable("DownloadSolutions", (string)null);
                 });
 
             modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadTranslation", b =>
@@ -4572,25 +4536,6 @@ namespace VicRound.Api.Data.Migrations
                     b.Navigation("Download");
                 });
 
-            modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadCategory", b =>
-                {
-                    b.HasOne("VicRound.Api.Models.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VicRound.Api.Models.Entities.Download", "Download")
-                        .WithMany("DownloadCategories")
-                        .HasForeignKey("DownloadId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Download");
-                });
-
             modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadCertification", b =>
                 {
                     b.HasOne("VicRound.Api.Models.Entities.Certification", "Certification")
@@ -4627,25 +4572,6 @@ namespace VicRound.Api.Data.Migrations
                     b.Navigation("Download");
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadSolution", b =>
-                {
-                    b.HasOne("VicRound.Api.Models.Entities.Download", "Download")
-                        .WithMany("DownloadSolutions")
-                        .HasForeignKey("DownloadId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VicRound.Api.Models.Entities.Solution", "Solution")
-                        .WithMany()
-                        .HasForeignKey("SolutionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Download");
-
-                    b.Navigation("Solution");
                 });
 
             modelBuilder.Entity("VicRound.Api.Models.Entities.DownloadTranslation", b =>
@@ -5492,13 +5418,9 @@ namespace VicRound.Api.Data.Migrations
                 {
                     b.Navigation("DownloadArticles");
 
-                    b.Navigation("DownloadCategories");
-
                     b.Navigation("DownloadCertifications");
 
                     b.Navigation("DownloadProducts");
-
-                    b.Navigation("DownloadSolutions");
 
                     b.Navigation("Translations");
                 });

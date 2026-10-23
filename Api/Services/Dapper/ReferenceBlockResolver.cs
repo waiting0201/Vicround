@@ -62,8 +62,7 @@ internal static class ReferenceBlockResolver
             {
                 Downloads = Take(
                     await DownloadReadService.ListAsync(
-                        db, culture, DownloadReadService.ParseKind(settings.Kind),
-                        settings.Product, settings.Category, settings.Solution),
+                        db, culture, DownloadReadService.ParseKind(settings.Kind), settings.Product),
                     settings.Limit),
             },
             BlockType.CertificationList => new BlockReferenceDto

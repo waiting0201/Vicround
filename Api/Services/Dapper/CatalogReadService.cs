@@ -248,7 +248,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Images = await ProductImagesAsync(db, culture, row.Id),
             Certifications = await CertificationReadService.ListAsync(db, culture, category: null, productSlug: row.Slug),
             Downloads = await DownloadReadService.ListAsync(
-                db, culture, kindValue: null, productSlug: row.Slug, categorySlug: null, solutionSlug: null),
+                db, culture, kindValue: null, productSlug: row.Slug),
             Parent = parent,
             Variants = family,
         };

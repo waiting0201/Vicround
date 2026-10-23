@@ -967,6 +967,37 @@ public sealed class AdminCrudService(
                 continue;
             }
 
+            // 關聯欄位（productIds…）：none＝一筆都沒掛、any＝至少掛一筆、數字＝掛了這一筆。
+            // 下載中心要靠它分出「全域文件」與「產品文件」，產品編輯頁也靠它列出自己的文件。
+            if (resource.LinkFields.FirstOrDefault(l => l.Field == pair.Key) is { } link)
+            {
+                var linkType = Meta(link.LinkEntity);
+                var exists = $"""
+                    EXISTS (SELECT 1 FROM {Table(linkType)} l
+                            WHERE l.[{ColumnOf(linkType, link.OwnerFk)}] = e.[{KeyColumn(entity)}]
+                    """;
+
+                switch (pair.Value.ToString())
+                {
+                    case "none":
+                        clauses.Add($"NOT {exists})");
+                        break;
+                    case "any":
+                        clauses.Add($"{exists})");
+                        break;
+                    case var raw when int.TryParse(raw, out var otherId):
+                        var linkParam = $"F{args.ParameterNames.Count()}";
+                        clauses.Add($"{exists} AND l.[{ColumnOf(linkType, link.OtherFk)}] = @{linkParam})");
+                        args.Add(linkParam, otherId);
+                        break;
+                    default:
+                        throw AppException.BadRequest(ErrorCodes.ValidationFormat,
+                            $"{pair.Key} 只能是 none、any 或一個 id。");
+                }
+
+                continue;
+            }
+
             var property = entity.FindProperty(AdminMapper.Pascal(pair.Key));
             if (property is null)
             {

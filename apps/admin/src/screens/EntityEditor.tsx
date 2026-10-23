@@ -10,6 +10,7 @@ import { rowTitle } from '@/lib/format';
 import { EntityForm, scrollToFirstFieldError } from '@/components/EntityForm';
 import { ChildCollection } from '@/components/ChildCollection';
 import { RecordActions } from '@/components/RecordActions';
+import { RelatedList } from '@/components/RelatedList';
 
 /**
  * 獨立編輯頁：基本資料 → 語系分頁 → 子項，底部是固定的動作列。
@@ -109,6 +110,11 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
           {resource.children?.map((child) => (
             <ChildCollection key={child.key} definition={child} draft={draft} culture={culture} />
           ))}
+
+          {!isNew &&
+            resource.related?.map((related) => (
+              <RelatedList key={related.type} definition={related} ownerId={id} culture={culture} />
+            ))}
         </div>
       )}
 

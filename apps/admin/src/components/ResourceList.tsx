@@ -90,7 +90,8 @@ export function ResourceList({
           className="w-full max-w-xs"
         />
 
-        {resource.filters?.map((filter) => (
+        {/* 已經被 baseParams 釘住的條件不再給下拉——產品頁裡的文件清單再選「歸屬」毫無意義 */}
+        {resource.filters?.filter((filter) => baseParams?.[filter.name] === undefined).map((filter) => (
           <Select
             key={filter.name}
             aria-label={filter.label}

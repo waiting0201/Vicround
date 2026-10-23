@@ -85,7 +85,8 @@ GET  /api/v1/news                ✅ 別名 → /articles?type=news（相容既�
 GET  /api/v1/exhibitions         ✅ ?upcoming=true|false
 GET  /api/v1/faq                 ✅ ?category=（回「分類 + 其下題目」的巢狀結構）
 GET  /api/v1/certifications      ✅ ?category=company-factory|sustainability|product-compliance
-GET  /api/v1/downloads           ✅ ?kind=&product=&category=&solution=
+GET  /api/v1/downloads           ✅ ?kind=&product=
+                                    （沒給 product＝下載中心，只回沒掛產品的全域文件）
 
 GET  /api/v1/pages/{slug}        ✅ blocks，reference block 已在後端解析成強型別資料
 
@@ -118,7 +119,7 @@ FULLTEXT / Azure AI Search 都是新的基礎設施，內容量級變了再換�
 | `articleList` | `articles` | `type`、`limit` |
 | `exhibitionList` | `exhibitions` | `upcoming`、`limit` |
 | `faqList` | `faqCategories` | `category`、`featuredOnly`、`limit` |
-| `downloadList` | `downloads` | `kind`、`product`、`category`、`solution`、`limit` |
+| `downloadList` | `downloads` | `kind`、`product`、`limit` |
 | `certificationList` | `certifications` | `category`、`limit` |
 | `processFlowRef` | `processFlows` | `kind`、`slug` |
 | `milestoneTimeline` | `milestones` | `limit` |

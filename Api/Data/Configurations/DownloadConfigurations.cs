@@ -64,30 +64,6 @@ public class DownloadProductConfiguration : IEntityTypeConfiguration<DownloadPro
     }
 }
 
-public class DownloadCategoryConfiguration : IEntityTypeConfiguration<DownloadCategory>
-{
-    public void Configure(EntityTypeBuilder<DownloadCategory> builder)
-    {
-        builder.ToTable("DownloadCategories");
-        builder.HasKey(x => new { x.DownloadId, x.CategoryId });
-        builder.HasOne(x => x.Download).WithMany(d => d.DownloadCategories).HasForeignKey(x => x.DownloadId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasIndex(x => new { x.CategoryId, x.DownloadId }, "IX_DownloadCategories_Reverse");
-    }
-}
-
-public class DownloadSolutionConfiguration : IEntityTypeConfiguration<DownloadSolution>
-{
-    public void Configure(EntityTypeBuilder<DownloadSolution> builder)
-    {
-        builder.ToTable("DownloadSolutions");
-        builder.HasKey(x => new { x.DownloadId, x.SolutionId });
-        builder.HasOne(x => x.Download).WithMany(d => d.DownloadSolutions).HasForeignKey(x => x.DownloadId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(x => x.Solution).WithMany().HasForeignKey(x => x.SolutionId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasIndex(x => new { x.SolutionId, x.DownloadId }, "IX_DownloadSolutions_Reverse");
-    }
-}
-
 public class DownloadCertificationConfiguration : IEntityTypeConfiguration<DownloadCertification>
 {
     public void Configure(EntityTypeBuilder<DownloadCertification> builder)

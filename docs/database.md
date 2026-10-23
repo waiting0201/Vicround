@@ -590,6 +590,10 @@ FaqItemTranslations (FaqItemId, Culture)
 與合規文件、Certification dialog 的證書。
 **API**：`GET /api/v1/downloads`；`POST /api/v1/account/downloads/{slug}/link`；Admin `downloads`。
 
+**全域文件 vs 產品文件**（2026-10-23）：有 `DownloadProducts` 列的是**產品文件**，只出現在那些產品頁的
+「下載」區塊（站內搜尋也連到產品頁 `#downloads`）；沒有的是**全域文件**，才列在下載中心與 Resources 頁。
+後台下載清單以「歸屬」篩選分開兩者，產品編輯頁底部列出該產品的文件（唯讀，關聯仍在下載項目上勾）。
+
 ### `Downloads` 必須獨立於 `MediaAssets`
 
 - `MediaAssets` 是**檔案倉庫**——一張圖、一支影片、一個 PDF 的位址與 metadata。
@@ -636,8 +640,9 @@ container。這會影響 Blob 佈署設定，見 [architecture.md](architecture.
 
 ### join tables
 
-`DownloadProducts`、`DownloadCategories`、`DownloadSolutions`、`DownloadCertifications`、
-`DownloadArticles`——皆為 `(左Id, 右Id[, SortOrder])`，PK = 兩個 Id。
+`DownloadProducts`、`DownloadCertifications`、`DownloadArticles`——皆為 `(左Id, 右Id[, SortOrder])`，
+PK = 兩個 Id。原本還有 `DownloadCategories`、`DownloadSolutions`，但前台的產品線頁與產業頁都不列下載，
+2026-10-23 以 migration 拿掉。
 
 ---
 
@@ -1231,8 +1236,6 @@ SampleRequestItems
 | `CaseStudySolutions` | CaseStudies | Solutions | `SortOrder` | 產業頁的客戶案例 |
 | `CertificationCategories` | Certifications | Categories | — | 證書涵蓋的產品線 |
 | `DownloadProducts` | Downloads | Products | `SortOrder` | 產品頁 Download spec sheet |
-| `DownloadCategories` | Downloads | Categories | `SortOrder` | 產品線頁的規格書 |
-| `DownloadSolutions` | Downloads | Solutions | `SortOrder` | Solution 頁下載 |
 | `DownloadCertifications` | Downloads | Certifications | — | 證書之外的佐證文件 |
 | `DownloadArticles` | Downloads | Articles | — | Insight 文章的報告全文 |
 | `UserRoles` | Users | Roles | — | 後台權限 |

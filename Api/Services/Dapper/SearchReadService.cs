@@ -119,7 +119,11 @@ public sealed class SearchReadService(IDbConnection db) : ISearchReadService
             UNION ALL
             {Segment(
                 kind: "download", table: "Downloads", translations: "DownloadTranslations", fk: "DownloadId",
-                title: "Title", summary: "Description", weight: 5)}
+                title: "Title", summary: "Description", weight: 5,
+                // 產品文件不在下載中心，要連到它的產品頁：ParentSlug＝產品線、PathPrefix＝產品。
+                extraSelect: "dp.CategorySlug AS ParentSlug, CAST(0 AS tinyint) AS TypeCode, dp.ProductSlug AS PathPrefix",
+                extraJoin: DownloadReaders.HomeProduct("e", "dp"),
+                extraWhere: $"AND {DownloadReaders.Reachable("e", "dp")}")}
             UNION ALL
             {Segment(
                 kind: "faq", table: "FaqItems", translations: "FaqItemTranslations", fk: "FaqItemId",
@@ -173,7 +177,7 @@ public sealed class SearchReadService(IDbConnection db) : ISearchReadService
         "solution" => PublicPaths.Solution(row.Slug),
         "page" => PublicPaths.Page(row.Slug, row.PathPrefix),
         "article" => PublicPaths.Article((ArticleType)row.TypeCode, row.Slug),
-        "download" => PublicPaths.Download(row.Slug),
+        "download" => DownloadReaders.Path(row.Slug, row.ParentSlug, row.PathPrefix),
         _ => PublicPaths.FaqItem(row.Slug),
     };
 

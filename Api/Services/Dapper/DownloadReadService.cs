@@ -8,8 +8,7 @@ namespace VicRound.Api.Services.Dapper;
 
 public interface IDownloadReadService
 {
-    Task<IReadOnlyList<DownloadDto>> ListAsync(
-        string culture, string? kind, string? productSlug, string? categorySlug, string? solutionSlug);
+    Task<IReadOnlyList<DownloadDto>> ListAsync(string culture, string? kind, string? productSlug);
 }
 
 /// <summary>
@@ -22,16 +21,21 @@ public interface IDownloadReadService
 /// </summary>
 public sealed class DownloadReadService(IDbConnection db) : IDownloadReadService
 {
-    public Task<IReadOnlyList<DownloadDto>> ListAsync(
-        string culture, string? kind, string? productSlug, string? categorySlug, string? solutionSlug) =>
-        ListAsync(db, culture, ParseKind(kind), productSlug, categorySlug, solutionSlug);
+    public Task<IReadOnlyList<DownloadDto>> ListAsync(string culture, string? kind, string? productSlug) =>
+        ListAsync(db, culture, ParseKind(kind), productSlug);
 
     /// <summary>頁面的 <c>DownloadList</c> reference block 也要這一份（static 的理由同 SolutionReadService）。</summary>
     internal static async Task<IReadOnlyList<DownloadDto>> ListAsync(
-        IDbConnection db, string culture, byte? kindValue,
-        string? productSlug, string? categorySlug, string? solutionSlug)
+        IDbConnection db, string culture, byte? kindValue, string? productSlug)
     {
         var filters = new List<string> { DownloadReaders.Visible };
+
+        // 沒指定產品＝下載中心，只列全域文件。掛在產品上的文件屬於那個產品頁的「下載」區塊，
+        // 混進來的話，下載中心會變成兩百多份規格書的流水帳。
+        if (string.IsNullOrWhiteSpace(productSlug))
+        {
+            filters.Add(DownloadReaders.Global("e"));
+        }
 
         if (kindValue is not null)
         {
@@ -44,24 +48,6 @@ public sealed class DownloadReadService(IDbConnection db) : IDownloadReadService
                 EXISTS (SELECT 1 FROM DownloadProducts x
                         INNER JOIN Products p ON p.Id = x.ProductId
                         WHERE x.DownloadId = e.Id AND p.Slug = @ProductSlug)
-                """);
-        }
-
-        if (!string.IsNullOrWhiteSpace(categorySlug))
-        {
-            filters.Add("""
-                EXISTS (SELECT 1 FROM DownloadCategories x
-                        INNER JOIN Categories c ON c.Id = x.CategoryId
-                        WHERE x.DownloadId = e.Id AND c.Slug = @CategorySlug)
-                """);
-        }
-
-        if (!string.IsNullOrWhiteSpace(solutionSlug))
-        {
-            filters.Add("""
-                EXISTS (SELECT 1 FROM DownloadSolutions x
-                        INNER JOIN Solutions s ON s.Id = x.SolutionId
-                        WHERE x.DownloadId = e.Id AND s.Slug = @SolutionSlug)
                 """);
         }
 
@@ -79,8 +65,6 @@ public sealed class DownloadReadService(IDbConnection db) : IDownloadReadService
                 DownloadReaders.Today,
                 Kind = kindValue,
                 ProductSlug = productSlug,
-                CategorySlug = categorySlug,
-                SolutionSlug = solutionSlug,
             });
 
         return rows.Select(DownloadReaders.ToDto).ToList();
@@ -101,6 +85,36 @@ internal static class DownloadReaders
 {
     /// <summary>已發佈且未過期。<c>ValidUntil</c> 到期的文件自動不列出（§06）。</summary>
     public const string Visible = "e.Status = @Published AND (e.ValidUntil IS NULL OR e.ValidUntil >= @Today)";
+
+    /// <summary>全域文件＝沒有掛在任何產品上；只有這些會出現在下載中心。</summary>
+    public static string Global(string download) =>
+        $"NOT EXISTS (SELECT 1 FROM DownloadProducts gp WHERE gp.DownloadId = {download}.Id)";
+
+    /// <summary>
+    /// 產品文件的所在地：它掛的第一個已上架產品（產品線也要上架）。輸出 <c>{alias}.CategorySlug</c>
+    /// 與 <c>{alias}.ProductSlug</c>，交給 <see cref="Path"/>。搜尋、FAQ、導覽連到下載都走這一份。
+    /// </summary>
+    public static string HomeProduct(string download, string alias) => $"""
+        OUTER APPLY (SELECT TOP (1) hc.Slug AS CategorySlug, hp.Slug AS ProductSlug
+                     FROM DownloadProducts hx
+                     INNER JOIN Products hp ON hp.Id = hx.ProductId AND hp.Status = @Published
+                     INNER JOIN Categories hc ON hc.Id = hp.CategoryId AND hc.Status = @Published
+                     WHERE hx.DownloadId = {download}.Id
+                     ORDER BY hx.SortOrder, hp.SortOrder, hp.Id) {alias}
+        """;
+
+    /// <summary>
+    /// 前台上找得到這份文件：全域文件（下載中心），或至少有一個產品頁列出它。
+    /// 掛在產品上、但那些產品都沒上架的文件，哪裡都沒列——連過去只會是一個不存在的錨點。
+    /// </summary>
+    public static string Reachable(string download, string homeAlias) =>
+        $"({homeAlias}.ProductSlug IS NOT NULL OR {Global(download)})";
+
+    /// <summary>產品文件連到產品頁的「下載」區塊，全域文件連到下載中心的錨點。</summary>
+    public static string Path(string slug, string? categorySlug, string? productSlug) =>
+        productSlug is not null
+            ? PublicPaths.ProductDownloads(categorySlug ?? string.Empty, productSlug)
+            : PublicPaths.Download(slug);
 
     public const string Select = """
         SELECT e.Id, e.Slug, e.Kind, e.AccessLevel, e.Version, e.DocumentDate, e.ValidUntil,

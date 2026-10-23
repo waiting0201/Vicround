@@ -35,8 +35,6 @@ public class Download : SluggedEntity, IRoutable
 
     public ICollection<DownloadTranslation> Translations { get; set; } = new List<DownloadTranslation>();
     public ICollection<DownloadProduct> DownloadProducts { get; set; } = new List<DownloadProduct>();
-    public ICollection<DownloadCategory> DownloadCategories { get; set; } = new List<DownloadCategory>();
-    public ICollection<DownloadSolution> DownloadSolutions { get; set; } = new List<DownloadSolution>();
     public ICollection<DownloadCertification> DownloadCertifications { get; set; } = new List<DownloadCertification>();
     public ICollection<DownloadArticle> DownloadArticles { get; set; } = new List<DownloadArticle>();
 }
@@ -56,24 +54,6 @@ public class DownloadProduct
     public Download? Download { get; set; }
     public int ProductId { get; set; }
     public Product? Product { get; set; }
-    public int SortOrder { get; set; }
-}
-
-public class DownloadCategory
-{
-    public int DownloadId { get; set; }
-    public Download? Download { get; set; }
-    public int CategoryId { get; set; }
-    public Category? Category { get; set; }
-    public int SortOrder { get; set; }
-}
-
-public class DownloadSolution
-{
-    public int DownloadId { get; set; }
-    public Download? Download { get; set; }
-    public int SolutionId { get; set; }
-    public Solution? Solution { get; set; }
     public int SortOrder { get; set; }
 }
 

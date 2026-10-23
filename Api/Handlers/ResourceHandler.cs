@@ -39,12 +39,7 @@ public sealed class ResourceHandler(
 
     public async Task<IActionResult> ListDownloadsAsync(HttpRequest req)
     {
-        var items = await downloads.ListAsync(
-            LangResolver.Resolve(req),
-            req.Query["kind"],
-            req.Query["product"],
-            req.Query["category"],
-            req.Query["solution"]);
+        var items = await downloads.ListAsync(LangResolver.Resolve(req), req.Query["kind"], req.Query["product"]);
 
         CacheControl.Public(req.HttpContext.Response);
         return new OkObjectResult(ApiResponse.Ok(items));

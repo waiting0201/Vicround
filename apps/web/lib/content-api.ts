@@ -508,8 +508,9 @@ export function getProducts(
   return apiGet<Paged<ProductListItem>>('/products', { culture, query, tags: [tag.products()] });
 }
 
+/** 產品文件在後台是各自一筆「下載項目」，改它們只會打 `downloads` 標籤，所以產品頁也要掛上。 */
 export function getProduct(culture: Locale, slug: string) {
-  return apiGet<ProductDetail>(`/products/${slug}`, { culture, tags: [tag.product(slug)] });
+  return apiGet<ProductDetail>(`/products/${slug}`, { culture, tags: [tag.product(slug), tag.downloads()] });
 }
 
 export function getSolutions(culture: Locale) {
@@ -594,7 +595,7 @@ export function getSearch(culture: Locale, query: string, limit = 20) {
 
 export function getDownloads(
   culture: Locale,
-  query: { kind?: string; product?: string; category?: string; solution?: string } = {},
+  query: { kind?: string; product?: string } = {},
 ) {
   return apiGet<Download[]>('/downloads', { culture, query, tags: [tag.downloads()] });
 }

@@ -57,8 +57,6 @@ public class VicRoundDbContext(DbContextOptions<VicRoundDbContext> options) : Db
     public DbSet<Download> Downloads => Set<Download>();
     public DbSet<DownloadTranslation> DownloadTranslations => Set<DownloadTranslation>();
     public DbSet<DownloadProduct> DownloadProducts => Set<DownloadProduct>();
-    public DbSet<DownloadCategory> DownloadCategories => Set<DownloadCategory>();
-    public DbSet<DownloadSolution> DownloadSolutions => Set<DownloadSolution>();
     public DbSet<DownloadCertification> DownloadCertifications => Set<DownloadCertification>();
     public DbSet<DownloadArticle> DownloadArticles => Set<DownloadArticle>();
 

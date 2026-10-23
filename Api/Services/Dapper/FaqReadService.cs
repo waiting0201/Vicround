@@ -51,7 +51,9 @@ public sealed class FaqReadService(IDbConnection db) : IFaqReadService
             $"""
              SELECT e.Id, e.FaqCategoryId, e.Slug, e.IsFeatured, e.ExternalUrl,
                     p.Slug AS PageSlug, c.Slug AS CategorySlug, s.Slug AS SolutionSlug,
-                    pr.Slug AS ProductSlug, prc.Slug AS ProductCategorySlug, d.Slug AS DownloadSlug,
+                    pr.Slug AS ProductSlug, prc.Slug AS ProductCategorySlug,
+                    CASE WHEN {DownloadReaders.Reachable("d", "dhp")} THEN d.Slug END AS DownloadSlug,
+                    dhp.CategorySlug AS DownloadCategorySlug, dhp.ProductSlug AS DownloadProductSlug,
                     {Sql.Coalesce("Question")}, {Sql.Coalesce("Answer")}, {Sql.Coalesce("LinkLabel")},
                     {Sql.HasCulture}
              FROM FaqItems e
@@ -62,6 +64,7 @@ public sealed class FaqReadService(IDbConnection db) : IFaqReadService
              LEFT JOIN Products pr ON pr.Id = e.RefProductId AND pr.Status = @Published
              LEFT JOIN Categories prc ON prc.Id = pr.CategoryId
              LEFT JOIN Downloads d ON d.Id = e.RefDownloadId AND d.Status = @Published
+             {DownloadReaders.HomeProduct("d", "dhp")}
              {Sql.TranslationJoin("FaqItemTranslations", "FaqItemId")}
              WHERE e.Status = @Published AND (@CategorySlug IS NULL OR fc.Slug = @CategorySlug)
              ORDER BY e.SortOrder, e.Id
@@ -93,7 +96,7 @@ public sealed class FaqReadService(IDbConnection db) : IFaqReadService
         { CategorySlug: { } category } => PublicPaths.Category(category),
         { SolutionSlug: { } solution } => PublicPaths.Solution(solution),
         { ProductSlug: { } product, ProductCategorySlug: { } category } => PublicPaths.Product(category, product),
-        { DownloadSlug: { } download } => PublicPaths.Download(download),
+        { DownloadSlug: { } download } => DownloadReaders.Path(download, row.DownloadCategorySlug, row.DownloadProductSlug),
         _ => row.ExternalUrl,
     };
 
@@ -119,6 +122,8 @@ public sealed class FaqReadService(IDbConnection db) : IFaqReadService
         public string? ProductSlug { get; set; }
         public string? ProductCategorySlug { get; set; }
         public string? DownloadSlug { get; set; }
+        public string? DownloadCategorySlug { get; set; }
+        public string? DownloadProductSlug { get; set; }
         public string? Question { get; set; }
         public string? Answer { get; set; }
         public string? LinkLabel { get; set; }

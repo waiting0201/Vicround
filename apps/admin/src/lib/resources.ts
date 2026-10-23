@@ -156,6 +156,21 @@ export type ResourceDef = {
   filters?: { name: string; label: string; options: Option[] }[];
   /** 子項編輯器（規格列、版塊、步驟…），在編輯頁下半部。 */
   children?: ChildCollectionDef[];
+  /** 掛在這一筆身上的其他實體（例如產品的文件），在編輯頁最下面列出、點進去編輯。 */
+  related?: RelatedListDef[];
+};
+
+/**
+ * 反向關聯清單。關聯是在對方那邊勾的（下載項目勾「關聯產品」），這裡只負責讓編輯者
+ * 從產品這一頭也看得到——不然要知道一個產品掛了哪些文件，只能去下載中心一筆一筆翻。
+ */
+export type RelatedListDef = {
+  /** 對方的資源。 */
+  type: string;
+  /** 對方的關聯欄位；清單用 `{param}={這一筆的 id}` 篩。 */
+  param: string;
+  label: string;
+  description: string;
 };
 
 export type ChildCollectionDef = {
@@ -413,6 +428,15 @@ const products: ResourceDef = {
         { name: 'value', label: '典型值', type: 'text', scope: 'translation', required: true, maxLength: 200 },
         { name: 'note', label: '量測方法／備註', type: 'text', scope: 'translation', maxLength: 400, wide: true },
       ],
+    },
+  ],
+  related: [
+    {
+      type: 'downloads',
+      param: 'productIds',
+      label: '產品文件',
+      description:
+        '規格書、測試報告、證書等，顯示在這個產品頁的「下載」區塊，不會出現在下載中心。要新增或拿掉，請到下載中心編輯那份文件的「關聯產品」。',
     },
   ],
 };
@@ -914,7 +938,7 @@ const downloads: ResourceDef = {
   hasTranslations: true,
   hasSeo: true,
   description:
-    '可以發布給前台或會員下載的文件（規格書、型錄、證書等），各自有版本號、效期與存取層級。同一份文件如果出了新版本，要新增一筆新的下載項目，不是覆蓋原本那筆——這樣舊版本連結才不會失效。',
+    '可以發布給前台或會員下載的文件，各自有版本號、效期與存取層級。勾了「關聯產品」的是產品文件，只出現在那些產品頁；沒勾的是全域文件（公司型錄、證書等），才會列在前台的下載中心。同一份文件如果出了新版本，要新增一筆新的下載項目，不是覆蓋原本那筆——這樣舊版本連結才不會失效。',
   columns: [
     { name: 'title', label: '標題', fromTranslation: true },
     { name: 'kind', label: '類型', type: 'badge', options: DOWNLOAD_KIND_OPTIONS, width: '8rem' },
@@ -924,6 +948,14 @@ const downloads: ResourceDef = {
     STATUS_COLUMN,
   ],
   filters: [
+    {
+      name: 'productIds',
+      label: '歸屬',
+      options: [
+        { value: 'none', label: '全域文件（下載中心）' },
+        { value: 'any', label: '產品文件' },
+      ],
+    },
     { name: 'kind', label: '類型', options: DOWNLOAD_KIND_OPTIONS },
     { name: 'accessLevel', label: '存取層級', options: DOWNLOAD_ACCESS_OPTIONS },
   ],
@@ -969,25 +1001,7 @@ const downloads: ResourceDef = {
       scope: 'base',
       refType: 'products',
       wide: true,
-      hint: '這份文件會出現在勾選的產品頁面的「下載」區塊。',
-    },
-    {
-      name: 'categoryIds',
-      label: '關聯產品線',
-      type: 'multiReference',
-      scope: 'base',
-      refType: 'categories',
-      wide: true,
-      hint: '這份文件會出現在勾選的產品線頁面的「下載」區塊。',
-    },
-    {
-      name: 'solutionIds',
-      label: '關聯解決方案',
-      type: 'multiReference',
-      scope: 'base',
-      refType: 'solutions',
-      wide: true,
-      hint: '這份文件會出現在勾選的產業頁面的「下載」區塊。',
+      hint: '勾了就是產品文件：只出現在勾選的產品頁面的「下載」區塊，不會列在下載中心。不勾就是全域文件，列在下載中心。',
     },
     SORT_FIELD,
   ],

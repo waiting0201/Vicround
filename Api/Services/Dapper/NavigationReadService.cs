@@ -27,7 +27,9 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
              SELECT e.Id, e.ParentId, e.Location, e.LinkType, e.Url, e.IconName, e.OpenInNewTab,
                     p.Slug AS PageSlug, c.Slug AS CategorySlug, s.Slug AS SolutionSlug,
                     pr.Slug AS ProductSlug, prc.Slug AS ProductCategorySlug,
-                    a.Slug AS ArticleSlug, a.Type AS ArticleType, d.Slug AS DownloadSlug,
+                    a.Slug AS ArticleSlug, a.Type AS ArticleType,
+                    CASE WHEN {DownloadReaders.Reachable("d", "dhp")} THEN d.Slug END AS DownloadSlug,
+                    dhp.CategorySlug AS DownloadCategorySlug, dhp.ProductSlug AS DownloadProductSlug,
                     {Sql.Coalesce("Label")}, {Sql.Coalesce("Note")},
                     {Sql.Coalesce("MenuTitle")}, {Sql.Coalesce("AriaLabel")},
                     {Sql.HasCulture}
@@ -39,6 +41,7 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
              LEFT JOIN Categories prc ON prc.Id = pr.CategoryId
              LEFT JOIN Articles a ON a.Id = e.RefArticleId AND a.Status = @Published
              LEFT JOIN Downloads d ON d.Id = e.RefDownloadId AND d.Status = @Published
+             {DownloadReaders.HomeProduct("d", "dhp")}
              {Sql.TranslationJoin("NavigationItemTranslations", "NavigationItemId")}
              WHERE e.Status = @Published AND (@Location IS NULL OR e.Location = @Location)
              ORDER BY e.Location, e.SortOrder, e.Id
@@ -101,7 +104,7 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
             { SolutionSlug: { } solution } => PublicPaths.Solution(solution),
             { ProductSlug: { } product, ProductCategorySlug: { } category } => PublicPaths.Product(category, product),
             { ArticleSlug: { } article, ArticleType: { } type } => PublicPaths.Article((ArticleType)type, article),
-            { DownloadSlug: { } download } => PublicPaths.Download(download),
+            { DownloadSlug: { } download } => DownloadReaders.Path(download, row.DownloadCategorySlug, row.DownloadProductSlug),
             _ => null,
         };
     }
@@ -136,6 +139,8 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
         public string? ArticleSlug { get; set; }
         public byte? ArticleType { get; set; }
         public string? DownloadSlug { get; set; }
+        public string? DownloadCategorySlug { get; set; }
+        public string? DownloadProductSlug { get; set; }
         public string? Label { get; set; }
         public string? Note { get; set; }
         public string? MenuTitle { get; set; }
