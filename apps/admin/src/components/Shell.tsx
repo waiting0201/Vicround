@@ -116,11 +116,20 @@ export function Shell() {
 
   const nav = <Nav collapsed={collapsed} {...navProps} onNavigate={() => setMobileOpen(false)} />;
 
+  // 換到另一個畫面從頂端開始。SPA 換頁不會自己捲回去，新畫面會停在上一頁捲到的高度。
+  // 只看 pathname：清單的搜尋、篩選、分頁改的是 query string，不該讓畫面跳回頂端。
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <div className="flex min-h-screen">
       <aside
         style={{ width: collapsed ? 'var(--admin-sidebar-w-collapsed)' : 'var(--admin-sidebar-w)' }}
-        className="admin-transition-slow hidden shrink-0 flex-col overflow-hidden border-r border-[var(--border-1)] bg-[var(--surface-card)] transition-[width] md:flex"
+        // 側欄釘在視窗上、自己捲（中間那層 overflow-y-auto）：跟內容一起捲的話，要點下半部的
+        // 選單就得先把整頁捲下去，換頁後右側內容停在半路
+        className="admin-transition-slow sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-[var(--border-1)] bg-[var(--surface-card)] transition-[width] md:flex"
       >
         <div
           style={{ height: 'var(--admin-topbar-h)' }}
