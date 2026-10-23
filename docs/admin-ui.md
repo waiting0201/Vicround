@@ -228,11 +228,11 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 
 | 分區 | 畫面（`menu.ts` label） | `path` | 型別 | 備註 |
 | --- | --- | --- | --- | --- |
-| 內容 | 產品線 | `categories` | A | `docs/database.md §02` |
+| 內容 | 產品線 | `categories` | A | `docs/database.md §02`。有「版塊」子區塊（橫幅、概覽與數字、產品系列、頁尾 CTA），見 5.4 |
 | 內容 | 產品 | `products` | A | 含 `SpecificationRows`／`ProductImages` 子區塊（見 5.4） |
-| 內容 | 產業解決方案 | `solutions` | A | |
+| 內容 | 產業解決方案 | `solutions` | A | 有「版塊」子區塊（依版塊類型對應：橫幅、卡片區、數字區、比較表、頁尾 CTA），見 5.4 |
 | 內容 | 文章 | `articles` | A | 清單需要「News／Insight／技術文章」`Type` 篩選（決定 URL 前綴，改值要走 301 提示，同 slug） |
-| 內容 | 頁面與版塊 | `pages` | A | 編輯頁另有「版塊」子區塊，見 5.4。**版塊結構固定**（前台定版，2026-10-23 決定）：只改文字與圖片，不能增刪排序 |
+| 內容 | 頁面與版塊 | `pages` | A | **固定資料**（2026-10-23 決定）：14 頁對應前台寫死的路由，不能新增／刪除／取消發布，網址片段與版型唯讀（後端 `AdminResource.EditableFields`）。欄位依頁而異，見 5.4 |
 | 資源 | 展會 | `exhibitions` | A | 日期驅動可見性，清單要能看「即將登場／已結束」 |
 | 資源 | FAQ 分類 | `faq-categories` | B | |
 | 資源 | FAQ 題目 | `faq-items` | A | `Ref*` 關聯欄位（見 5.3 的關聯選擇器） |
@@ -398,9 +398,20 @@ props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節�
   而後台的多對多選項數量都在可勾選範圍內（最多幾十個）。
 - **版塊不開放增刪排序**（2026-10-23 決定）：前台設計已定版，後台的「版塊」子區塊是
   `fixed`——沒有新增／上下移／刪除，類型唯讀，錨點、底色、`SettingsJson` 不出現在表單上，
-  只改文字與圖片。後端以 `AdminChild.EditableFields` 白名單強制，送來的 id 必須正好是現有
+  只改文字。後端以 `AdminChild.EditableFields` 白名單強制，送來的 id 必須正好是現有
   那幾塊，且**就地更新**（整組刪掉重建會把 `ContentBlockItems` 一起 CASCADE 掉）。
   下一條的參數表單因此暫不實作。
+- **欄位依前台實際讀的欄位呈現**（2026-10-23 決定）：頁面與版塊共用一組翻譯欄位，但每頁
+  只讀其中幾個（下載中心的橫幅大標讀版塊標題、頁面「副標」整站沒用到）。對照表在
+  `apps/admin/src/lib/page-layouts.ts`——頁面以 slug、產品線版塊以 anchor、產業頁版塊以
+  `blockType` 對應；只列會出現在畫面上的欄位，標籤寫「它在畫面上的位置」（「橫幅大標」
+  「頁尾行動呼籲：標題」），前台以純文字輸出的內文改用 `textarea`。不在表上的頁面或版塊
+  退回顯示全部欄位。**前台改了讀哪個欄位，這張表要跟著改**——真相來源是
+  `apps/web/app/[locale]/` 的頁面檔。
+- **版塊項目**（`ContentBlockItems`：卡片、數字、標籤）：在對照表上宣告 `items` 的版塊，
+  底下多一個可增刪排序的清單（`BlockItemList`），隨版塊一起送出、後端整組換掉
+  （`AdminChild.Items`）。只對「前台真的從項目取文字」的版塊開放；其餘版塊的項目多是
+  種子資料，前台讀的是認證、據點、製程流程等強型別表，版塊上以註記指出來源。
 - **Reference block**（`docs/database.md §09`，例如「插入認證清單」）：編輯者選
   分類與數量，**不是**打開一個文字編輯器貼證書內容。UI 是一個
   `Select`（block 類型）+ 依類型變化的參數表單（例如 `CertificationList` 選
