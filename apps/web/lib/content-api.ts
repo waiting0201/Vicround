@@ -59,6 +59,8 @@ export type CategoryDetail = {
   type: CategoryType;
   accentColorHex: string | null;
   iconName: string | null;
+  /** CMS 指定的 banner 圖；沒指定時前台用 `lib/page-assets` 的設計素材。 */
+  bannerImageUrl: string | null;
   name: string | null;
   summary: string | null;
   intro: string | null;
@@ -129,6 +131,8 @@ export type SolutionDetail = {
   slug: string;
   iconName: string | null;
   isNew: boolean;
+  /** CMS 指定的 banner 圖；沒指定時前台用 `lib/page-assets` 的設計素材。 */
+  bannerImageUrl: string | null;
   name: string | null;
   summary: string | null;
   challengeTitle: string | null;

@@ -108,6 +108,8 @@ public sealed class AdminCrudService(
 
     public async Task<Dictionary<string, object?>> CreateAsync(AdminResource resource, JsonElement body, CancellationToken ct)
     {
+        RejectIfFixed(resource, "新增");
+
         var entity = Meta(resource.Entity);
         var instance = Activator.CreateInstance(resource.Entity)
             ?? throw new InvalidOperationException($"無法建立 {resource.Entity.Name}。");
@@ -155,12 +157,15 @@ public sealed class AdminCrudService(
         // （database.md §0.5、docs/sitemap.md）。
         var previousPath = await PublicPathAsync(resource, instance, ct);
 
+        // 固定資料只套白名單；關聯與子項仍從完整的 body 取。
+        var baseBody = resource.IsFixed ? OnlyFields(body, resource.EditableFields!) : body;
+
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
-            AdminMapper.Apply(instance, entity, body);
-            ApplyIdentityRules(instance, body, isNew: false);
+            AdminMapper.Apply(instance, entity, baseBody);
+            ApplyIdentityRules(instance, baseBody, isNew: false);
             await db.SaveChangesAsync(ct);
 
             await SaveLinksAndChildrenAsync(resource, key, body, ct);
@@ -248,6 +253,8 @@ public sealed class AdminCrudService(
     /// </summary>
     public async Task DeleteAsync(AdminResource resource, string id, CancellationToken ct)
     {
+        RejectIfFixed(resource, "刪除");
+
         var entity = Meta(resource.Entity);
         var key = KeyValue(entity, id);
 
@@ -294,6 +301,40 @@ public sealed class AdminCrudService(
         await RevalidateAsync(resource, instance, ct);
     }
 
+    /// <summary>
+    /// 既有子項的主鍵。讀取時主鍵一律序列化成字串（見 AdminMapper.ToRow），後台原樣送回來；
+    /// 數字也收。後台新增的列是 <c>new-…</c>，解析不出來就是 null。
+    /// </summary>
+    private static int? ExistingId(JsonElement item)
+    {
+        if (!item.TryGetProperty("id", out var id))
+        {
+            return null;
+        }
+
+        return id.ValueKind switch
+        {
+            JsonValueKind.Number when id.TryGetInt32(out var number) => number,
+            JsonValueKind.String when int.TryParse(id.GetString(), out var text) => text,
+            _ => (int?)null,
+        };
+    }
+
+    private static void RejectIfFixed(AdminResource resource, string action)
+    {
+        if (resource.IsFixed)
+        {
+            throw new AppException(
+                ErrorCodes.ConflictState, $"{resource.Slug} 是固定資料，前台每一筆都綁著一條路由，不能{action}。", 409);
+        }
+    }
+
+    /// <summary>只留白名單裡的欄位（camelCase）。不在名單上的欄位直接略過，不報錯——後台送的是整份表單。</summary>
+    private static JsonElement OnlyFields(JsonElement body, string[] fields) =>
+        JsonSerializer.SerializeToElement(fields
+            .Where(field => body.TryGetProperty(field, out _))
+            .ToDictionary(field => field, field => body.GetProperty(field)));
+
     /// <summary>FK 擋下的刪除。547 同時涵蓋 CHECK，但刪除時只可能是外鍵。</summary>
     private static bool IsForeignKeyViolation(DbUpdateException e) =>
         e.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 547 };
@@ -307,6 +348,12 @@ public sealed class AdminCrudService(
         if (await FindTrackedAsync(resource.Entity, key, ct) is not ContentEntity content)
         {
             throw AppException.BadRequest(ErrorCodes.ConflictState, $"{resource.Slug} 沒有發布狀態。");
+        }
+
+        // 固定頁一取消發布，前台那條路由就取不到資料（requirePage 會丟例外）。
+        if (status != ContentStatus.Published)
+        {
+            RejectIfFixed(resource, "取消發布");
         }
 
         content.Status = status;
@@ -599,6 +646,11 @@ public sealed class AdminCrudService(
             AdminMapper.Apply(row, childType, item);
             SetProperty(row, child.OwnerFk, ownerKey);
 
+            if (row is not ContentEntity && child.Entity.GetProperty("SortOrder") is { } sortOrder)
+            {
+                sortOrder.SetValue(row, order);
+            }
+
             if (row is ContentEntity content)
             {
                 content.SortOrder = order;
@@ -656,11 +708,7 @@ public sealed class AdminCrudService(
             .ToHashSet();
 #pragma warning restore EF1002
 
-        var sent = items.EnumerateArray()
-            .Select(item => item.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.Number && id.TryGetInt32(out var value)
-                ? value
-                : (int?)null)
-            .ToList();
+        var sent = items.EnumerateArray().Select(ExistingId).ToList();
 
         if (sent.Any(id => id is null) || sent.Count != existing.Count || !existing.SetEquals(sent.Select(id => id!.Value)))
         {
@@ -670,13 +718,10 @@ public sealed class AdminCrudService(
 
         foreach (var item in items.EnumerateArray())
         {
-            var row = await db.FindAsync(child.Entity, [item.GetProperty("id").GetInt32()], ct)
+            var row = await db.FindAsync(child.Entity, [ExistingId(item)!.Value], ct)
                 ?? throw new InvalidOperationException($"{child.Entity.Name} 在查詢後消失了。");
 
-            var allowed = child.EditableFields!
-                .Where(field => item.TryGetProperty(field, out _))
-                .ToDictionary(field => field, field => item.GetProperty(field));
-            AdminMapper.Apply(row, childType, JsonSerializer.SerializeToElement(allowed));
+            AdminMapper.Apply(row, childType, OnlyFields(item, child.EditableFields!));
 
             if (child.Translation is null
                 || !item.TryGetProperty("translations", out var translations)
@@ -706,6 +751,13 @@ public sealed class AdminCrudService(
                 }
 
                 AdminMapper.Apply(line, Meta(child.Translation), translation.Value);
+            }
+
+            if (child.Items is not null
+                && item.TryGetProperty(child.Items.Field, out var nested)
+                && nested.ValueKind == JsonValueKind.Array)
+            {
+                await ReplaceChildrenAsync(child.Items, KeyOf(row, childType), nested, ct);
             }
         }
     }
@@ -814,27 +866,40 @@ public sealed class AdminCrudService(
     {
         foreach (var child in resource.ChildFields)
         {
-            var childType = Meta(child.Entity);
-
-            var rows = (await connection.QueryAsync(new CommandDefinition(
-                $"""
-                 SELECT {Columns(childType)}
-                 FROM {Table(childType)} e
-                 WHERE e.[{ColumnOf(childType, child.OwnerFk)}] = @Id
-                 ORDER BY {(HasColumn(childType, "SortOrder") ? "e.[SortOrder], " : string.Empty)}e.[{KeyColumn(childType)}]
-                 """, new { Id = key }, cancellationToken: ct)))
-                .Cast<IDictionary<string, object?>>()
-                .Select(item => AdminMapper.ToRow(item, childType))
-                .ToList();
-
-            if (child.Translation is not null && child.TranslationFk is not null && rows.Count > 0)
-            {
-                await AttachTranslationsAsync(
-                    new AdminResource(child.Field, child.Entity, child.Translation, child.TranslationFk), rows, ct);
-            }
-
-            row[child.Field] = rows;
+            row[child.Field] = await LoadChildRowsAsync(child, key, ct);
         }
+    }
+
+    private async Task<List<Dictionary<string, object?>>> LoadChildRowsAsync(AdminChild child, object ownerKey, CancellationToken ct)
+    {
+        var childType = Meta(child.Entity);
+
+        var rows = (await connection.QueryAsync(new CommandDefinition(
+            $"""
+             SELECT {Columns(childType)}
+             FROM {Table(childType)} e
+             WHERE e.[{ColumnOf(childType, child.OwnerFk)}] = @Id
+             ORDER BY {(HasColumn(childType, "SortOrder") ? "e.[SortOrder], " : string.Empty)}e.[{KeyColumn(childType)}]
+             """, new { Id = ownerKey }, cancellationToken: ct)))
+            .Cast<IDictionary<string, object?>>()
+            .Select(item => AdminMapper.ToRow(item, childType))
+            .ToList();
+
+        if (child.Translation is not null && child.TranslationFk is not null && rows.Count > 0)
+        {
+            await AttachTranslationsAsync(
+                new AdminResource(child.Field, child.Entity, child.Translation, child.TranslationFk), rows, ct);
+        }
+
+        if (child.Items is not null)
+        {
+            foreach (var item in rows)
+            {
+                item[child.Items.Field] = await LoadChildRowsAsync(child.Items, item["id"]!, ct);
+            }
+        }
+
+        return rows;
     }
 
     // ── 內部：中繼資料 ──────────────────────────────────────────────────────

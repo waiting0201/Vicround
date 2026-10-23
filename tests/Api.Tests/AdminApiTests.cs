@@ -104,6 +104,14 @@ public class AdminApiTests
 
         foreach (var resource in AdminResources.All)
         {
+            foreach (var field in resource.EditableFields ?? [])
+            {
+                if (Model.FindEntityType(resource.Entity)?.FindProperty(AdminMapper.Pascal(field)) is null)
+                {
+                    problems.Add($"{resource.Slug}.{field}");
+                }
+            }
+
             foreach (var link in resource.LinkFields)
             {
                 var entity = Model.FindEntityType(link.LinkEntity);
@@ -121,6 +129,12 @@ public class AdminApiTests
                 if (entity is null || entity.FindProperty(child.OwnerFk) is null)
                 {
                     problems.Add($"{resource.Slug}.{child.Field}");
+                }
+
+                if (child.Items is { } items
+                    && Model.FindEntityType(items.Entity)?.FindProperty(items.OwnerFk) is null)
+                {
+                    problems.Add($"{resource.Slug}.{child.Field}.{items.Field}");
                 }
 
                 // 白名單是 camelCase；拼錯的欄位會被默默略過，等於那一欄永遠存不進去。
@@ -148,6 +162,18 @@ public class AdminApiTests
 
         Assert.Equal(3, blocks.Count);
         Assert.All(blocks, child => Assert.NotNull(child.EditableFields));
+        Assert.All(blocks, child => Assert.Equal(typeof(ContentBlockItem), child.Items?.Entity));
+    }
+
+    /// <summary>頁面是前台寫死的 14 條路由：不能新增刪除，網址片段與版型也改不動。</summary>
+    [Fact]
+    public void 頁面是固定資料()
+    {
+        var pages = AdminResources.All.Single(resource => resource.Slug == "pages");
+
+        Assert.True(pages.IsFixed);
+        Assert.DoesNotContain("slug", pages.EditableFields!);
+        Assert.DoesNotContain("template", pages.EditableFields!);
     }
 
     /// <summary>Editor 管內容，Admin 另外管使用者、轉址與站台設定（docs/cms.md）。</summary>

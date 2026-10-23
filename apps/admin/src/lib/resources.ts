@@ -22,6 +22,7 @@ import {
   SETTING_VALUE_KIND_OPTIONS,
   type Option,
 } from './enums';
+import { CATEGORY_BLOCKS, PAGE_LAYOUTS, SOLUTION_BLOCKS, type BlockLayout, type FieldCopy } from './page-layouts';
 
 /**
  * **後台的資料字典。**
@@ -158,6 +159,16 @@ export type ResourceDef = {
   children?: ChildCollectionDef[];
   /** 掛在這一筆身上的其他實體（例如產品的文件），在編輯頁最下面列出、點進去編輯。 */
   related?: RelatedListDef[];
+  /**
+   * 固定資料：不能新增、刪除、取消發布，只改內容。後端對應 `AdminResource.EditableFields`，
+   * 繞過畫面直接打 API 一樣會被擋。
+   */
+  fixed?: boolean;
+  /**
+   * 依這一筆的內容換掉編輯頁的欄位。固定頁面每一頁前台讀的欄位都不同（lib/page-layouts.ts），
+   * 回傳 null 就用上面的預設欄位。只影響畫面；存檔照樣送整份資料，沒顯示的欄位原值不動。
+   */
+  layoutFor?: (values: Record<string, unknown>) => Pick<ResourceDef, 'baseFields' | 'translationFields'> | null;
 };
 
 /**
@@ -184,6 +195,18 @@ export type ChildCollectionDef = {
    * `AdminChild.EditableFields`，送出增刪或換序的陣列會被擋下。
    */
   fixed?: boolean;
+  /** 依母體與這一列換掉標題與欄位（固定頁面的版塊各有各的用途）；回傳 null 用預設。 */
+  itemLayout?: (owner: Record<string, unknown>, item: Record<string, unknown>) => ChildItemLayout | null;
+};
+
+export type ChildItemLayout = {
+  /** 取代「第 N 塊」的名稱，寫它在前台的位置。 */
+  label: string;
+  note?: string;
+  baseFields: FieldDef[];
+  translationFields: FieldDef[];
+  /** 這一列底下可以增刪排序的項目（版塊的卡片、數字），存在這一列的 `items` 陣列。 */
+  items?: { label: string; noun: string; baseFields: FieldDef[]; translationFields: FieldDef[] };
 };
 
 /* --------------------------------------------------------------------------
@@ -254,6 +277,87 @@ const UPDATED_COLUMN: ColumnDef = { name: 'updatedAt', label: '最後更新', ty
  * 一、內容
  * ------------------------------------------------------------------------ */
 
+/* ── 版塊（產品線、頁面共用）──────────────────────────────────────────── */
+
+const BLOCK_TRANSLATION_FIELDS: FieldDef[] = [
+  { name: 'eyebrow', label: '眉標', type: 'text', scope: 'translation', maxLength: 120 },
+  { name: 'title', label: '標題', type: 'text', scope: 'translation', maxLength: 300 },
+  { name: 'subtitle', label: '副標', type: 'text', scope: 'translation', maxLength: 400, wide: true },
+  { name: 'body', label: '內文', type: 'html', scope: 'translation', wide: true },
+  { name: 'ctaLabel', label: 'CTA 文字', type: 'text', scope: 'translation', maxLength: 80 },
+  { name: 'footNote', label: '註腳', type: 'text', scope: 'translation', maxLength: 600 },
+];
+
+/** 版塊項目（`ContentBlockItems`）的欄位；長度對齊 PageConfigurations.cs。 */
+const BLOCK_ITEM_FIELDS: FieldDef[] = [
+  { name: 'iconName', label: '圖示', type: 'icon', scope: 'base' },
+  { name: 'linkUrl', label: '連結網址', type: 'text', scope: 'base', maxLength: 2048, wide: true },
+  { name: 'value', label: '數字', type: 'text', scope: 'translation', maxLength: 100 },
+  { name: 'title', label: '標題', type: 'text', scope: 'translation', maxLength: 300 },
+  { name: 'body', label: '說明', type: 'textarea', scope: 'translation', rows: 2, wide: true },
+  { name: 'subtitle', label: '補充小字', type: 'text', scope: 'translation', maxLength: 300 },
+  { name: 'linkLabel', label: '連結文字', type: 'text', scope: 'translation', maxLength: 120 },
+];
+
+/**
+ * 依對照表（lib/page-layouts.ts）挑出前台真的讀的欄位，換上「它在畫面上的位置」當標籤。
+ * 順序跟著對照表走——對照表是照前台由上而下寫的。
+ */
+function pickFields(fields: FieldDef[], copies: Partial<Record<string, FieldCopy>>): FieldDef[] {
+  return Object.entries(copies).flatMap(([name, copy]) => {
+    const field = fields.find((item) => item.name === name);
+    if (!field || !copy) return [];
+    return [
+      {
+        ...field,
+        label: copy.label,
+        hint: copy.hint,
+        ...(copy.plainText
+          ? {
+              type: 'textarea' as const,
+              rows: 3,
+              wide: true,
+              hint: [copy.hint, '純文字，不支援粗體、連結等格式。'].filter(Boolean).join(''),
+            }
+          : {}),
+      },
+    ];
+  });
+}
+
+/** 對照表的一個版塊 → 編輯器用的欄位。 */
+function blockLayout(layout: BlockLayout | undefined): ChildItemLayout | null {
+  if (!layout) return null;
+  const itemFields = layout.items ? pickFields(BLOCK_ITEM_FIELDS, layout.items.fields) : [];
+  return {
+    label: layout.name,
+    note: layout.note,
+    baseFields: [],
+    translationFields: pickFields(BLOCK_TRANSLATION_FIELDS, layout.fields),
+    items: layout.items && {
+      label: layout.items.label,
+      noun: layout.items.noun,
+      baseFields: itemFields.filter((field) => field.scope === 'base'),
+      translationFields: itemFields.filter((field) => field.scope === 'translation'),
+    },
+  };
+}
+
+/** 版塊集合的共同定義：結構固定，只改文字與項目。 */
+function blockCollection(description: string, layoutFor: ChildCollectionDef['itemLayout']): ChildCollectionDef {
+  return {
+    key: 'blocks',
+    label: '版塊',
+    fixed: true,
+    description,
+    baseFields: [
+      { name: 'blockType', label: '版塊類型', type: 'select', scope: 'base', options: BLOCK_TYPE_OPTIONS, readOnly: true },
+    ],
+    translationFields: BLOCK_TRANSLATION_FIELDS,
+    itemLayout: layoutFor,
+  };
+}
+
 const categories: ResourceDef = {
   type: 'categories',
   label: '產品線',
@@ -309,7 +413,7 @@ const categories: ResourceDef = {
       type: 'media',
       scope: 'base',
       accept: IMAGE_ACCEPT,
-      hint: '這條產品線頁面最上方的大幅橫幅照片。',
+      hint: '這條產品線頁面最上方的大幅橫幅照片。留空會使用設計稿的預設圖片。',
     },
     SORT_FIELD,
   ],
@@ -317,9 +421,18 @@ const categories: ResourceDef = {
     { name: 'name', label: '名稱', type: 'text', scope: 'translation', required: true, maxLength: 200 },
     { name: 'shortName', label: '選單短名', type: 'text', scope: 'translation', maxLength: 80 },
     { name: 'menuNote', label: 'Mega menu 說明', type: 'text', scope: 'translation', maxLength: 160, wide: true },
-    { name: 'summary', label: '摘要', type: 'textarea', scope: 'translation', maxLength: 600, rows: 2, wide: true },
-    { name: 'intro', label: '產品線頁開場', type: 'html', scope: 'translation', wide: true },
-    { name: 'description', label: '完整說明', type: 'html', scope: 'translation', wide: true },
+    {
+      name: 'summary',
+      label: '摘要',
+      type: 'textarea',
+      scope: 'translation',
+      maxLength: 600,
+      rows: 2,
+      wide: true,
+      hint: '產品總覽頁（/products）上這條產品線的說明。產品線頁的橫幅「說明」沒填時也會用這段。',
+    },
+    { name: 'intro', label: '產品線頁開場', type: 'html', scope: 'translation', wide: true, hint: '產品線頁「概覽」標題下方的段落。' },
+    { name: 'description', label: '完整說明', type: 'html', scope: 'translation', wide: true, hint: '前台目前沒有顯示這個欄位。' },
     ...SEO_FIELDS,
   ],
   children: [
@@ -337,6 +450,10 @@ const categories: ResourceDef = {
         { name: 'note', label: '量測方法／備註', type: 'text', scope: 'translation', maxLength: 400, wide: true },
       ],
     },
+    blockCollection(
+      '產品線頁由上而下的區塊，只能修改文字與數字。產品卡片來自「產品」；製程步驟來自「製程流程」；「應用於哪些產業」是在「應用解決方案」裡勾選產品線。',
+      (_owner, item) => blockLayout(CATEGORY_BLOCKS[String(item.anchor ?? '')]),
+    ),
   ],
 };
 
@@ -472,7 +589,7 @@ const solutions: ResourceDef = {
       type: 'media',
       scope: 'base',
       accept: IMAGE_ACCEPT,
-      hint: '這個產業頁面最上方的大幅橫幅照片。',
+      hint: '這個產業頁面最上方的大幅橫幅照片。留空會使用設計稿的預設圖片。',
     },
     {
       name: 'categoryIds',
@@ -481,18 +598,18 @@ const solutions: ResourceDef = {
       scope: 'base',
       refType: 'categories',
       wide: true,
-      hint: '這個產業會出現在這裡勾選的產品線頁面的「相關產業」。',
+      hint: '這個產業會出現在勾選的產品線頁面的「應用於哪些產業」；產業頁數字區下方的按鈕也是這些產品線，產品比較表則取第一個產品線的產品。',
     },
     SORT_FIELD,
   ],
   translationFields: [
     { name: 'name', label: '名稱', type: 'text', scope: 'translation', required: true, maxLength: 200 },
     { name: 'menuNote', label: 'Mega menu 說明', type: 'text', scope: 'translation', maxLength: 160 },
-    { name: 'summary', label: '索引卡摘要', type: 'textarea', scope: 'translation', maxLength: 600, rows: 2, wide: true },
-    { name: 'challengeTitle', label: '課題標題', type: 'text', scope: 'translation', maxLength: 300, wide: true },
-    { name: 'challengeBody', label: '課題內文', type: 'html', scope: 'translation', wide: true },
-    { name: 'description', label: '完整說明', type: 'html', scope: 'translation', wide: true },
-    { name: 'ctaLabel', label: 'CTA 按鈕文字', type: 'text', scope: 'translation', maxLength: 80 },
+    { name: 'summary', label: '索引卡摘要', type: 'textarea', scope: 'translation', maxLength: 600, rows: 2, wide: true, hint: '解決方案總覽頁卡片上的說明。產業頁橫幅的「說明」沒填時也會用這段。' },
+    { name: 'challengeTitle', label: '課題標題', type: 'text', scope: 'translation', maxLength: 300, wide: true, hint: '橫幅下方「課題」段落的標題。留空的話整段不顯示。' },
+    { name: 'challengeBody', label: '課題內文', type: 'html', scope: 'translation', wide: true, hint: '「課題」標題下方的段落；左側圖片目前是佔位框。' },
+    { name: 'description', label: '完整說明', type: 'html', scope: 'translation', wide: true, hint: '前台目前沒有顯示這個欄位。' },
+    { name: 'ctaLabel', label: 'CTA 按鈕文字', type: 'text', scope: 'translation', maxLength: 80, hint: '前台目前沒有顯示這個欄位；頁尾行動呼籲請改下方「版塊」。' },
     ...SEO_FIELDS,
   ],
   children: [
@@ -510,6 +627,16 @@ const solutions: ResourceDef = {
         { name: 'note', label: '量測方法／備註', type: 'text', scope: 'translation', maxLength: 400, wide: true },
       ],
     },
+    blockCollection(
+      '產業頁由上而下的區塊，只能修改文字與卡片、數字。客戶案例來自「客戶案例」；頁尾的「其他產業」列出其餘解決方案。',
+      (_owner, item) => {
+        const layout = blockLayout(SOLUTION_BLOCKS[String(item.blockType ?? '')]);
+        // 同一頁可能有兩個同類型的版塊（Acoustic 有兩個卡片區），名稱後面帶上它自己的標題才分得出來
+        const translations = (item.translations ?? {}) as Record<string, Record<string, unknown> | undefined>;
+        const title = translations['zh-Hant']?.title ?? translations.en?.title;
+        return layout && title ? { ...layout, label: `${layout.label}：${String(title)}` } : layout;
+      },
+    ),
   ],
 };
 
@@ -621,6 +748,43 @@ const articles: ResourceDef = {
   ],
 };
 
+const PAGE_BASE_FIELDS: FieldDef[] = [
+  {
+    ...SLUG_FIELD,
+    readOnly: true,
+    hint: '前台每一頁的網址都是寫死的路由，不能修改。',
+  },
+  {
+    name: 'template',
+    label: '版型',
+    type: 'select',
+    scope: 'base',
+    options: PAGE_TEMPLATE_OPTIONS,
+    readOnly: true,
+  },
+  {
+    name: 'heroMediaAssetId',
+    label: '主視覺',
+    type: 'media',
+    scope: 'base',
+    accept: IMAGE_ACCEPT,
+    hint: '這頁最上方橫幅使用的大幅照片。',
+  },
+];
+
+const PAGE_TRANSLATION_FIELDS: FieldDef[] = [
+  { name: 'title', label: '頁面標題', type: 'text', scope: 'translation', required: true, maxLength: 300, wide: true },
+  { name: 'eyebrow', label: '眉標', type: 'text', scope: 'translation', maxLength: 120 },
+  { name: 'subtitle', label: '副標', type: 'text', scope: 'translation', maxLength: 400 },
+  { name: 'bannerTitle', label: 'Banner 標題', type: 'text', scope: 'translation', maxLength: 300 },
+  { name: 'bannerDescription', label: 'Banner 說明', type: 'textarea', scope: 'translation', maxLength: 600, rows: 2 },
+  { name: 'ctaEyebrow', label: 'CTA 眉標', type: 'text', scope: 'translation', maxLength: 120 },
+  { name: 'ctaHeadline', label: 'CTA 標題', type: 'text', scope: 'translation', maxLength: 300 },
+  { name: 'ctaSubcopy', label: 'CTA 副文', type: 'textarea', scope: 'translation', maxLength: 400, rows: 2 },
+  { name: 'body', label: '長文內容', type: 'html', scope: 'translation', wide: true },
+  { name: 'lastReviewedLabel', label: '更新日期標示', type: 'text', scope: 'translation', maxLength: 80 },
+];
+
 const pages: ResourceDef = {
   type: 'pages',
   label: '頁面與版塊',
@@ -630,134 +794,35 @@ const pages: ResourceDef = {
   titleFromTranslation: true,
   hasSlug: true,
   hasStatus: true,
-  hasSort: true,
   hasTranslations: true,
   hasSeo: true,
+  fixed: true,
   description:
-    '網站固定頁面的文字與版塊（例如首頁、關於我們、隱私權）。系統頁面（見下方「系統頁」欄位）不能被刪除；「版型」決定這頁在前台用哪種版面樣式呈現。',
+    '網站固定頁面的文字與圖片。頁面與版面都已定版，不能新增或刪除；每一頁只列出前台實際會顯示的欄位，標籤寫的是它在畫面上的位置。',
   columns: [
     { name: 'title', label: '標題', fromTranslation: true },
     { name: 'slug', label: '網址片段', type: 'code', width: '12rem' },
-    { name: 'template', label: '版型', type: 'badge', options: PAGE_TEMPLATE_OPTIONS, width: '10rem' },
     STATUS_COLUMN,
     UPDATED_COLUMN,
   ],
-  filters: [{ name: 'template', label: '版型', options: PAGE_TEMPLATE_OPTIONS }],
-  baseFields: [
-    SLUG_FIELD,
-    {
-      name: 'template',
-      label: '版型',
-      type: 'select',
-      scope: 'base',
-      required: true,
-      options: PAGE_TEMPLATE_OPTIONS,
-      hint: '決定這頁在前台用哪一種版面樣式呈現。新增後不要隨意更換——版塊不會自動跟著調整，已經編好的內容可能會排得不對。',
-    },
-    {
-      name: 'parentPageId',
-      label: '上層頁面',
-      type: 'reference',
-      scope: 'base',
-      refType: 'pages',
-      hint: '大多數頁面留空；只有這頁是某個頁面底下的子頁（例如法律條文的子條款）時才需要選。',
-    },
-    {
-      name: 'isSystemPage',
-      label: '系統頁',
-      type: 'boolean',
-      scope: 'base',
-      readOnly: true,
-      hint: '首頁、隱私權、聯絡等頁面不可刪除。這格由系統設定，後台無法勾選或取消。',
-    },
-    {
-      name: 'heroMediaAssetId',
-      label: '主視覺',
-      type: 'media',
-      scope: 'base',
-      accept: IMAGE_ACCEPT,
-      hint: '這頁最上方橫幅使用的大幅照片。',
-    },
-    SORT_FIELD,
-  ],
-  translationFields: [
-    {
-      name: 'title',
-      label: '頁面標題',
-      type: 'text',
-      scope: 'translation',
-      required: true,
-      maxLength: 300,
-      wide: true,
-      hint: '瀏覽器分頁與導覽麵包屑顯示的名稱。頁面最上方橫幅裡的大標題請填下面的「Banner 標題」，兩者可以不一樣。',
-    },
-    { name: 'eyebrow', label: '眉標', type: 'text', scope: 'translation', maxLength: 120, hint: '大標題上方的一小行前導文字，非必填。' },
-    { name: 'subtitle', label: '副標', type: 'text', scope: 'translation', maxLength: 400, hint: '頁面標題下方的一小段補充説明。' },
-    {
-      name: 'bannerTitle',
-      label: 'Banner 標題',
-      type: 'text',
-      scope: 'translation',
-      maxLength: 300,
-      hint: '頁面最上方橫幅裡的視覺大標題。留空的話橫幅會改顯示上面的「頁面標題」。',
-    },
-    {
-      name: 'bannerDescription',
-      label: 'Banner 說明',
-      type: 'textarea',
-      scope: 'translation',
-      maxLength: 600,
-      rows: 2,
-      hint: '橫幅標題下方的一段說明文字。',
-    },
-    {
-      name: 'ctaEyebrow',
-      label: 'CTA 眉標',
-      type: 'text',
-      scope: 'translation',
-      maxLength: 120,
-      hint: '頁面底部「行動呼籲」區塊（例如「立即聯絡我們」）的前導文字，這一頁不需要的話整組 CTA 欄位都可以留空。',
-    },
-    { name: 'ctaHeadline', label: 'CTA 標題', type: 'text', scope: 'translation', maxLength: 300 },
-    { name: 'ctaSubcopy', label: 'CTA 副文', type: 'textarea', scope: 'translation', maxLength: 400, rows: 2 },
-    { name: 'body', label: '長文內容', type: 'html', scope: 'translation', wide: true, hint: '隱私權這類純長文可以直接寫在這裡，不用另外加版塊。' },
-    {
-      name: 'lastReviewedLabel',
-      label: '更新日期標示',
-      type: 'text',
-      scope: 'translation',
-      maxLength: 80,
-      hint: '顯示在頁尾的「最後更新」文字，法律類頁面（隱私權、服務條款）才需要填，一般頁面留空即可。',
-    },
-    ...SEO_FIELDS,
-  ],
-  children: [
-    {
-      key: 'blocks',
-      label: '版塊',
-      fixed: true,
-      description:
-        '這頁由上而下的內容區塊。前台版面已定版，這裡只能修改文字與圖片，不能新增、刪除或調整順序。「認證清單」「里程碑時間軸」這類參照版塊的資料來自對應的管理畫面（例如改認證內容請去「認證管理」）。',
+  baseFields: PAGE_BASE_FIELDS,
+  translationFields: [...PAGE_TRANSLATION_FIELDS, ...SEO_FIELDS],
+  layoutFor: (values) => {
+    const layout = PAGE_LAYOUTS[String(values.slug ?? '')];
+    if (!layout) return null;
+    return {
       baseFields: [
-        {
-          name: 'blockType',
-          label: '版塊類型',
-          type: 'select',
-          scope: 'base',
-          options: BLOCK_TYPE_OPTIONS,
-          readOnly: true,
-        },
-        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+        ...PAGE_BASE_FIELDS.filter((field) => field.name !== 'heroMediaAssetId'),
+        ...(layout.heroImage ? pickFields(PAGE_BASE_FIELDS, { heroMediaAssetId: layout.heroImage }) : []),
       ],
-      translationFields: [
-        { name: 'eyebrow', label: '眉標', type: 'text', scope: 'translation', maxLength: 120 },
-        { name: 'title', label: '標題', type: 'text', scope: 'translation', maxLength: 300 },
-        { name: 'subtitle', label: '副標', type: 'text', scope: 'translation', maxLength: 400, wide: true },
-        { name: 'body', label: '內文', type: 'html', scope: 'translation', wide: true },
-        { name: 'ctaLabel', label: 'CTA 文字', type: 'text', scope: 'translation', maxLength: 80 },
-        { name: 'footNote', label: '註腳', type: 'text', scope: 'translation', maxLength: 600 },
-      ],
-    },
+      translationFields: [...pickFields(PAGE_TRANSLATION_FIELDS, layout.fields), ...SEO_FIELDS],
+    };
+  },
+  children: [
+    blockCollection(
+      '這頁由上而下的內容區塊，只能修改文字與卡片。認證、據點、步驟這類清單的內容來自各自的管理畫面，每個版塊下方有註明。',
+      (owner, item) => blockLayout(PAGE_LAYOUTS[String(owner.slug ?? '')]?.blocks[String(item.anchor ?? '')]),
+    ),
   ],
 };
 

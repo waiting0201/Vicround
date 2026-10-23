@@ -83,10 +83,12 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
         var row = await db.QuerySingleOrDefaultAsync<SolutionDetailRow>(
             """
             SELECT e.Id, e.Slug, e.IconName, e.IsNew,
+                   CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS BannerImageUrl,
                    t.Name, t.Summary, t.ChallengeTitle, t.ChallengeBody, t.Description,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Solutions e
             INNER JOIN SolutionTranslations t ON t.SolutionId = e.Id AND t.Culture = @Culture
+            LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
             new { culture, Slug = slug, Sql.Published });
@@ -116,6 +118,7 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
             Slug = row.Slug,
             IconName = row.IconName,
             IsNew = row.IsNew,
+            BannerImageUrl = row.BannerImageUrl,
             Name = row.Name,
             Summary = row.Summary,
             ChallengeTitle = row.ChallengeTitle,
@@ -145,7 +148,7 @@ public sealed class SolutionReadService(IDbConnection db) : ISolutionReadService
     private sealed record SolutionCategoryChip(int SolutionId, string Slug, string? Name);
 
     private sealed record SolutionDetailRow(
-        int Id, string Slug, string? IconName, bool IsNew,
+        int Id, string Slug, string? IconName, bool IsNew, string? BannerImageUrl,
         string? Name, string? Summary, string? ChallengeTitle, string? ChallengeBody, string? Description,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);
 

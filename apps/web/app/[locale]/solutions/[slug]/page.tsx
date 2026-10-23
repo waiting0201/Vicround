@@ -168,7 +168,7 @@ export default async function SolutionPage({ params }: Params) {
           eyebrow={banner?.eyebrow ?? t('nav.solutions')}
           title={banner?.title ?? solution.name ?? ''}
           description={banner?.subtitle ?? solution.summary ?? undefined}
-          image={bannerImage(null)}
+          image={bannerImage(solution.bannerImageUrl)}
         />
 
         {/* ============ 課題 ============ */}

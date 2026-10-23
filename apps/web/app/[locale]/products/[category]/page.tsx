@@ -77,7 +77,7 @@ export default async function ProductLinePage({ params }: Params) {
           eyebrow={banner?.eyebrow ?? t('nav.products')}
           title={banner?.title ?? category.name ?? ''}
           description={banner?.subtitle ?? category.summary ?? undefined}
-          image={bannerImage(null, slug)}
+          image={bannerImage(category.bannerImageUrl, slug)}
         />
 
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px clamp(24px, 5vw, 80px) 0' }}>

@@ -2,6 +2,7 @@ import { Badge, Button, Card, Icon, IconButton } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
 import type { EntityDraft } from '@/lib/draft';
 import type { ChildCollectionDef } from '@/lib/resources';
+import { BlockItemList } from './BlockItemList';
 import { FieldGrid } from './EntityForm';
 
 /** `en` / `zh-Hant` 這種代碼是給程式看的；畫面上一律顯示配好的中文講法。 */
@@ -114,59 +115,88 @@ export function ChildCollection({
         </p>
       ) : (
         <ol className="flex flex-col gap-4">
-          {items.map((item, index) => (
-            <li
-              key={String(item.id ?? index)}
-              className="rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-card-alt)] p-4"
-            >
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2">
-                  {!definition.fixed && <Icon name="grip-vertical" size={14} className="text-[var(--fg-3)]" />}
-                  <Badge tone="neutral">
-                    第 {index + 1} {definition.fixed ? '塊' : '列'}
-                  </Badge>
-                </span>
-                {!definition.fixed && (
-                  <span className="flex items-center gap-1">
-                    <IconButton icon="chevron-up" label="上移" size="sm" onClick={() => move(index, -1)} disabled={index === 0} />
-                    <IconButton
-                      icon="chevron-down"
-                      label="下移"
-                      size="sm"
-                      onClick={() => move(index, 1)}
-                      disabled={index === items.length - 1}
-                    />
-                    <IconButton icon="trash-2" label="刪除這一列" size="sm" className="hover:text-[var(--danger-500)]" onClick={() => remove(index)} />
-                  </span>
-                )}
-              </div>
+          {items.map((item, index) => {
+            // 固定頁面的版塊各有各的用途：換成它在前台的位置與前台真的讀的欄位
+            const layout = definition.itemLayout?.(draft.base, item) ?? null;
+            const baseFields = layout?.baseFields ?? definition.baseFields;
+            const translationFields = layout?.translationFields ?? definition.translationFields;
 
-              <div className="flex flex-col gap-4">
-                <FieldGrid
-                  fields={definition.baseFields}
-                  values={item}
-                  errors={draft.errors}
-                  errorPrefix={`${definition.key}.${index}`}
-                  onChange={(name, value) => setItemBase(index, name, value)}
-                />
-                {definition.translationFields.length > 0 && (
-                  <div className="border-t border-[var(--border-1)] pt-4">
-                    <p className="mb-3 text-xs text-[var(--fg-2)]">
-                      以下欄位屬於<span className="font-medium text-[var(--fg-1)]">{cultureLabel(culture)}</span>，
-                      切換上方語系分頁可編輯另一個語系。
-                    </p>
-                    <FieldGrid
-                      fields={definition.translationFields}
-                      values={item.translations?.[culture] ?? {}}
-                      errors={draft.errors}
-                      errorPrefix={`${definition.key}.${index}.${culture}`}
-                      onChange={(name, value) => setItemTranslation(index, name, value)}
-                    />
+            return (
+              <li
+                key={String(item.id ?? index)}
+                className="rounded-[var(--radius-md)] border border-[var(--border-1)] bg-[var(--surface-card-alt)] p-4"
+              >
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    {!definition.fixed && <Icon name="grip-vertical" size={14} className="text-[var(--fg-3)]" />}
+                    {layout ? (
+                      <span className="text-sm font-medium text-[var(--fg-1)]">{layout.label}</span>
+                    ) : (
+                      <Badge tone="neutral">
+                        第 {index + 1} {definition.fixed ? '塊' : '列'}
+                      </Badge>
+                    )}
+                  </span>
+                  {!definition.fixed && (
+                    <span className="flex items-center gap-1">
+                      <IconButton icon="chevron-up" label="上移" size="sm" onClick={() => move(index, -1)} disabled={index === 0} />
+                      <IconButton
+                        icon="chevron-down"
+                        label="下移"
+                        size="sm"
+                        onClick={() => move(index, 1)}
+                        disabled={index === items.length - 1}
+                      />
+                      <IconButton icon="trash-2" label="刪除這一列" size="sm" className="hover:text-[var(--danger-500)]" onClick={() => remove(index)} />
+                    </span>
+                  )}
+                </div>
+
+                {layout?.note && <p className="mb-3 text-xs text-[var(--fg-2)]">{layout.note}</p>}
+
+                {layout && baseFields.length === 0 && translationFields.length === 0 && !layout.items ? (
+                  <p className="text-xs text-[var(--fg-3)]">前台不會顯示這個版塊的文字，這裡沒有需要修改的欄位。</p>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {baseFields.length > 0 && (
+                      <FieldGrid
+                        fields={baseFields}
+                        values={item}
+                        errors={draft.errors}
+                        errorPrefix={`${definition.key}.${index}`}
+                        onChange={(name, value) => setItemBase(index, name, value)}
+                      />
+                    )}
+                    {translationFields.length > 0 && (
+                      <div className={baseFields.length > 0 ? 'border-t border-[var(--border-1)] pt-4' : undefined}>
+                        <p className="mb-3 text-xs text-[var(--fg-2)]">
+                          以下欄位屬於<span className="font-medium text-[var(--fg-1)]">{cultureLabel(culture)}</span>，
+                          切換上方語系分頁可編輯另一個語系。
+                        </p>
+                        <FieldGrid
+                          fields={translationFields}
+                          values={item.translations?.[culture] ?? {}}
+                          errors={draft.errors}
+                          errorPrefix={`${definition.key}.${index}.${culture}`}
+                          onChange={(name, value) => setItemTranslation(index, name, value)}
+                        />
+                      </div>
+                    )}
+                    {layout?.items && (
+                      <BlockItemList
+                        layout={layout.items}
+                        items={Array.isArray(item.items) ? item.items : []}
+                        culture={culture}
+                        draft={draft}
+                        errorPrefix={`${definition.key}.${index}.items`}
+                        onChange={(next) => setItemBase(index, 'items', next)}
+                      />
+                    )}
                   </div>
                 )}
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
       )}
     </Card>

@@ -41,6 +41,8 @@ for (const block of admin.split(/\n(?=  type: ')/)) {
 
   // 子項集合（規格列、版塊、製程步驟）在資料字典裡是 `children: [{ key: '…' }]`。
   for (const child of block.matchAll(/^ {6}key: '(\w+)'/gm)) fields.add(child[1]);
+  // 版塊集合由 `blockCollection()` 組出來（產品線、頁面共用），key 固定是 blocks。
+  if (/^ {4}blockCollection\(/m.test(block)) fields.add('blocks');
 
   if (fields.size > 0) front.set(slug, fields);
 }

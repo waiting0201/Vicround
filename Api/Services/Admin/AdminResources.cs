@@ -11,6 +11,13 @@ public static class AdminResources
     /// <summary>版塊只改得到內容：前台版面已定版，類型、錨點、底色、查詢條件與順序都不開放。</summary>
     private static readonly string[] BlockEditableFields = ["mediaAssetId"];
 
+    /// <summary>版塊的卡片、數字、步驟：文字在這裡，版面不在這裡，所以可以增刪排序。</summary>
+    private static readonly AdminChild BlockItems = new("items", typeof(ContentBlockItem), "ContentBlockId",
+        typeof(ContentBlockItemTranslation), "ContentBlockItemId");
+
+    /// <summary>頁面是固定的那 14 頁：網址、版型、上層頁都綁在前台路由上，後台只改得到橫幅圖。</summary>
+    private static readonly string[] PageEditableFields = ["heroMediaAssetId"];
+
     private static readonly AdminResource[] Registry =
     [
         // ── 內容 ────────────────────────────────────────────────────────────
@@ -22,7 +29,7 @@ public static class AdminResources
                 new("specifications", typeof(SpecificationRow), "OwnerCategoryId",
                     typeof(SpecificationRowTranslation), "SpecificationRowId"),
                 new("blocks", typeof(ContentBlock), "OwnerCategoryId",
-                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields, BlockItems),
             ],
             RoutePrefix: "/products"),
 
@@ -52,7 +59,7 @@ public static class AdminResources
                 new("specifications", typeof(SpecificationRow), "OwnerSolutionId",
                     typeof(SpecificationRowTranslation), "SpecificationRowId"),
                 new("blocks", typeof(ContentBlock), "OwnerSolutionId",
-                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields, BlockItems),
             ],
             RoutePrefix: "/solutions"),
 
@@ -74,8 +81,9 @@ public static class AdminResources
             Children:
             [
                 new("blocks", typeof(ContentBlock), "OwnerPageId",
-                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields),
-            ]),
+                    typeof(ContentBlockTranslation), "ContentBlockId", BlockEditableFields, BlockItems),
+            ],
+            EditableFields: PageEditableFields),
 
         // ── 資源 ────────────────────────────────────────────────────────────
         new("exhibitions", typeof(Exhibition), typeof(ExhibitionTranslation), "ExhibitionId",

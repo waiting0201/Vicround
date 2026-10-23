@@ -65,7 +65,8 @@ export function RecordActions({
 
   return (
     <>
-      {resource.hasStatus && (
+      {/* 固定資料不能取消發布（前台那條路由會取不到資料）；還沒發布的仍要能發布 */}
+      {resource.hasStatus && !(resource.fixed && isPublished) && (
         <Button
           variant="secondary"
           icon={<Icon name={isPublished ? 'eye-off' : 'globe'} size={15} />}
@@ -75,13 +76,15 @@ export function RecordActions({
         </Button>
       )}
 
-      <Button
-        variant="danger"
-        icon={<Icon name="trash-2" size={15} />}
-        onClick={() => setConfirming('delete')}
-      >
-        刪除
-      </Button>
+      {!resource.fixed && (
+        <Button
+          variant="danger"
+          icon={<Icon name="trash-2" size={15} />}
+          onClick={() => setConfirming('delete')}
+        >
+          刪除
+        </Button>
+      )}
 
       <ConfirmDialog
         open={confirming === 'publish'}

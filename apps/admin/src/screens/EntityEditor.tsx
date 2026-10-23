@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useBlocker, useNavigate, useParams } from 'react-router';
+import { Navigate, useBlocker, useNavigate, useParams } from 'react-router';
 import { Button, ConfirmDialog, Icon, LoadingBlock, PageHeader, useToast } from '@/ui';
 import { CULTURES, type Culture } from '@/lib/enums';
 import { useEntityDraft, useUnsavedGuard } from '@/lib/draft';
@@ -40,6 +40,12 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
     ({ currentLocation, nextLocation }) =>
       draft.dirty && currentLocation.pathname !== nextLocation.pathname,
   );
+
+  // 固定頁面每一頁前台讀的欄位不同：畫面依這一筆換欄位，存檔仍走原本的 resource（見 ResourceDef.layoutFor）
+  const layout = resource.layoutFor?.(draft.base) ?? null;
+  const view = layout ? { ...resource, ...layout } : resource;
+
+  if (isNew && resource.fixed) return <Navigate to={`/${resource.type}`} replace />;
 
   const title = isNew ? `新增${resource.singular}` : row ? rowTitle(row, resource, culture) : '載入中…';
   const slugChanged = Boolean(row?.slug) && draft.base.slug !== row?.slug;
@@ -105,7 +111,7 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
             </p>
           )}
 
-          <EntityForm resource={resource} draft={draft} culture={culture} onCultureChange={setCulture} />
+          <EntityForm resource={view} draft={draft} culture={culture} onCultureChange={setCulture} />
 
           {resource.children?.map((child) => (
             <ChildCollection key={child.key} definition={child} draft={draft} culture={culture} />

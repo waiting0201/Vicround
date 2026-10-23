@@ -34,6 +34,10 @@ public sealed record CategoryDetailDto
     public required string Type { get; init; }
     public string? AccentColorHex { get; init; }
     public string? IconName { get; init; }
+
+    /// <summary>後台「主視覺」；沒指定時前台用設計稿的預設圖（apps/web/lib/page-assets.ts）。</summary>
+    public string? BannerImageUrl { get; init; }
+
     public string? Name { get; init; }
     public string? Summary { get; init; }
     public string? Intro { get; init; }
@@ -156,6 +160,10 @@ public sealed record SolutionDetailDto
     public required string Slug { get; init; }
     public string? IconName { get; init; }
     public bool IsNew { get; init; }
+
+    /// <summary>後台「主視覺」；沒指定時前台用設計稿的預設圖（apps/web/lib/page-assets.ts）。</summary>
+    public string? BannerImageUrl { get; init; }
+
     public string? Name { get; init; }
     public string? Summary { get; init; }
     public string? ChallengeTitle { get; init; }

@@ -55,10 +55,12 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         var row = await db.QuerySingleOrDefaultAsync<CategoryDetailRow>(
             """
             SELECT e.Id, e.Slug, e.Type, e.AccentColorHex, e.IconName,
+                   CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS BannerImageUrl,
                    t.Name, t.Summary, t.Intro, t.Description,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Categories e
             INNER JOIN CategoryTranslations t ON t.CategoryId = e.Id AND t.Culture = @Culture
+            LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
             new { culture, Slug = slug, Sql.Published });
@@ -103,6 +105,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             Type = ContentReaders.Camel(((CategoryType)row.Type).ToString()),
             AccentColorHex = row.AccentColorHex,
             IconName = row.IconName,
+            BannerImageUrl = row.BannerImageUrl,
             Name = row.Name,
             Summary = row.Summary,
             Intro = row.Intro,
@@ -440,7 +443,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     }
 
     private sealed record CategoryDetailRow(
-        int Id, string Slug, byte Type, string? AccentColorHex, string? IconName,
+        int Id, string Slug, byte Type, string? AccentColorHex, string? IconName, string? BannerImageUrl,
         string? Name, string? Summary, string? Intro, string? Description,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);
 
