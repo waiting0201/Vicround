@@ -136,11 +136,6 @@ public sealed partial class AppRouter
             ("PUT" or "PATCH", ["admin", "business-domains", ..]) => PermissionCodes.BusinessDomainsEdit,
             ("DELETE",         ["admin", "business-domains", ..]) => PermissionCodes.BusinessDomainsDelete,
 
-            ("GET",            ["admin", "navigation", ..]) => PermissionCodes.NavigationView,
-            ("POST",           ["admin", "navigation", ..])     => PermissionCodes.NavigationEdit,
-            ("PUT" or "PATCH", ["admin", "navigation", ..]) => PermissionCodes.NavigationEdit,
-            ("DELETE",         ["admin", "navigation", ..]) => PermissionCodes.NavigationDelete,
-
             ("GET",            ["admin", "redirects", ..]) => PermissionCodes.RedirectsView,
             ("POST",           ["admin", "redirects", ..])     => PermissionCodes.RedirectsEdit,
             ("PUT" or "PATCH", ["admin", "redirects", ..]) => PermissionCodes.RedirectsEdit,

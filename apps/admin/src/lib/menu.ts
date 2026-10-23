@@ -71,7 +71,6 @@ export const MENU: MenuSection[] = [
   {
     title: '站台',
     items: [
-      { type: 'navigation', label: '導覽選單', icon: 'link' },
       { type: 'redirects', label: '轉址（301）', icon: 'arrow-up-down' },
       { type: 'site-settings', label: '站台設定', icon: 'settings', adminOnly: true },
       { type: 'users', label: '後台使用者', icon: 'users', adminOnly: true },

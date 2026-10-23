@@ -292,31 +292,7 @@ export const SAMPLE_REQUEST_TIMESTAMPS: { status: SampleRequestStatus; field: st
   { status: 'cancelled', field: 'cancelledAt', label: '取消' },
 ];
 
-/* ---------------- 導覽與轉址 ---------------- */
-
-export type NavigationLocation = 'header' | 'footer' | 'footerLegal' | 'social' | 'searchChip';
-
-export const NAVIGATION_LOCATION_LABEL: Record<NavigationLocation, string> = {
-  header: 'Header 主選單',
-  footer: 'Footer 選單',
-  footerLegal: 'Footer 法律連結',
-  social: '社群連結',
-  searchChip: 'Header 熱門搜尋',
-};
-
-export const NAVIGATION_LOCATION_OPTIONS = options(NAVIGATION_LOCATION_LABEL);
-
-export type LinkTargetType = 'internal' | 'external' | 'anchor' | 'entityRef' | 'contactModal';
-
-export const LINK_TARGET_TYPE_LABEL: Record<LinkTargetType, string> = {
-  internal: '站內路徑',
-  external: '外部網址',
-  anchor: '頁內錨點',
-  entityRef: '指向內容實體',
-  contactModal: '開啟聯絡表單',
-};
-
-export const LINK_TARGET_TYPE_OPTIONS = options(LINK_TARGET_TYPE_LABEL);
+/* ---------------- 轉址 ---------------- */
 
 /** 301／302／308 是轉址，410 是「內容永久移除且無替代」。 */
 export const REDIRECT_STATUS_OPTIONS: Option<string>[] = [

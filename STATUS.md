@@ -256,7 +256,6 @@ apps/web/
 | 清單＋獨立編輯頁 | categories／products／solutions／articles／pages／exhibitions／faq-items／downloads／certifications／process-flows | `EditorScreen` + `EntityEditor`（含子項編輯器：規格列、版塊、製程步驟） |
 | 清單＋編輯抽屜 | article-tags／authors／locations／testimonials／partner-brands／contact-channels／business-domains／users | `CollectionScreen` |
 | 排序清單 | faq-categories／milestones | `OrderedScreen`（上移／下移 + 批次存排序） |
-| 導覽（樹狀＋位置分頁） | navigation | `NavigationScreen` |
 | 審核佇列 | members | `MembersScreen` + `MemberDetail`（列上直接核准／拒絕，拒絕須填理由） |
 | 收件匣 | contact-inquiries | `InquiriesScreen` + `InquiryDetail` |
 | 看板 | sample-requests | `SampleRequestsScreen` + `SampleRequestDetail`（只列合法的下一個狀態，不做拖曳） |

@@ -83,7 +83,6 @@ const SEED_NAMES: Record<string, string[]> = {
   'partner-brands': ['Brand A', 'Brand B', 'Brand C', 'Brand D'],
   'contact-channels': ['Sales & quotations', 'Technical support', 'Partnership'],
   'process-flows': ['Core processes', 'How optical film is made', 'Co-development', 'OEM / ODM', 'After you send an inquiry'],
-  navigation: ['Products', 'Solutions', 'Technologies', 'About', 'Resources', 'Contact'],
   // ⚠️ 要與 `Api/Data/Seeding/SeedData.cs` 的 SiteSettings 逐字一致。
   // 這裡曾經是 `Seo:TitleTemplate` 這種舊寫法，於是 SettingsScreen 的說明文字
   // 在開發模式下對得上、對真的 API 卻一句都沒顯示——假資料的形狀跟真資料不一樣時，

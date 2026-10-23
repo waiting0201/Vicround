@@ -133,10 +133,6 @@ public static class RevalidationTags
                 tags.AddRange(["technologies", "page:technologies", "page:partnership", "page:contact"]);
                 break;
 
-            case "navigation":
-                tags.Add("navigation");
-                break;
-
             case "site-settings":
                 tags.Add("site-settings");
                 break;

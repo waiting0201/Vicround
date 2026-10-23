@@ -75,9 +75,6 @@ public static class PermissionCodes
     public const string BusinessDomainsView = "business-domains.view";
     public const string BusinessDomainsEdit = "business-domains.edit";
     public const string BusinessDomainsDelete = "business-domains.delete";
-    public const string NavigationView = "navigation.view";
-    public const string NavigationEdit = "navigation.edit";
-    public const string NavigationDelete = "navigation.delete";
     public const string RedirectsView = "redirects.view";
     public const string RedirectsEdit = "redirects.edit";
     public const string RedirectsDelete = "redirects.delete";

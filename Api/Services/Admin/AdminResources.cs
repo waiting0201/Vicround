@@ -185,11 +185,6 @@ public static class AdminResources
             SearchColumns: ["Domain"]),
 
         // ── 站台 ────────────────────────────────────────────────────────────
-        new("navigation", typeof(NavigationItem), typeof(NavigationItemTranslation), "NavigationItemId",
-            OrderBy: "Location, ParentId, SortOrder",
-            SearchColumns: ["Url", "IconName"],
-            TranslationSearchColumns: ["Label"]),
-
         new("redirects", typeof(Redirect), OrderBy: "FromPath",
             SearchColumns: ["FromPath", "ToPath", "Notes"]),
 

@@ -312,7 +312,7 @@ int / Guid / string 三種），enum 一律 camelCase 字串。
 categories | products | solutions | articles | article-tags | authors |
 pages | content-blocks | faq-categories | faq-items | exhibitions |
 certifications | downloads | process-flows | milestones | locations |
-case-studies | testimonials | partner-brands | contact-channels | navigation | redirects |
+case-studies | testimonials | partner-brands | contact-channels | redirects |
 media | site-settings | users | members | sample-requests |
 contact-inquiries | business-domains
 ```

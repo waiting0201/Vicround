@@ -250,7 +250,6 @@ TypeScript + Tailwind v4，只用 `apps/admin/src/ds/tokens/*.css` 既有的 des
 | 營運 | 會員審核 | `members` | E | 見 5.5 |
 | 營運 | 樣品申請 | `sample-requests` | F | 見 5.6 |
 | 營運 | 詢問單 | `contact-inquiries` | E | 見 5.5 |
-| 站台 | 導覽選單 | `navigation` | D | 見 5.7 |
 | 站台 | 轉址（301） | `redirects` | C | `FromPath`／`ToPath`／`StatusCode`，見 5.8 的碰撞檢查提示 |
 | 站台 | 站台設定 | `site-settings` | G | `adminOnly` |
 | 站台 | 後台使用者 | `users` | C | `adminOnly`；抽屜內是「角色勾選 + 帳號啟用開關」，不含密碼欄位（密碼由使用者自己在登入後修改，Admin 不代改密碼） |
@@ -469,30 +468,13 @@ props（`loading` / `error` / `rows.length === 0`）。文案規則見第 8 節�
   子清單（比照 5.4 子清單樣式，但這裡多數欄位唯讀，因為明細是會員送出時的快照）、
   `InternalNote`（後台限定，`Textarea`）。
 
-### 5.7 型別 D：排序清單（`navigation`）
+### 5.7 導覽選單：不做後台（2026-10-23 決定）
 
-```
-Tabs: Header │ Footer │ FooterLegal │ Social │ SearchChip
-┌─────────────────────────────────────────────┐
-│ ▸ Products                          [↑][↓][✎]│
-│    ▸ Optical Film                   [↑][↓][✎]│
-│    ▸ Textile & Foam                 [↑][↓][✎]│
-│    ▸ Acoustic                       [↑][↓][✎]│
-│ ▸ Solutions                         [↑][↓][✎]│
-│ ▸ Technologies                      [↑][↓][✎]│
-│                                    [+ 新增項目] │
-└─────────────────────────────────────────────┘
-```
-
-- 最外層用 `Tabs` 切換 `NavigationLocation`（5 個值），**每個 Location 各自是
-  獨立的排序空間**（`SortOrder` 不跨 Location 比較）。
-- 樹狀縮排：不用 `Table`（`Table` 是平面欄位表格，不適合表達縮排階層），改用
-  一個手刻的清單（`Card` + 逐列 `flex` + `paddingLeft: depth * 20px`），子項目
-  （`ParentId` 非空）縮排一階。上移／下移**只在同一層（同 `ParentId`）內移動**。
-- 編輯（`pencil`／或整列可點擊）開 `Drawer`，內容含 `LinkType` 決定的條件欄位
-  （`Internal`/`External`/`Anchor`/`EntityRef`/`ContactModal`，切換 `LinkType`
-  時用 `Select` 選了之後才顯示對應的下一個欄位，其餘 `LinkType` 的欄位不佔畫面）
-  ＋ en/zh-Hant 分頁（`Label`/`Note`/`MenuTitle`/`AriaLabel`）。
+Header／Footer／法律連結／社群連結／熱門搜尋這五組導覽是**固定的**，後台不提供編輯畫面，
+Admin API 也沒有 `navigation` 單元。資料仍在 `NavigationItems`（由 `BootstrapSeeder`
+依 `SeedData.Navigation` 建立），前台照常從 `GET /api/v1/navigation` 讀——mega menu 裡
+產品線、產業的名稱與網址是 `Ref*Id` 解析出來的，在「產品線」「應用解決方案」改名或改 slug
+仍會跟著變。要調整導覽結構就改 `SeedData.cs`；seeder 只補缺不覆寫，既有列要另外處理。
 
 ### 5.8 型別 C 的補充：`redirects` 的碰撞提示
 

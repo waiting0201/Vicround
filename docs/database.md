@@ -859,7 +859,7 @@ ContentBlockItemTranslations (ContentBlockItemId, Culture)
 ## 10 導覽、SEO 與轉址
 
 **服務頁面**：`Header.dc.html`、`Footer.dc.html`、全站 metadata、`sitemap.xml`、`robots.txt`。
-**API**：`GET /api/v1/navigation`、`/sitemap`；Admin `navigation`、`redirects`、`site-settings`。
+**API**：`GET /api/v1/navigation`、`/sitemap`；Admin `redirects`、`site-settings`。導覽選單固定、不做後台（2026-10-23 決定），內容來自 `SeedData.Navigation`。
 
 ### NavigationItems
 

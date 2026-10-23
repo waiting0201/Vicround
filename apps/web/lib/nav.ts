@@ -12,8 +12,8 @@ import { ROUTES } from './routes';
  * </p>
  *
  * <p>
- * ⚠️ Products 與 Solutions 的子項現在是寫死的 slug（來自 docs/sitemap.md 的清單）。
- * 接上 `GET /api/v1/navigation` 之後改由 `NavigationItems` 供應，順序交給編輯者排。
+ * ⚠️ 這份是 `GET /api/v1/navigation` 取不到時的退路。正常情況下導覽來自 `NavigationItems`
+ * （`SeedData.Navigation` 建立）；導覽選單固定、不做後台（2026-10-23 決定）。
  * </p>
  */
 export type MegaChild = {
@@ -77,7 +77,7 @@ export function navItems(): NavItem[] {
   ];
 }
 
-/** 常用搜尋 chip（Header.dc.html 的 `searchChips`，`SearchChip` 之後由後台的導覽單元管理）。 */
+/** 常用搜尋 chip（Header.dc.html 的 `searchChips`）；API 取不到 `SearchChip` 時的退路。 */
 export function searchChips(): MegaChild[] {
   return [
     { key: 'antiGlare', href: `${ROUTES.products}/optical-film` },

@@ -14,7 +14,6 @@ import { InquiriesScreen } from '@/screens/InquiriesScreen';
 import { InquiryDetail } from '@/screens/InquiryDetail';
 import { MemberDetail } from '@/screens/MemberDetail';
 import { MembersScreen } from '@/screens/MembersScreen';
-import { NavigationScreen } from '@/screens/NavigationScreen';
 import { OrderedScreen } from '@/screens/OrderedScreen';
 import { RedirectsScreen } from '@/screens/RedirectsScreen';
 import { SampleRequestDetail } from '@/screens/SampleRequestDetail';
@@ -44,11 +43,7 @@ function listElement(resource: ResourceDef) {
     case 'editor':
       return <EditorScreen resource={resource} />;
     case 'ordered':
-      return resource.type === 'navigation' ? (
-        <NavigationScreen resource={resource} />
-      ) : (
-        <OrderedScreen resource={resource} />
-      );
+      return <OrderedScreen resource={resource} />;
     case 'queue':
       return <MembersScreen resource={resource} />;
     case 'board':
