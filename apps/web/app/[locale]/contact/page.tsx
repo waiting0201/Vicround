@@ -5,7 +5,6 @@ import { ContactForm } from '@/components/ContactForm';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { LocationMap } from '@/components/LocationMap';
-import { PageBanner } from '@/components/PageBanner';
 import { PageShell } from '@/components/PageShell';
 import { Container, ImageSlot } from '@/components/sections';
 import { block, getCategories, getPage, requirePage } from '@/lib/content-api';
@@ -20,6 +19,7 @@ import { pageMetadata } from '@/lib/seo';
  * Contact —— 版型逐區塊對照 `mockup/Rounded Design/contact.dc.html`。
  *
  * <p>
+ * 頁首不放 banner，直接從表單開始。
  * 表單送出走同源的 `/api/contact`；收件窗口、據點與「送出之後」三段都是
  * reference block，資料分別來自 `ContactChannels` / `Locations` / `ProcessFlows`。
  * </p>
@@ -71,13 +71,8 @@ export default async function ContactPage({ params }: Params) {
       <JsonLd data={organizationContactSchema(locale, { location: headquarters, channels })} />
 
       <PageShell tone="light">
-        <PageBanner
-          tone="light"
-          eyebrow={page.eyebrow ?? t('nav.contact')}
-          title={page.bannerTitle ?? page.title ?? ''}
-          description={page.bannerDescription ?? undefined}
-          image={page.bannerImageUrl}
-        />
+        {/* 這頁不放 banner，H1 只給搜尋引擎與螢幕閱讀器 */}
+        <h1 className="sr-only">{page.bannerTitle ?? page.title ?? t('nav.contact')}</h1>
 
         {/* ============ 表單 + 直接聯絡 ============ */}
         <section>

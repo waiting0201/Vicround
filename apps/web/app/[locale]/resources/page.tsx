@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cardStyle } from '@/components/blocks';
 import { JsonLd } from '@/components/JsonLd';
-import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { DownloadList, ResourceSection } from '@/components/ResourceSections';
@@ -19,6 +18,7 @@ import { pageMetadata } from '@/lib/seo';
  * Resources hub —— 版型逐區塊對照 `mockup/Rounded Design/resources.dc.html`。
  *
  * <p>
+ * 頁首不放 banner，直接從新聞與展會開始。
  * 五個區段的內容都由頁面的 reference block 帶出來（展會、FAQ、洞察、技術文章、下載），
  * 因此「這一區顯示哪幾筆」是編輯者在後台調的查詢參數，不是寫死在版型裡。
  * </p>
@@ -68,13 +68,8 @@ export default async function ResourcesPage({ params }: Params) {
       <JsonLd data={breadcrumbSchema(locale, crumbs)} />
 
       <PageShell tone="light">
-        <PageBanner
-          tone="light"
-          eyebrow={page.eyebrow ?? t('nav.resources')}
-          title={page.bannerTitle ?? page.title ?? ''}
-          description={page.bannerDescription ?? undefined}
-          image={page.bannerImageUrl}
-        />
+        {/* 這頁不放 banner，H1 只給搜尋引擎與螢幕閱讀器 */}
+        <h1 className="sr-only">{page.bannerTitle ?? page.title ?? t('nav.resources')}</h1>
 
         {/* ============ 新聞與展會 ============ */}
         {news ? (
