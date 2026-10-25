@@ -1020,7 +1020,7 @@ const downloads: ResourceDef = {
       type: 'media',
       scope: 'base',
       required: true,
-      // 存取層級是同一張表單上的欄位，所以上傳時就能決定容器，不必事後搬檔案。
+      // 存取層級是同一張表單上的欄位，儲存時上傳就能決定容器，不必事後搬檔案。
       container: (values) => (values.accessLevel === 'public' ? 'public-media' : 'member-documents'),
       accept: 'application/pdf,image/jpeg,image/png,image/webp',
       hint: '限會員與詢問後提供的檔案會存進私有容器，公開端拿不到真實網址。',

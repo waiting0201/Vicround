@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useRef } from 'react';
 import {
   Badge,
   Button,
@@ -12,11 +12,10 @@ import {
   cx,
 } from '@/ui';
 import { CULTURES } from '@/lib/enums';
-import { uploadMedia } from '@/lib/api';
+import { containerOf, createPendingMedia, isPendingMedia, releasePendingMedia } from '@/lib/pending-media';
 import { useItem, useList } from '@/lib/queries';
 import { resourceOf, type FieldDef } from '@/lib/resources';
 import { formatBytes, isValidSlug, rowTitle, toSlug } from '@/lib/format';
-import { describeError } from '@/lib/errors';
 
 /**
  * 把一條欄位定義（`lib/resources.ts` 的 `FieldDef`）畫成一個輸入控制項。
@@ -167,7 +166,7 @@ function renderControl({ id, field, value, text, onChange, error, readOnly, valu
         <MediaControl
           id={id}
           field={field}
-          value={text}
+          value={value}
           onChange={onChange}
           readOnly={readOnly}
           values={values}
@@ -297,14 +296,18 @@ function SlugControl({
   );
 }
 
-/** 媒體選擇：開一個對話框從媒體庫挑，而不是要編輯者手貼一串 URL。 */
 /**
  * 檔案欄位。
  *
  * <p>
- * **沒有媒體庫可以挑**——檔案就在用到它的欄位上直接上傳，傳完立刻綁在這一格。
+ * **沒有媒體庫可以挑**——檔案就在用到它的欄位上直接選，選完立刻綁在這一格。
  * 編輯者不必先去別的畫面把檔案準備好，也不會在挑一張標章圖時看到一整櫃跟手邊
  * 工作無關的檔案。
+ * </p>
+ *
+ * <p>
+ * **選檔時不上傳**：值先是一個 `PendingMedia`（檔案＋本機預覽），按下儲存才上傳並換成
+ * MediaAsset id（`lib/pending-media.ts`）。選錯、換檔、放棄編輯都不會在 Blob 留下孤兒檔。
  * </p>
  *
  * <p>
@@ -323,44 +326,39 @@ function MediaControl({
 }: {
   id: string;
   field: FieldDef;
-  value: string;
+  value: unknown;
   onChange: (value: unknown) => void;
   readOnly?: boolean;
   values?: Record<string, unknown>;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
+
+  const pending = isPendingMedia(value) ? value : null;
+  const assetId = !pending && typeof value === 'string' && value ? value : undefined;
 
   // 既有值只是一個 id，檔名與縮圖要跟後端要——編輯一筆舊資料時才看得出選的是哪個檔案。
-  const { data: asset, isLoading } = useItem('media', value || undefined);
+  const { data: asset, isLoading } = useItem('media', assetId);
 
-  const container =
-    typeof field.container === 'function' ? field.container(values ?? {}) : (field.container ?? 'public-media');
-  const isPrivate = container === 'member-documents';
+  const isPrivate = containerOf(field.container, values ?? {}) === 'member-documents';
 
-  async function upload(file: File | undefined) {
+  function pick(file: File | undefined) {
     if (!file) return;
-    setUploading(true);
-    setFailed(null);
-    try {
-      const row = await uploadMedia(file, container);
-      onChange(row.id);
-    } catch (error) {
-      // 上傳失敗最常見的是檔案太大與格式不支援，兩種後端都回得出中文原因；
-      // 斷線時 fetch 只丟一句英文的 Failed to fetch，那一句貼在畫面上等於沒說。
-      const notice = describeError(error, '上傳失敗');
-      setFailed(notice.description ? `${notice.title}：${notice.description}` : notice.title);
-    } finally {
-      setUploading(false);
-      // 清掉 input 的值，否則連續選同一個檔案不會觸發 change。
-      if (fileInput.current) fileInput.current.value = '';
-    }
+    releasePendingMedia(value);
+    onChange(createPendingMedia(file, field.container));
+    // 清掉 input 的值，否則連續選同一個檔案不會觸發 change。
+    if (fileInput.current) fileInput.current.value = '';
   }
 
-  const url = typeof asset?.url === 'string' ? asset.url : undefined;
-  const fileName = typeof asset?.fileName === 'string' ? asset.fileName : undefined;
-  const isImage = String(asset?.type ?? '') === 'image';
+  function clear() {
+    releasePendingMedia(value);
+    onChange(null);
+  }
+
+  const hasValue = Boolean(pending || assetId);
+  const url = pending ? pending.previewUrl : typeof asset?.url === 'string' ? asset.url : undefined;
+  const fileName = pending ? pending.file.name : typeof asset?.fileName === 'string' ? asset.fileName : undefined;
+  const isImage = pending ? pending.file.type.startsWith('image/') : String(asset?.type ?? '') === 'image';
+  const size = pending ? pending.file.size : typeof asset?.fileSizeBytes === 'number' ? asset.fileSizeBytes : undefined;
 
   return (
     <div className="flex flex-col gap-2">
@@ -370,12 +368,12 @@ function MediaControl({
         id={id}
         accept={field.accept}
         className="sr-only"
-        disabled={readOnly || uploading}
-        onChange={(event) => void upload(event.target.files?.[0])}
+        disabled={readOnly}
+        onChange={(event) => pick(event.target.files?.[0])}
       />
 
       <div className="flex items-center gap-3">
-        {value && (
+        {hasValue && (
           <span
             className={cx(
               'flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden',
@@ -392,34 +390,32 @@ function MediaControl({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm text-[var(--fg-1)]">
-            {uploading
-              ? '上傳中…'
-              : value
-                ? (fileName ?? (isLoading ? '載入中…' : value))
-                : '尚未上傳檔案'}
+            {hasValue ? (fileName ?? (isLoading ? '載入中…' : assetId)) : '尚未選擇檔案'}
           </p>
-          {value && !uploading && typeof asset?.fileSizeBytes === 'number' && (
-            <p className="text-xs text-[var(--fg-3)]">{formatBytes(asset.fileSizeBytes)}</p>
+          {hasValue && (
+            <p className="text-xs text-[var(--fg-3)]">
+              {typeof size === 'number' && formatBytes(size)}
+              {pending && !pending.uploadedId && (typeof size === 'number' ? '・' : '') + '儲存時上傳'}
+            </p>
           )}
         </div>
 
         <Button
           variant="secondary"
           size="sm"
-          disabled={readOnly || uploading}
+          disabled={readOnly}
           onClick={() => fileInput.current?.click()}
         >
-          {value ? '更換檔案' : '選擇檔案'}
+          {hasValue ? '更換檔案' : '選擇檔案'}
         </Button>
-        {value && !readOnly && !uploading && (
-          <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
+        {hasValue && !readOnly && (
+          <Button variant="ghost" size="sm" onClick={clear}>
             清除
           </Button>
         )}
       </div>
 
-      {failed && <p className="text-xs text-[var(--danger)]">上傳失敗：{failed}</p>}
-      {isPrivate && !failed && (
+      {isPrivate && (
         <p className="text-xs text-[var(--fg-3)]">
           這個檔案會存進私有容器，公開端只能經 SAS 連結取得。
         </p>
@@ -432,9 +428,9 @@ function MediaControl({
  * 多檔案欄位（產品圖庫）。
  *
  * <p>
- * 與 `MediaControl` 同一個原則：直接上傳，不從既有檔案裡挑。可一次選多個檔案，
- * 順序就是上傳的順序，要換順序就移除再傳一次——圖庫通常只有幾張，為它做拖曳排序
- * 不划算。
+ * 與 `MediaControl` 同一個原則：直接選，存檔時才上傳。可一次選多個檔案，
+ * 順序就是選取的順序，要換順序就移除再選一次——圖庫通常只有幾張，為它做拖曳排序
+ * 不划算。值是 MediaAsset id 與 `PendingMedia` 混在一起的陣列。
  * </p>
  */
 function MediaListControl({
@@ -442,7 +438,6 @@ function MediaListControl({
   value,
   onChange,
   readOnly,
-  values,
 }: {
   field: FieldDef;
   value: unknown;
@@ -451,34 +446,19 @@ function MediaListControl({
   values?: Record<string, unknown>;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
 
-  const ids = Array.isArray(value) ? (value as string[]) : [];
-  const container =
-    typeof field.container === 'function' ? field.container(values ?? {}) : (field.container ?? 'public-media');
+  const entries = Array.isArray(value) ? (value as unknown[]) : [];
 
-  async function upload(files: FileList | null) {
+  function pick(files: FileList | null) {
     if (!files?.length) return;
-    setUploading(true);
-    setFailed(null);
-    try {
-      const added: string[] = [];
-      // 逐一上傳而不是並行：後端對每個檔案都要寫一列，並行只是把失敗變得更難解讀。
-      for (const file of Array.from(files)) {
-        const row = await uploadMedia(file, container);
-        added.push(row.id);
-      }
-      onChange([...ids, ...added]);
-    } catch (error) {
-      // 上傳失敗最常見的是檔案太大與格式不支援，兩種後端都回得出中文原因；
-      // 斷線時 fetch 只丟一句英文的 Failed to fetch，那一句貼在畫面上等於沒說。
-      const notice = describeError(error, '上傳失敗');
-      setFailed(notice.description ? `${notice.title}：${notice.description}` : notice.title);
-    } finally {
-      setUploading(false);
-      if (fileInput.current) fileInput.current.value = '';
-    }
+    const added = Array.from(files).map((file) => createPendingMedia(file, field.container));
+    onChange([...entries, ...added]);
+    if (fileInput.current) fileInput.current.value = '';
+  }
+
+  function remove(entry: unknown) {
+    releasePendingMedia(entry);
+    onChange(entries.filter((item) => item !== entry));
   }
 
   return (
@@ -489,18 +469,18 @@ function MediaListControl({
         multiple
         accept={field.accept}
         className="sr-only"
-        disabled={readOnly || uploading}
-        onChange={(event) => void upload(event.target.files)}
+        disabled={readOnly}
+        onChange={(event) => pick(event.target.files)}
       />
 
-      {ids.length > 0 && (
+      {entries.length > 0 && (
         <ul className="flex flex-wrap gap-2">
-          {ids.map((assetId) => (
+          {entries.map((entry, index) => (
             <MediaListItem
-              key={assetId}
-              id={assetId}
+              key={isPendingMedia(entry) ? entry.previewUrl : String(entry) + index}
+              entry={entry}
               readOnly={readOnly}
-              onRemove={() => onChange(ids.filter((item) => item !== assetId))}
+              onRemove={() => remove(entry)}
             />
           ))}
         </ul>
@@ -510,32 +490,40 @@ function MediaListControl({
         <Button
           variant="secondary"
           size="sm"
-          disabled={readOnly || uploading}
+          disabled={readOnly}
           onClick={() => fileInput.current?.click()}
         >
-          {uploading ? '上傳中…' : ids.length ? '再加檔案' : '選擇檔案'}
+          {entries.length ? '再加檔案' : '選擇檔案'}
         </Button>
-        {ids.length > 0 && <span className="text-xs text-[var(--fg-3)]">{ids.length} 個檔案</span>}
+        {entries.length > 0 && (
+          <span className="text-xs text-[var(--fg-3)]">
+            {entries.length} 個檔案
+            {entries.some((entry) => isPendingMedia(entry) && !entry.uploadedId) && '・新選的儲存時上傳'}
+          </span>
+        )}
       </div>
-
-      {failed && <p className="text-xs text-[var(--danger)]">上傳失敗：{failed}</p>}
     </div>
   );
 }
 
-/** 圖庫裡的一張。縮圖要靠 id 去把網址讀回來，所以獨立成一個元件各自查詢。 */
+/**
+ * 圖庫裡的一張。既有的只有 id，縮圖要去把網址讀回來，所以獨立成一個元件各自查詢；
+ * 剛選的（`PendingMedia`）直接用本機預覽，虛線框標示「還沒上傳」。
+ */
 function MediaListItem({
-  id,
+  entry,
   onRemove,
   readOnly,
 }: {
-  id: string;
+  entry: unknown;
   onRemove: () => void;
   readOnly?: boolean;
 }) {
+  const pending = isPendingMedia(entry) ? entry : null;
+  const id = !pending && typeof entry === 'string' ? entry : undefined;
   const { data } = useItem('media', id);
-  const url = typeof data?.url === 'string' ? data.url : undefined;
-  const fileName = typeof data?.fileName === 'string' ? data.fileName : id;
+  const url = pending ? pending.previewUrl : typeof data?.url === 'string' ? data.url : undefined;
+  const fileName = pending ? pending.file.name : typeof data?.fileName === 'string' ? data.fileName : (id ?? '');
 
   return (
     <li className="relative">
@@ -543,8 +531,9 @@ function MediaListItem({
         className={cx(
           'flex h-16 w-16 items-center justify-center overflow-hidden',
           'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
+          pending && !pending.uploadedId && 'border-dashed',
         )}
-        title={fileName}
+        title={pending && !pending.uploadedId ? `${fileName}（儲存時上傳）` : fileName}
       >
         {url ? (
           <img src={url} alt="" className="h-full w-full object-cover" />

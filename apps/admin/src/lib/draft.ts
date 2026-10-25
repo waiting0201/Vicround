@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CULTURES, type Culture } from './enums';
 import { describeError, type ErrorNotice } from './errors';
 import { isValidSlug } from './format';
+import { resolvePendingMedia } from './pending-media';
 import { useSaveItem, useSaveTranslation } from './queries';
 import type { AdminRow } from './api';
 import type { FieldDef, ResourceDef } from './resources';
@@ -158,6 +159,8 @@ export function useEntityDraft(resource: ResourceDef, row?: AdminRow): EntityDra
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<ErrorNotice | null>(null);
   const [dirty, setDirty] = useState(false);
+  /** 存檔前上傳檔案的那一段：mutation 還沒開始，`saving` 要靠它才不會讓人連按兩次儲存。 */
+  const [uploading, setUploading] = useState(false);
   const touchedCultures = useRef(new Set<string>());
   /** 這一輪已經被後端建立起來的 id（新增時存到一半失敗才用得到，見 `save`）。 */
   const createdId = useRef<string | undefined>(undefined);
@@ -252,20 +255,33 @@ export function useEntityDraft(resource: ResourceDef, row?: AdminRow): EntityDra
     try {
       // 新增時若「基底列存好了、翻譯列失敗」，這一筆其實已經在資料庫裡了。記住後端配的 id，
       // 再按一次儲存才會是 PUT 同一筆，而不是 POST 出第二筆（然後撞 slug 唯一鍵）。
+      // 檔案欄位選檔時不上傳（lib/pending-media.ts）：送出前才逐一上傳、換成 MediaAsset id。
+      // 換好的值寫回草稿，存到一半失敗再按一次儲存時，畫面與送出的都是 id，不會重傳。
+      setUploading(true);
+      const resolvedBase = await resolvePendingMedia(base);
+      const resolvedTranslations: Record<string, Record<string, unknown>> = {};
+      for (const culture of touchedCultures.current) {
+        resolvedTranslations[culture] = await resolvePendingMedia(translations[culture] ?? {});
+      }
+      setUploading(false);
+      setBaseState(resolvedBase);
+      setTranslations((current) => ({ ...current, ...resolvedTranslations }));
+
       const knownId = row?.id ?? createdId.current;
-      const saved = await saveItem.mutateAsync({ id: knownId, data: base });
+      const saved = await saveItem.mutateAsync({ id: knownId, data: resolvedBase });
       const id = saved?.id ?? knownId;
       if (!id) throw new Error('後端沒有回傳這筆資料的 id。');
       if (!row?.id) createdId.current = id;
 
       for (const culture of touchedCultures.current) {
-        await saveTranslation.mutateAsync({ id, culture, data: translations[culture] ?? {} });
+        await saveTranslation.mutateAsync({ id, culture, data: resolvedTranslations[culture] ?? {} });
       }
 
       touchedCultures.current = new Set();
       setDirty(false);
       return { ok: true, id };
     } catch (error) {
+      setUploading(false);
       const notice = describeError(error, '儲存失敗');
       setSubmitError(notice);
       return { ok: false, notice };
@@ -279,7 +295,7 @@ export function useEntityDraft(resource: ResourceDef, row?: AdminRow): EntityDra
       errors,
       submitError,
       dirty,
-      saving: saveItem.isPending || saveTranslation.isPending,
+      saving: uploading || saveItem.isPending || saveTranslation.isPending,
       setBase,
       setTranslation,
       clearErrors,
@@ -292,6 +308,7 @@ export function useEntityDraft(resource: ResourceDef, row?: AdminRow): EntityDra
       errors,
       submitError,
       dirty,
+      uploading,
       saveItem.isPending,
       saveTranslation.isPending,
       setBase,
