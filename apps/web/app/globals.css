@@ -223,6 +223,14 @@ body {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.4);
 }
+.vr-icon-btn[data-tone='light'] {
+  border-color: rgba(20, 20, 31, 0.16);
+  color: rgba(20, 20, 31, 0.62);
+}
+.vr-icon-btn[data-tone='light']:hover {
+  color: #14141f;
+  border-color: rgba(20, 20, 31, 0.4);
+}
 
 /* Header.dc.html — menuChildren.style + style-hover */
 .vr-mega-link {

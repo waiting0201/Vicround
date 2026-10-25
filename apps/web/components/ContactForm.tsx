@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { TURNSTILE_FIELD, Turnstile } from './Turnstile';
 
 /**
  * 詢問表單 —— 逐項對照 `mockup/Rounded Design/contact.dc.html`。
@@ -67,6 +68,8 @@ export function ContactForm({
   const [reference, setReference] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [sending, setSending] = useState(false);
+  // 每次送出失敗就遞增，讓 Turnstile 換一個新 token（token 只能用一次）
+  const [attempt, setAttempt] = useState(0);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -91,6 +94,7 @@ export function ContactForm({
           consent: form.get('consent') === 'on',
           // 蜜罐：真人看不到這個欄位，有值就是機器人（後端會擋下）
           website: form.get('website') || undefined,
+          antiBotToken: form.get(TURNSTILE_FIELD) || undefined,
         }),
       });
 
@@ -100,9 +104,11 @@ export function ContactForm({
         setReference(body.data.referenceNumber);
       } else {
         setFailed(true);
+        setAttempt((n) => n + 1);
       }
     } catch {
       setFailed(true);
+      setAttempt((n) => n + 1);
     } finally {
       setSending(false);
     }
@@ -246,6 +252,8 @@ export function ContactForm({
           {labels.consentAfter}
         </span>
       </label>
+
+      <Turnstile locale={culture} resetKey={attempt} />
 
       {failed ? (
         <p

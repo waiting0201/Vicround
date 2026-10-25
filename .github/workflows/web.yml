@@ -80,6 +80,9 @@ jobs:
       #
       # `NEXT_PUBLIC_MEMBERS_ENABLED` 沒設就是關閉 —— 前台會員區整段藏起來
       # 要重新開放就把 repo 變數設成 true 再重跑這條 workflow，不必動程式。
+      #
+      # `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 沒設就不顯示詢問表單的 Turnstile 驗證元件。
+      # 必須與 Functions 的 `AntiBot:TurnstileSecret` 一起設（見 apps/web/lib/features.ts）。
       - name: Build web
         run: pnpm --filter web build
         env:
@@ -87,6 +90,7 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
           NEXT_PUBLIC_MEDIA_BASE: ${{ vars.MEDIA_BASE }}
           NEXT_PUBLIC_MEMBERS_ENABLED: ${{ vars.MEMBERS_ENABLED }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
 
       # postbuild 已經跑過 250MB 閘（apps/web/scripts/check-size.mjs），
       # 這裡只把數字留在 log 裡，方便日後回頭看是哪一次開始變大的。

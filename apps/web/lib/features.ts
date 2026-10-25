@@ -32,3 +32,14 @@
  * </p>
  */
 export const MEMBERS_ENABLED = process.env.NEXT_PUBLIC_MEMBERS_ENABLED === 'true';
+
+/**
+ * Cloudflare Turnstile 的 site key（公開值，不是機密）。
+ *
+ * <p>
+ * 沒設就不渲染驗證元件（`components/Turnstile.tsx`）。要與 Functions 的
+ * `AntiBot:TurnstileSecret` <b>一起</b>設定：只設 secret 不設 site key，前台送不出 token，
+ * 所有詢問都會被擋下；只設 site key 不設 secret，則後端照樣放行（驗證等於沒開）。
+ * </p>
+ */
+export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';

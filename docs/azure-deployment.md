@@ -160,12 +160,28 @@ Communication Services 的 SDK，是因為 ACS Email 本身就提供 SMTP relay�
 
 ## 前台的 build-time 變數（GitHub repo variables）
 
-`web.yml` 會把兩個 repo variable **內嵌進建置產物**，所以改了變數必須重跑 workflow 才生效。
+`web.yml` 會把下列 repo variable **內嵌進建置產物**，所以改了變數必須重跑 workflow 才生效。
 
 | Variable | 用途 | 沒設定時的行為 |
 | --- | --- | --- |
 | `SITE_URL` | canonical、`hreflang`、`sitemap.xml`、`llms.txt` 的絕對網址 | 退回 SWA 預設網域，且 `app/robots.ts` 判定為非正式站 → 整站 `Disallow: /` |
 | `MEDIA_BASE` | 版位素材（banner、產品照）的根位址 | 空字串 → 圖片輸出相對路徑 `/assets/...` |
+| `MEMBERS_ENABLED` | 前台會員區的總開關（`lib/features.ts`） | 關閉：入口不渲染、會員網址一律 404 |
+| `TURNSTILE_SITE_KEY` | 詢問表單（`/contact` 與聯絡 dialog）的 Cloudflare Turnstile site key | 不顯示驗證元件 |
+
+⚠️ **`TURNSTILE_SITE_KEY` 要與 Function App 的 `AntiBot:TurnstileSecret` 成對設定。**
+只設 secret：前台送不出 token，**所有詢問都會被擋下**；只設 site key：後端照樣放行，
+驗證等於沒開。上線順序是先設 site key 並重跑 web workflow，確認表單出現驗證元件，再設 secret：
+
+```bash
+gh variable set TURNSTILE_SITE_KEY --body "<site key>"
+gh workflow run web.yml --ref master
+az functionapp config appsettings set -g VicRoundUS -n func-vicround-prod \
+  --settings "AntiBot__TurnstileSecret=<secret key>"
+```
+
+Turnstile 小工具的「網域」要列入實際對外的網域（`vicround.4webdemo.com`，正式上線再加
+`www.vicround.com`）；不在清單上的網域會顯示錯誤、拿不到 token。
 
 ⚠️ **`MEDIA_BASE` 是三處綁在一起的開關**，只改一邊就是整站版位圖 404：
 

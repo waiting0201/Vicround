@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from './Icon';
+import { TURNSTILE_FIELD, Turnstile } from './Turnstile';
 import { LOCALES, LOCALE_SHORT_LABELS, switchLocalePath, type Locale } from '@/lib/locale';
 
 /**
@@ -391,15 +392,15 @@ const LABEL: React.CSSProperties = {
   flexDirection: 'column',
   gap: 6,
   font: "500 13px/1.2 Geologica, 'GenYoGothic TW', sans-serif",
-  color: 'rgba(255,255,255,0.66)',
+  color: 'rgba(20,20,31,0.62)',
 };
 
 const FIELD: React.CSSProperties = {
   height: 44,
   padding: '0 14px',
-  background: '#0d0d18',
-  border: '1px solid rgba(255,255,255,0.14)',
-  color: '#ffffff',
+  background: '#f5f4fb',
+  border: '1px solid rgba(20,20,31,0.12)',
+  color: '#14141f',
   font: '400 15px/1.4 Geologica, sans-serif',
   outlineColor: '#6436ef',
   borderRadius: 12,
@@ -413,12 +414,18 @@ const FIELD: React.CSSProperties = {
  * `POST /v1/contact`。兩邊送的欄位也一致（產品線送 slug、帶 `sourceUrl` 與 `culture`、
  * 附蜜罐欄位），因此後端看到的是同一種詢問單，只是入口不同。
  * </p>
+ *
+ * <p>
+ * 面板是白底（淺色語彙同 `.vr-page[data-tone='light']`），遮罩維持深色。
+ * </p>
  */
 function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => void }) {
   const d = model.dialog;
   const [reference, setReference] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [sending, setSending] = useState(false);
+  // 每次送出失敗就遞增，讓 Turnstile 換一個新 token（token 只能用一次）
+  const [attempt, setAttempt] = useState(0);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -443,6 +450,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
           consent: form.get('consent') === 'on',
           // 蜜罐：真人看不到這個欄位，有值就是機器人（後端會擋下）
           website: form.get('website') || undefined,
+          antiBotToken: form.get(TURNSTILE_FIELD) || undefined,
         }),
       });
 
@@ -452,9 +460,11 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
         setReference(body.data.referenceNumber);
       } else {
         setFailed(true);
+        setAttempt((n) => n + 1);
       }
     } catch {
       setFailed(true);
+      setAttempt((n) => n + 1);
     } finally {
       setSending(false);
     }
@@ -485,20 +495,20 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
           maxWidth: 600,
           maxHeight: '90vh',
           overflow: 'auto',
-          background: '#14141f',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: '#ffffff',
+          border: '1px solid rgba(20,20,31,0.12)',
           padding: 32,
           borderRadius: 22,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <p style={{ ...EYEBROW, margin: 0 }}>{d.eyebrow}</p>
+            <p style={{ ...EYEBROW, margin: 0, color: '#6436ef' }}>{d.eyebrow}</p>
             <h3
               style={{
                 margin: '10px 0 0',
                 font: "400 1.75rem/1.15 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: '#ffffff',
+                color: '#14141f',
               }}
             >
               {d.title}
@@ -509,6 +519,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
             aria-label={d.close}
             onClick={onClose}
             className="vr-icon-btn"
+            data-tone="light"
             style={{ fontSize: 16 }}
           >
             ✕
@@ -521,15 +532,15 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
               marginTop: 28,
               padding: '32px 24px',
               textAlign: 'center',
-              border: '1px solid rgba(161,132,245,0.35)',
-              background: 'rgba(100,54,239,0.1)',
+              border: '1px solid rgba(100,54,239,0.25)',
+              background: 'rgba(100,54,239,0.06)',
             }}
           >
             <p
               style={{
                 margin: 0,
                 font: "500 1.125rem/1.5 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: '#ffffff',
+                color: '#14141f',
               }}
             >
               {d.sentTitle}
@@ -538,7 +549,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
               style={{
                 margin: '8px 0 0',
                 font: "400 0.9375rem/1.5 'Geologica', sans-serif",
-                color: 'rgba(255,255,255,0.6)',
+                color: 'rgba(20,20,31,0.62)',
               }}
             >
               {d.sentBody}
@@ -549,7 +560,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
                 font: "500 12px/1.2 'Geologica', sans-serif",
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.5)',
+                color: 'rgba(20,20,31,0.45)',
               }}
             >
               {d.reference}
@@ -558,7 +569,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
               style={{
                 margin: '6px 0 0',
                 font: "600 1.25rem/1.2 'IBM Plex Mono', monospace",
-                color: '#a184f5',
+                color: '#6436ef',
               }}
             >
               {reference}
@@ -622,7 +633,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
                 alignItems: 'flex-start',
                 gap: 10,
                 font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                color: 'rgba(255,255,255,0.6)',
+                color: 'rgba(20,20,31,0.62)',
               }}
             >
               <input
@@ -633,12 +644,14 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
               />
               <span>
                 {d.consent}{' '}
-                <Link href={model.privacyHref} style={{ color: '#a184f5', fontWeight: 600 }}>
+                <Link href={model.privacyHref} style={{ color: '#6436ef', fontWeight: 600 }}>
                   {d.consentLink}
                 </Link>
                 {d.consentSuffix}
               </span>
             </label>
+
+            <Turnstile locale={model.locale} resetKey={attempt} />
 
             {failed && (
               <p
@@ -646,7 +659,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
                 style={{
                   margin: '16px 0 0',
                   font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                  color: '#ff9a9a',
+                  color: '#d92d20',
                 }}
               >
                 {d.failed}
