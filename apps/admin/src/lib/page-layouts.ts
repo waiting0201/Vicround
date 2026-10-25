@@ -87,15 +87,6 @@ const BANNER: Partial<Record<PageTextField, FieldCopy>> = {
 
 const BANNER_IMAGE: FieldCopy = { label: '橫幅背景圖', hint: '頁面最上方橫幅的照片。留空時前台不顯示這條圖帶，只留標題與說明。' };
 
-/** 不顯示橫幅的頁面（Resources、Contact）：大標與說明只剩 SEO 用途，沒有眉標與背景圖。 */
-const HIDDEN_BANNER: Partial<Record<PageTextField, FieldCopy>> = {
-  bannerTitle: {
-    label: '頁面大標',
-    hint: '這頁不顯示橫幅，大標只給搜尋引擎與螢幕閱讀器讀；沒填「搜尋結果標題」時也是瀏覽器分頁標題。',
-  },
-  bannerDescription: { label: '頁面說明', hint: '前台不顯示。沒填「搜尋結果說明」時，Google 搜尋結果會用這段。' },
-};
-
 const PAGE_CTA: Partial<Record<PageTextField, FieldCopy>> = {
   ctaEyebrow: { label: '頁尾行動呼籲：眉標', hint: '頁面最底部「聯絡我們」區塊標題上方的小字。' },
   ctaHeadline: { label: '頁尾行動呼籲：標題', hint: '留空的話，整個頁尾行動呼籲區塊都不會顯示。' },
@@ -215,7 +206,7 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
   }),
 
   contact: {
-    fields: { title: PAGE_TITLE, ...HIDDEN_BANNER },
+    fields: { title: PAGE_TITLE, ...BANNER },
     blocks: {
       channels: {
         name: '聯絡管道（表單右側）',
@@ -310,11 +301,7 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
   }),
 
   resources: {
-    fields: {
-      title: PAGE_TITLE,
-      ...HIDDEN_BANNER,
-      ...PAGE_CTA,
-    },
+    fields: { title: PAGE_TITLE, ...BANNER, ...PAGE_CTA },
     blocks: {
       news: {
         name: '最新消息與展會',
