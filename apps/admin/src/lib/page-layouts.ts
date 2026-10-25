@@ -207,6 +207,7 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
 
   contact: {
     fields: { title: PAGE_TITLE, ...BANNER },
+    heroImage: BANNER_IMAGE,
     blocks: {
       channels: {
         name: '聯絡管道（表單右側）',
@@ -300,31 +301,28 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
     lines: { name: '產品線卡片', note: '卡片內容來自「產品線」。', fields: {} },
   }),
 
-  resources: {
-    fields: { title: PAGE_TITLE, ...BANNER, ...PAGE_CTA },
-    blocks: {
-      news: {
-        name: '最新消息與展會',
-        fields: { ...EYEBROW_TITLE, ctaLabel: { label: '「看全部」連結文字', hint: '標題右側的連結，連到最新消息頁。' } },
-      },
-      faq: {
-        name: '常見問題',
-        note: '題目來自「FAQ 題目」。',
-        fields: { ...EYEBROW_TITLE, ctaLabel: { label: '「看全部」連結文字', hint: '連到常見問題頁。' } },
-      },
-      insights: {
-        name: '產業洞察',
-        note: '文章來自「文章」。',
-        fields: { ...EYEBROW_TITLE, ctaLabel: { label: '卡片連結文字', hint: '每張文章卡片底部的連結文字。' } },
-      },
-      articles: {
-        name: '技術文章',
-        note: '文章來自「文章」。',
-        fields: { ...EYEBROW_TITLE, ctaLabel: { label: '卡片連結文字', hint: '每張文章卡片底部的連結文字。' } },
-      },
-      downloads: { name: '文件下載', note: '文件來自「下載中心」。', fields: EYEBROW_TITLE },
+  resources: standard({
+    news: {
+      name: '最新消息與展會',
+      fields: { ...EYEBROW_TITLE, ctaLabel: { label: '「看全部」連結文字', hint: '標題右側的連結，連到最新消息頁。' } },
     },
-  },
+    faq: {
+      name: '常見問題',
+      note: '題目來自「FAQ 題目」。',
+      fields: { ...EYEBROW_TITLE, ctaLabel: { label: '「看全部」連結文字', hint: '連到常見問題頁。' } },
+    },
+    insights: {
+      name: '產業洞察',
+      note: '文章來自「文章」。',
+      fields: { ...EYEBROW_TITLE, ctaLabel: { label: '卡片連結文字', hint: '每張文章卡片底部的連結文字。' } },
+    },
+    articles: {
+      name: '技術文章',
+      note: '文章來自「文章」。',
+      fields: { ...EYEBROW_TITLE, ctaLabel: { label: '卡片連結文字', hint: '每張文章卡片底部的連結文字。' } },
+    },
+    downloads: { name: '文件下載', note: '文件來自「下載中心」。', fields: EYEBROW_TITLE },
+  }),
 
   solutions: standard({
     cards: { name: '產業卡片', note: '卡片內容來自「解決方案」。', fields: {} },

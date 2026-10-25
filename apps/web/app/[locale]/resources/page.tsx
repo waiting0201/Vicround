@@ -19,7 +19,6 @@ import { pageMetadata } from '@/lib/seo';
  * Resources hub —— 版型逐區塊對照 `mockup/Rounded Design/resources.dc.html`。
  *
  * <p>
- * 頁首不放 banner 圖（後台也沒有這個欄位），只留眉標、標題與導言。
  * 五個區段的內容都由頁面的 reference block 帶出來（展會、FAQ、洞察、技術文章、下載），
  * 因此「這一區顯示哪幾筆」是編輯者在後台調的查詢參數，不是寫死在版型裡。
  * </p>
@@ -69,12 +68,12 @@ export default async function ResourcesPage({ params }: Params) {
       <JsonLd data={breadcrumbSchema(locale, crumbs)} />
 
       <PageShell tone="light">
-        {/* 這頁不放 banner 圖，只留眉標／H1／導言 */}
         <PageBanner
           tone="light"
           eyebrow={page.eyebrow ?? t('nav.resources')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
+          image={page.bannerImageUrl}
         />
 
         {/* ============ 新聞與展會 ============ */}

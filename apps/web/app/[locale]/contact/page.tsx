@@ -20,7 +20,6 @@ import { pageMetadata } from '@/lib/seo';
  * Contact —— 版型逐區塊對照 `mockup/Rounded Design/contact.dc.html`。
  *
  * <p>
- * 頁首不放 banner 圖（後台也沒有這個欄位），只留眉標、標題與導言。
  * 表單送出走同源的 `/api/contact`；收件窗口、據點與「送出之後」三段都是
  * reference block，資料分別來自 `ContactChannels` / `Locations` / `ProcessFlows`。
  * </p>
@@ -72,12 +71,12 @@ export default async function ContactPage({ params }: Params) {
       <JsonLd data={organizationContactSchema(locale, { location: headquarters, channels })} />
 
       <PageShell tone="light">
-        {/* 這頁不放 banner 圖，只留眉標／H1／導言 */}
         <PageBanner
           tone="light"
           eyebrow={page.eyebrow ?? t('nav.contact')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
+          image={page.bannerImageUrl}
         />
 
         {/* ============ 表單 + 直接聯絡 ============ */}
