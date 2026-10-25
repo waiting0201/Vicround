@@ -21,7 +21,6 @@ import { getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -231,7 +230,7 @@ export default async function AboutPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.about')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         {page.blocks.map((block, index) => (

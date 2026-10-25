@@ -2,9 +2,10 @@
  * 內頁頁首 —— 逐項對照 `mockup/Rounded Design/PageBanner.dc.html`。
  *
  * <p>
- * `image` 有值就鋪滿實圖，沒有就用 mockup 的預設漸層（`linear-gradient(150deg, #3a17a8…)`）。
+ * `image` 有值就鋪滿實圖；**後台沒傳圖就整條圖帶不渲染**，只留眉標／標題／導言——
+ * 不拿設計素材或漸層頂替，前台看到什麼就是後台給了什麼。H1 永遠保留（SEO 與無障礙）。
  * **不顯示尺寸提示標籤**——那是設計稿給設計師看的標記，印在客戶的正式頁面上會被當成
- * bug。banner 圖由 CMS 的 `MediaAssets` 或 `lib/page-assets.ts` 的設計素材供應。
+ * bug。banner 圖只來自 CMS 的 `MediaAssets`。
  * </p>
  */
 export function PageBanner({
@@ -31,16 +32,14 @@ export function PageBanner({
     alignItems: 'flex-end',
     padding: '24px 28px',
     overflow: 'hidden',
-    ...(image
-      ? { background: `#0a0a12 url('${image}') center center / cover no-repeat` }
-      : { background: 'linear-gradient(150deg, #3a17a8 0%, #1a0755 55%, #0d0d18 100%)' }),
+    background: `#0a0a12 url('${image}') center center / cover no-repeat`,
   };
 
   return (
     <section
       style={{ fontFamily: "'Geologica', 'GenYoGothic TW', 'Noto Sans TC', system-ui, sans-serif" }}
     >
-      <div style={bannerStyle} role={image ? 'img' : undefined} aria-label={image ? title : undefined} />
+      {image && <div style={bannerStyle} role="img" aria-label={title} />}
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 clamp(24px, 5vw, 80px)' }}>
         <div style={{ padding: 'clamp(32px, 4vw, 48px) 0 clamp(8px, 1vw, 16px)' }}>

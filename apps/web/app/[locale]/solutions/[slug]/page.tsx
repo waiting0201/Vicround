@@ -25,7 +25,6 @@ import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -168,7 +167,7 @@ export default async function SolutionPage({ params }: Params) {
           eyebrow={banner?.eyebrow ?? t('nav.solutions')}
           title={banner?.title ?? solution.name ?? ''}
           description={banner?.subtitle ?? solution.summary ?? undefined}
-          image={bannerImage(solution.bannerImageUrl)}
+          image={solution.bannerImageUrl}
         />
 
         {/* ============ 課題 ============ */}

@@ -14,7 +14,6 @@ import { PageShell } from '@/components/PageShell';
 import { getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -64,7 +63,7 @@ export default async function SustainabilityPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.sustainability')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         {page.blocks.map((block, index) => (

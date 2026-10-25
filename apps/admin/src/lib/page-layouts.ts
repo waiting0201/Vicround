@@ -85,7 +85,7 @@ const BANNER: Partial<Record<PageTextField, FieldCopy>> = {
   },
 };
 
-const BANNER_IMAGE: FieldCopy = { label: '橫幅背景圖', hint: '頁面最上方橫幅的照片。留空會使用設計稿的預設圖片。' };
+const BANNER_IMAGE: FieldCopy = { label: '橫幅背景圖', hint: '頁面最上方橫幅的照片。留空時前台不顯示這條圖帶，只留標題與說明。' };
 
 const PAGE_CTA: Partial<Record<PageTextField, FieldCopy>> = {
   ctaEyebrow: { label: '頁尾行動呼籲：眉標', hint: '頁面最底部「聯絡我們」區塊標題上方的小字。' },
@@ -150,10 +150,11 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
     fields: {
       title: { label: '頁面名稱', hint: '只用在後台清單。首頁的瀏覽器分頁標題取自下方「首頁主視覺」的大標。' },
     },
+    heroImage: { label: '主視覺背景圖', hint: '首頁最上方的大幅照片。留空時前台不顯示這張圖，只留下方的大標與說明。' },
     blocks: {
       hero: {
         name: '首頁主視覺',
-        note: '背景圖是設計稿固定的影像。',
+        note: '背景圖在上方「主視覺背景圖」設定。',
         fields: {
           eyebrow: { label: '眉標', hint: '大標上方的小字。' },
           title: { label: '大標', hint: '同時是首頁的瀏覽器分頁標題（沒另外填「搜尋結果標題」時）。' },

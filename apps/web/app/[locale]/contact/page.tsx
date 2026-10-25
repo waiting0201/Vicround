@@ -12,7 +12,6 @@ import { block, getCategories, getPage, requirePage } from '@/lib/content-api';
 import { getMessages, translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema, organizationContactSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -77,7 +76,7 @@ export default async function ContactPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.contact')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         {/* ============ 表單 + 直接聯絡 ============ */}

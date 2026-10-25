@@ -9,7 +9,7 @@ import { getCategories, getPage, getProducts, requirePage } from '@/lib/content-
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { CATEGORY_ACCENT, bannerImage, categoryImage } from '@/lib/page-assets';
+import { CATEGORY_ACCENT, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -57,7 +57,7 @@ export default async function ProductsPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.products')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         {/* ============ 三張分類卡 ============ */}

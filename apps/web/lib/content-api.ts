@@ -59,7 +59,7 @@ export type CategoryDetail = {
   type: CategoryType;
   accentColorHex: string | null;
   iconName: string | null;
-  /** CMS 指定的 banner 圖；沒指定時前台用 `lib/page-assets` 的設計素材。 */
+  /** CMS 指定的 banner 圖；沒指定時前台不顯示圖帶（見 `components/PageBanner.tsx`）。 */
   bannerImageUrl: string | null;
   name: string | null;
   summary: string | null;
@@ -131,7 +131,7 @@ export type SolutionDetail = {
   slug: string;
   iconName: string | null;
   isNew: boolean;
-  /** CMS 指定的 banner 圖；沒指定時前台用 `lib/page-assets` 的設計素材。 */
+  /** CMS 指定的 banner 圖；沒指定時前台不顯示圖帶（見 `components/PageBanner.tsx`）。 */
   bannerImageUrl: string | null;
   name: string | null;
   summary: string | null;
@@ -209,7 +209,7 @@ export type PageDetail = {
   template: string;
   /** 資訊架構上的父頁；**不是網址的一部分**（見 `path`）。 */
   parentSlug: string | null;
-  /** CMS 指定的 banner 圖；沒指定時前台用 `lib/page-assets` 的設計素材。 */
+  /** CMS 指定的 banner 圖；沒指定時前台不顯示圖帶（見 `components/PageBanner.tsx`）。 */
   bannerImageUrl: string | null;
   title: string | null;
   eyebrow: string | null;

@@ -14,7 +14,7 @@ import { localizeHtml } from '@/lib/html';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { CATEGORY_ACCENT, bannerImage, categoryImage } from '@/lib/page-assets';
+import { CATEGORY_ACCENT, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -77,7 +77,7 @@ export default async function ProductLinePage({ params }: Params) {
           eyebrow={banner?.eyebrow ?? t('nav.products')}
           title={banner?.title ?? category.name ?? ''}
           description={banner?.subtitle ?? category.summary ?? undefined}
-          image={bannerImage(category.bannerImageUrl, slug)}
+          image={category.bannerImageUrl}
         />
 
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px clamp(24px, 5vw, 80px) 0' }}>

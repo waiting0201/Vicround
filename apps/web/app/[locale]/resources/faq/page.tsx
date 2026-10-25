@@ -8,7 +8,6 @@ import { getFaq, getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema, faqPageSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -72,7 +71,7 @@ export default async function FaqPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.faq')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         <section id="faq" style={{ scrollMarginTop: 90 }}>

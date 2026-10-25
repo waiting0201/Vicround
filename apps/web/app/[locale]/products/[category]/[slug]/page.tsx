@@ -11,11 +11,11 @@ import { PageShell } from '@/components/PageShell';
 import { DownloadList } from '@/components/ResourceSections';
 import { Container, ImageSlot } from '@/components/sections';
 import { apiGet, tag } from '@/lib/api';
-import type { Certification, Download, SpecificationRow } from '@/lib/content-api';
+import { getCategory, type Certification, type Download, type SpecificationRow } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale, type Locale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { CATEGORY_TEXT_ACCENT, bannerImage, categoryImage } from '@/lib/page-assets';
+import { CATEGORY_TEXT_ACCENT, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema, productSchema, type ProductSchemaInput } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -196,6 +196,8 @@ export default async function ProductPage({ params }: Params) {
   const accent = CATEGORY_TEXT_ACCENT[categorySlug] ?? '#6436ef';
   const categoryPath = `${ROUTES.products}/${category}`;
   const path = `${categoryPath}/${slug}`;
+  // banner 沿用所屬產品線在後台設的圖；產品線沒傳圖，這裡也不顯示圖帶。
+  const bannerImageUrl = (await getCategory(locale, categorySlug))?.bannerImageUrl ?? null;
   const productHref = (ref: ProductRef) => localeHref(locale, `${ROUTES.products}/${ref.categorySlug}/${ref.slug}`);
 
   const crumbs = [
@@ -263,7 +265,7 @@ export default async function ProductPage({ params }: Params) {
           eyebrow={`${t('nav.products')} · ${categoryName}`}
           title={name}
           description={data.summary ?? undefined}
-          image={bannerImage(null, categorySlug)}
+          image={bannerImageUrl}
         />
 
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '8px clamp(24px, 5vw, 80px) 0' }}>

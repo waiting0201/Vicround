@@ -20,7 +20,7 @@ import { formatDateRange } from '@/lib/format';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { CATEGORY_ACCENT, HERO_IMAGE, categoryImage } from '@/lib/page-assets';
+import { CATEGORY_ACCENT, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { organizationSchema, webSiteSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -80,29 +80,32 @@ export default async function HomePage({ params }: Params) {
       <PageShell tone="dark">
         {/* ============ Hero ============ */}
         <section id="top" style={{ position: 'relative' }}>
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '8 / 3', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: '#000000' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}
-              <img
-                src={HERO_IMAGE}
-                alt={hero?.title ?? ''}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          {/* 主視覺圖取自後台「橫幅背景圖」；沒傳圖就不顯示圖帶，只留下方文字。 */}
+          {page.bannerImageUrl && (
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '8 / 3', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, background: '#000000' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}
+                <img
+                  src={page.bannerImageUrl}
+                  alt={hero?.title ?? ''}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </div>
+              {/* 品牌 V mark 以 5% 透明度平鋪成紋理（mockup 的 heroPattern） */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: "url('/brand/vicround-mark-white.png')",
+                  backgroundSize: '150px',
+                  backgroundRepeat: 'repeat',
+                  opacity: 0.05,
+                  pointerEvents: 'none',
+                }}
               />
             </div>
-            {/* 品牌 V mark 以 5% 透明度平鋪成紋理（mockup 的 heroPattern） */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: "url('/brand/vicround-mark-white.png')",
-                backgroundSize: '150px',
-                backgroundRepeat: 'repeat',
-                opacity: 0.05,
-                pointerEvents: 'none',
-              }}
-            />
-          </div>
+          )}
 
           <Container style={{ padding: 'clamp(48px, 6vw, 80px) clamp(24px, 5vw, 80px) clamp(16px, 2vw, 32px)' }}>
             <p style={{ ...eyebrowStyle, margin: '0 0 20px', color: '#c3aefc' }}>{hero?.eyebrow}</p>

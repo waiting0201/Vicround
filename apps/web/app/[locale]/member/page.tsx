@@ -10,7 +10,6 @@ import { Container } from '@/components/sections';
 import { block, getPage, requirePage } from '@/lib/content-api';
 import { getMessages, translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
-import { bannerImage } from '@/lib/page-assets';
 import { localeHref } from '@/lib/nav';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
@@ -57,7 +56,7 @@ export default async function MemberPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.member')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         <section>

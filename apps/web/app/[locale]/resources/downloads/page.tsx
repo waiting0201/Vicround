@@ -7,7 +7,6 @@ import { DownloadList, ResourceSection } from '@/components/ResourceSections';
 import { block, getDownloads, getPage, requirePage } from '@/lib/content-api';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -64,7 +63,7 @@ export default async function DownloadsPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.resources')}
           title={section?.title ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         <ResourceSection

@@ -10,7 +10,6 @@ import { formatDate, formatDateRange, isoDate } from '@/lib/format';
 import { translator } from '@/lib/i18n';
 import { requireLocale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { bannerImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema, eventSchema } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -88,7 +87,7 @@ export default async function NewsPage({ params }: Params) {
           eyebrow={page.eyebrow ?? t('nav.news')}
           title={page.bannerTitle ?? page.title ?? ''}
           description={page.bannerDescription ?? undefined}
-          image={bannerImage(page.bannerImageUrl)}
+          image={page.bannerImageUrl}
         />
 
         {/* ============ 最新消息 ============ */}

@@ -401,7 +401,7 @@ const categories: ResourceDef = {
       type: 'media',
       scope: 'base',
       accept: IMAGE_ACCEPT,
-      hint: '這條產品線頁面最上方的大幅橫幅照片。留空會使用設計稿的預設圖片。',
+      hint: '這條產品線頁面（與底下各產品頁）最上方的大幅橫幅照片。留空時前台不顯示這條圖帶。',
     },
     SORT_FIELD,
   ],
@@ -577,7 +577,7 @@ const solutions: ResourceDef = {
       type: 'media',
       scope: 'base',
       accept: IMAGE_ACCEPT,
-      hint: '這個產業頁面最上方的大幅橫幅照片。留空會使用設計稿的預設圖片。',
+      hint: '這個產業頁面最上方的大幅橫幅照片。留空時前台不顯示這條圖帶。',
     },
     {
       name: 'categoryIds',
