@@ -208,7 +208,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
                 setMenu(null);
               }}
             >
-              <Icon name={search ? 'x' : 'search'} size={18} />
+              <Icon name={search ? 'x' : 'search'} size={22} />
             </button>
 
             {model.memberHref && (

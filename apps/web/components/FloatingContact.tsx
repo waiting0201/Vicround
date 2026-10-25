@@ -31,7 +31,7 @@ export function FloatingContact({ locale }: { locale: Locale }) {
       }}
     >
       <Link href={localeHref(locale, ROUTES.contact)} className="vr-float">
-        <Icon name="mail" size={18} />
+        <Icon name="mail" size={22} />
         <span style={{ font: "600 14px/1 'Geologica', 'GenYoGothic TW', sans-serif" }}>
           {t('nav.contact')}
         </span>

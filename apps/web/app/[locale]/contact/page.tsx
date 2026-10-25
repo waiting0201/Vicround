@@ -140,7 +140,7 @@ export default async function ContactPage({ params }: Params) {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon name="mail" size={18} />
+                    <Icon name="mail" size={22} />
                   </span>
                   <div>
                     <span

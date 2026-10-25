@@ -309,7 +309,7 @@ export default async function ProductLinePage({ params }: Params) {
                         justifyContent: 'center',
                       }}
                     >
-                      <Icon name={step.iconName} size={18} />
+                      <Icon name={step.iconName} size={22} />
                     </span>
                   ) : null}
                   <span

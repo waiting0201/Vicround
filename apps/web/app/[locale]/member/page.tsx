@@ -131,7 +131,7 @@ export default async function MemberPage({ params }: Params) {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon name={item.iconName ?? 'shield-check'} size={18} />
+                    <Icon name={item.iconName ?? 'shield-check'} size={22} />
                   </span>
                   <div>
                     <span

@@ -81,7 +81,7 @@ export default async function SolutionsPage({ params }: Params) {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon name={solution.iconName ?? 'layers'} size={20} />
+                    <Icon name={solution.iconName ?? 'layers'} size={22} />
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

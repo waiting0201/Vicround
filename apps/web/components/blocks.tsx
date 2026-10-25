@@ -106,7 +106,7 @@ export function FeatureGridBlock({ block, columns }: { block: ContentBlock; colu
           <div key={item.title ?? index} style={cardStyle}>
             {item.iconName ? (
               <span style={iconBadgeStyle}>
-                <Icon name={item.iconName} size={20} />
+                <Icon name={item.iconName} size={22} />
               </span>
             ) : null}
             <span
@@ -414,7 +414,7 @@ export function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[];
           </span>
           {step.iconName ? (
             <span style={{ ...iconBadgeStyle, width: 40, height: 40 }}>
-              <Icon name={step.iconName} size={18} />
+              <Icon name={step.iconName} size={22} />
             </span>
           ) : null}
           <span style={{ font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}>
@@ -613,7 +613,7 @@ export function OfferingGrid({
           <>
             {item.iconName ? (
               <span style={iconBadgeStyle}>
-                <Icon name={item.iconName} size={20} />
+                <Icon name={item.iconName} size={22} />
               </span>
             ) : null}
             <span
