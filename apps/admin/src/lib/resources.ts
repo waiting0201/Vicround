@@ -161,6 +161,11 @@ export type ResourceDef = {
    */
   fixed?: boolean;
   /**
+   * 筆數已定案：不開放新增與刪除（藏掉「新增」「刪除」鈕、擋掉 `/new`），但照常可以
+   * 發布與取消發布。與 `fixed` 不同，這只是畫面上的限制，後端仍接受新增與刪除。
+   */
+  fixedSet?: boolean;
+  /**
    * 依這一筆的內容換掉編輯頁的欄位。固定頁面每一頁前台讀的欄位都不同（lib/page-layouts.ts），
    * 回傳 null 就用上面的預設欄位。只影響畫面；存檔照樣送整份資料，沒顯示的欄位原值不動。
    */
@@ -358,6 +363,9 @@ const categories: ResourceDef = {
   hasSort: true,
   hasTranslations: true,
   hasSeo: true,
+  // 三條產品線是定案的，不從後台增刪。上層分類、主色、圖示也不開放編輯
+  // （欄位沒列出來，存檔時照原值送回）。
+  fixedSet: true,
   description:
     '產品分類樹：三條產品線（Optical Film／Textile & Foam／Acoustic）與其下的子分類。這裡的 slug 會組成產品頁網址，例如 vicround.com/products/optical-film 裡的「optical-film」。',
   columns: [
@@ -379,22 +387,6 @@ const categories: ResourceDef = {
       options: CATEGORY_TYPE_OPTIONS,
       hint: '這筆屬於三條產品線的哪一條，決定它出現在網站上的哪個大分類底下。',
     },
-    {
-      name: 'parentId',
-      label: '上層分類',
-      type: 'reference',
-      scope: 'base',
-      refType: 'categories',
-      hint: '產品線本身（最上層）留空；子分類要選它所屬的產品線，否則不會出現在正確的選單位置。',
-    },
-    {
-      name: 'accentColorHex',
-      label: '主色',
-      type: 'color',
-      scope: 'base',
-      hint: '這條產品線在網站上的識別色（例如清單裡的色點）。色號來自公司識別手冊（CIS），不要自己配色，要改請先跟負責品牌規範的人確認。',
-    },
-    { name: 'iconName', label: '圖示', type: 'icon', scope: 'base', hint: '選單與卡片上代表這條產品線的小圖示。' },
     {
       name: 'heroMediaAssetId',
       label: '主視覺',

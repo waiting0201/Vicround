@@ -76,7 +76,7 @@ export function RecordActions({
         </Button>
       )}
 
-      {!resource.fixed && (
+      {!resource.fixed && !resource.fixedSet && (
         <Button
           variant="danger"
           icon={<Icon name="trash-2" size={15} />}

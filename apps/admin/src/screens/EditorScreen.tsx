@@ -18,8 +18,8 @@ export function EditorScreen({ resource }: { resource: ResourceDef }) {
   const navigate = useNavigate();
   const [culture, setCulture] = useState<Culture>(CULTURES[0].value);
 
-  // 固定資料（頁面）只改不增：前台每一筆都對應一條寫死的路由
-  const create = resource.fixed ? undefined : (
+  // 固定資料（頁面）只改不增：前台每一筆都對應一條寫死的路由；產品線則是定案的三條
+  const create = resource.fixed || resource.fixedSet ? undefined : (
     <CreateButton label={resource.singular} onClick={() => navigate(`/${resource.type}/new`)} />
   );
 

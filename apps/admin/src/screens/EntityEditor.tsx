@@ -45,7 +45,7 @@ export function EntityEditor({ resource }: { resource: ResourceDef }) {
   const layout = resource.layoutFor?.(draft.base) ?? null;
   const view = layout ? { ...resource, ...layout } : resource;
 
-  if (isNew && resource.fixed) return <Navigate to={`/${resource.type}`} replace />;
+  if (isNew && (resource.fixed || resource.fixedSet)) return <Navigate to={`/${resource.type}`} replace />;
 
   const title = isNew ? `新增${resource.singular}` : row ? rowTitle(row, resource, culture) : '載入中…';
   const slugChanged = Boolean(row?.slug) && draft.base.slug !== row?.slug;
