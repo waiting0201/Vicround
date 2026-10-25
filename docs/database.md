@@ -1493,7 +1493,7 @@ Header:      Products(→Page products)      ├ Optical Film / Textile & Foam /
 Footer:      About Us, Products, Solutions, Technologies, FAQ, Downloads,
              News & Exhibitions, Contact Us
 FooterLegal: Privacy & Legal
-Social:      LinkedIn, YouTube            （URL 待客戶提供，見 19.9）
+Social:      LinkedIn, YouTube            （正式帳號，客戶 2026-10-25 提供）
 SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
              ISO 14001 certificate / Spec sheet download
 ```
@@ -1573,7 +1573,8 @@ SearchChip:  Anti-glare film / EMI shielding foam / IP67 acoustic mesh /
    產出 CSV 給客戶確認再進 seeder。
 8. **規格表填到哪一層** — mockup 只有產品線層級的 Common specifications，但會員權益寫「完整
    spec sheets、公差表、測試報告」。`SpecificationRows` 兩層都支援，但編輯工作量差約 10 倍。
-9. **Footer 社群連結與 Testimonial 是否具名** — mockup 目前皆為 placeholder；具名需客戶書面授權
+9. **Testimonial 是否具名** — mockup 目前為 placeholder；具名需客戶書面授權
+   （Footer 社群連結已於 2026-10-25 取得正式網址）
    （`Testimonials.AuthorName` 已設 nullable）。
 10. **不留下載紀錄的取捨** — 依專案決策不建 `MemberDownloads`；但業務端可能想知道「誰下載了
     EUDR 文件包」以便跟進。若要，加一張 `MemberDownloadGrants`（記錄**授權**而非瀏覽紀錄）

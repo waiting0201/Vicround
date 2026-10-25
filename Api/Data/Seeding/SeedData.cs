@@ -159,8 +159,8 @@ internal static class SeedData
 
     /// <summary>
     /// 依 Sitemap-0819 與已實作的 <c>Header.dc.html</c> / <c>Footer.dc.html</c>。
-    /// <b>Social（LinkedIn / YouTube）刻意不 seed</b>——網址待客戶提供（§19.9），
-    /// 由編輯者於後台新增，這裡不放假網址。
+    /// Social 的順序要與 <c>apps/web/components/SiteFooter.tsx</c> 的 <c>SOCIALS</c> 一致
+    /// （LinkedIn、YouTube）——頁尾以位置對應圖示。網址為客戶 2026-10-25 提供的正式帳號。
     /// </summary>
     public static readonly NavSeed[] Navigation =
     [
@@ -217,6 +217,9 @@ internal static class SeedData
         new(NavigationLocation.Footer, LinkTargetType.EntityRef, new Text("Contact Us", "聯絡我們"), RefPageSlug: "contact"),
 
         new(NavigationLocation.FooterLegal, LinkTargetType.EntityRef, new Text("Privacy & Legal", "隱私權與法律聲明"), RefPageSlug: "privacy"),
+
+        new(NavigationLocation.Social, LinkTargetType.External, new Text("LinkedIn", "LinkedIn"), Url: "https://www.linkedin.com/company/vicround-limited-company/home/"),
+        new(NavigationLocation.Social, LinkTargetType.External, new Text("YouTube", "YouTube"), Url: "https://www.youtube.com/@VicRound"),
 
         new(NavigationLocation.SearchChip, LinkTargetType.EntityRef, new Text("Anti-glare film", "抗眩光膜"), RefCategorySlug: "optical-film"),
         new(NavigationLocation.SearchChip, LinkTargetType.EntityRef, new Text("EMI shielding foam", "EMI 遮蔽泡棉"), RefCategorySlug: "textile-foam"),
