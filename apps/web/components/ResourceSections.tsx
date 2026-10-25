@@ -70,7 +70,13 @@ export function DownloadList({
         const target = href ?? localeHref(locale, item.requestUrl ?? ROUTES.contact);
 
         return (
-          <Link key={item.slug} href={target} className="vr-download-row">
+          <Link
+            key={item.slug}
+            href={target}
+            className="vr-download-row"
+            // 檔案另開分頁；連去登入頁或聯絡我們的維持原分頁。
+            {...(item.fileUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
             <span
               style={{
                 font: "600 0.9375rem/1.4 'Geologica', 'GenYoGothic TW', sans-serif",

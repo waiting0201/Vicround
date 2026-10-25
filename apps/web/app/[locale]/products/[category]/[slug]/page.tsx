@@ -421,7 +421,11 @@ export default async function ProductPage({ params }: Params) {
             <h2 style={sectionTitleStyle}>{t('product.specifications')}</h2>
             <SpecTable rows={specRows} labels={{ property: t('spec.property'), value: t('spec.value'), note: t('spec.note') }} />
             <div style={{ marginTop: 28, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <a className="vr-btn" href={specSheet?.fileUrl ?? '#downloads'}>
+              <a
+                className="vr-btn"
+                href={specSheet?.fileUrl ?? '#downloads'}
+                {...(specSheet ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              >
                 {t('spec.download')}
                 <span aria-hidden="true">→</span>
               </a>
