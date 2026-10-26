@@ -61,6 +61,7 @@ export default async function MemberPage({ params }: Params) {
 
         <section>
           <Container
+            className="vr-rwd-split"
             style={{
               padding: 'clamp(40px, 5vw, 64px) clamp(24px, 5vw, 80px)',
               display: 'grid',

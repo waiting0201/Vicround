@@ -88,6 +88,7 @@ export default async function ProductLinePage({ params }: Params) {
         {overview ? (
           <section id="overview" style={{ scrollMarginTop: 90 }}>
             <Container
+              className="vr-rwd-split"
               style={{
                 padding: 'clamp(40px, 5vw, 72px) clamp(24px, 5vw, 80px)',
                 display: 'grid',
@@ -105,6 +106,7 @@ export default async function ProductLinePage({ params }: Params) {
                 ) : null}
 
                 <div
+                  className="vr-rwd-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: `repeat(${Math.max(overview.items.length, 1)}, 1fr)`,
@@ -149,7 +151,7 @@ export default async function ProductLinePage({ params }: Params) {
         <BlockSection id="families" raised>
           {families ? <BlockHeading block={families} /> : null}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
+          <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
             {category.products.map((product, index, all) => (
               <div
                 key={product.slug}
@@ -290,7 +292,7 @@ export default async function ProductLinePage({ params }: Params) {
         {flow ? (
           <BlockSection id="process" raised>
             <h2 style={sectionTitleStyle}>{flow.title}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginTop: 40 }}>
               {flow.steps.map((step, index) => (
                 <div key={step.title ?? index} style={cardStyle}>
                   <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: accent }}>

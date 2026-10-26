@@ -37,6 +37,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     memberLabel: MEMBERS_ENABLED ? t('nav.member') : null,
     searchLabel: t('search.label'),
     languageLabel: t('common.language'),
+    menuLabel: t('common.menu'),
     items:
       header.length > 0
         ? header.map((item) => ({

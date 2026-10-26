@@ -174,6 +174,7 @@ export default async function SolutionPage({ params }: Params) {
         {solution.challengeTitle ? (
           <section id="challenge" style={{ scrollMarginTop: 90 }}>
             <Container
+              className="vr-rwd-split"
               style={{
                 padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)',
                 display: 'grid',

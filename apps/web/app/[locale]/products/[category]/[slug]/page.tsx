@@ -343,6 +343,7 @@ export default async function ProductPage({ params }: Params) {
 
               {highlights.length > 0 ? (
                 <div
+                  className="vr-rwd-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: `repeat(${Math.min(highlights.length, 3)}, 1fr)`,

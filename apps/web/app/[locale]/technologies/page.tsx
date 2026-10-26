@@ -74,6 +74,7 @@ export default async function TechnologiesPage({ params }: Params) {
             {/* 線上品管 —— 核心製程底下的一小段 */}
             {qc ? (
               <div
+                className="vr-rwd-split"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',

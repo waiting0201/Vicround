@@ -88,7 +88,7 @@ export default async function ResourcesPage({ params }: Params) {
               </Link>
             }
           >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, marginTop: 36 }}>
+            <div className="vr-rwd-split" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, marginTop: 36 }}>
               {/* 下一場展會 —— 由 ExhibitionList 版塊的查詢（upcoming）帶出來 */}
               {nextShow ? (
                 <div style={{ ...cardStyle, border: '1px dashed var(--page-border)' }}>
@@ -200,7 +200,7 @@ export default async function ResourcesPage({ params }: Params) {
               </Link>
             }
           >
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 36 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 36 }}>
               {faqCategories.flatMap((category) =>
                 category.items.map((item) => (
                   <Link
@@ -243,7 +243,7 @@ export default async function ResourcesPage({ params }: Params) {
               title={section.title ?? ''}
               raised={index === 1}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 36 }}>
+              <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 36 }}>
                 {(section.reference?.articles ?? []).map((article) => (
                   <Link
                     key={article.slug}

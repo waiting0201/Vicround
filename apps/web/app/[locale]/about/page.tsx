@@ -83,6 +83,7 @@ export default async function AboutPage({ params }: Params) {
           <>
             <BlockHeading block={block} />
             <div
+              className="vr-rwd-split"
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',

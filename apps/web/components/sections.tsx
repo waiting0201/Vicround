@@ -10,12 +10,20 @@ import { Icon } from './Icon';
 export function Container({
   children,
   style,
+  className,
+  mediaRight,
 }: {
   children: ReactNode;
   style?: CSSProperties;
+  /** RWD 的 `vr-rwd-*` 掛在這裡（globals.css）；inline style 寫不了 media query。 */
+  className?: string;
+  /** 圖文交錯列的圖在右邊 —— 疊成一欄時要把圖排回上面（`vr-rwd-split`）。 */
+  mediaRight?: boolean;
 }) {
   return (
     <div
+      className={className}
+      data-media-right={mediaRight}
       style={{
         maxWidth: 1280,
         margin: '0 auto',

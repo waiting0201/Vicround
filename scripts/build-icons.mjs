@@ -36,7 +36,7 @@ const ICONS = [
   'map-pin', 'monitor', 'package', 'pen-line', 'phone', 'scale', 'scan-line',
   'scissors', 'search', 'shield', 'shield-check', 'sliders-horizontal',
   'smartphone', 'speaker', 'square-dashed', 'stethoscope', 'sun', 'target',
-  'thermometer', 'truck', 'users', 'x',
+  'thermometer', 'truck', 'users', 'x', 'menu', 'chevron-down',
 ];
 
 /** SVG 的屬性名要轉成 JSX 的 camelCase，否則 React 會警告並丟掉該屬性。 */

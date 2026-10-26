@@ -148,7 +148,7 @@ export function CertificationDialog({
           {cert.summary}
         </p>
 
-        <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div className="vr-rwd-form" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {rows.map((row) => (
             <div key={row.label} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 14 }}>
               <p

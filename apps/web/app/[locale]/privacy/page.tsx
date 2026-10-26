@@ -57,6 +57,7 @@ export default async function PrivacyPage({ params }: Params) {
 
         <section>
           <Container
+            className="vr-rwd-split"
             style={{
               padding: 'clamp(40px, 5vw, 64px) clamp(24px, 5vw, 80px) clamp(48px, 6vw, 80px)',
               display: 'grid',

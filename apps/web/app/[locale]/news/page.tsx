@@ -128,7 +128,7 @@ export default async function NewsPage({ params }: Params) {
             <p style={eyebrow}>{events?.eyebrow}</p>
             <h2 style={heading}>{events?.title}</h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 36 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 36 }}>
               {shows.map((show) => (
                 <div
                   key={show.slug}

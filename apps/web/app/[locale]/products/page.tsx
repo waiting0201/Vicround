@@ -63,7 +63,7 @@ export default async function ProductsPage({ params }: Params) {
         {/* ============ 三張分類卡 ============ */}
         <section>
           <Container style={{ padding: 'clamp(24px, 3vw, 48px) clamp(24px, 5vw, 80px) clamp(48px, 6vw, 80px)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
               {categories.map((category) => (
                 <Link
                   key={category.slug}
@@ -127,7 +127,7 @@ export default async function ProductsPage({ params }: Params) {
               </h2>
               <p style={bodyStyle}>{category.summary}</p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 8 }}>
+              <div className="vr-rwd-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 8 }}>
                 {(families[index]?.items ?? []).map((product) => (
                   <div key={product.slug}>
                     <span
@@ -177,6 +177,8 @@ export default async function ProductsPage({ params }: Params) {
               style={{ background: index % 2 === 1 ? 'var(--page-raised)' : undefined, scrollMarginTop: 90 }}
             >
               <Container
+                className="vr-rwd-split"
+                mediaRight={imageRight}
                 style={{
                   padding: 'clamp(48px, 7vw, 88px) clamp(24px, 5vw, 80px)',
                   display: 'grid',

@@ -184,7 +184,7 @@ export function ContactForm({
         {labels.lead}
       </p>
 
-      <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="vr-rwd-form" style={{ marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         <label style={labelStyle}>
           {labels.name}
           <input type="text" name="name" required style={fieldStyle} />

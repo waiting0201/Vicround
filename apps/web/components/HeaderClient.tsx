@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from './Icon';
 import { TURNSTILE_FIELD, Turnstile } from './Turnstile';
-import { LOCALES, LOCALE_SHORT_LABELS, switchLocalePath, type Locale } from '@/lib/locale';
+import { LOCALES, LOCALE_LABELS, LOCALE_SHORT_LABELS, switchLocalePath, type Locale } from '@/lib/locale';
 
 /**
  * 頁首的互動層。**樣式值逐字取自 `Header.dc.html`**（sticky 84px、#0a0a12、
@@ -23,6 +23,7 @@ export type HeaderModel = {
   memberLabel: string | null;
   searchLabel: string;
   languageLabel: string;
+  menuLabel: string;
   items: {
     key: string;
     label: string;
@@ -96,6 +97,19 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
   const [menu, setMenu] = useState<string | null>(null);
   const [search, setSearch] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // 手機版（< 1024px）的全螢幕選單；桌機的 pill 導覽在那個寬度會被 CSS 藏起來
+  const [drawer, setDrawer] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  // 選單開著時鎖住底下的頁面捲動，否則在選單裡滑動會連帶捲動整頁
+  useEffect(() => {
+    if (!drawer) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [drawer]);
 
   // PageCTA / 其他區塊用 `vicround:contact` 事件叫出這個 dialog（同 mockup）
   useEffect(() => {
@@ -151,7 +165,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
             />
           </Link>
 
-          <nav style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <nav className="vr-hd-desktop" style={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             {model.items.map((item) => {
               const isActive = pathname.startsWith(item.href);
               const isOpen = menu === item.key;
@@ -207,6 +221,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
               onClick={() => {
                 setSearch(!search);
                 setMenu(null);
+                setDrawer(false);
               }}
             >
               <Icon name={search ? 'x' : 'search'} size={22} />
@@ -215,6 +230,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
             {model.memberHref && (
               <Link
                 href={model.memberHref}
+                className="vr-hd-desktop"
                 aria-label={model.memberLabel ?? undefined}
                 title={model.memberLabel ?? undefined}
                 style={{
@@ -236,6 +252,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
               語系探索仍靠 <head> 的 hreflang alternates，不依賴這個控制項。
             */}
             <select
+              className="vr-hd-desktop"
               aria-label={model.languageLabel}
               value={model.locale}
               onChange={(event) => router.push(switchLocalePath(pathname, event.target.value as Locale))}
@@ -254,9 +271,24 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
               ))}
             </select>
 
-            <Link href={model.contactHref} className="vr-cta">
+            <Link href={model.contactHref} className="vr-cta vr-hd-desktop">
               {model.contactLabel}
             </Link>
+
+            <button
+              type="button"
+              aria-label={drawer ? model.dialog.close : model.menuLabel}
+              aria-expanded={drawer}
+              aria-controls="vr-mobile-nav"
+              className="vr-icon-btn vr-hd-mobile"
+              onClick={() => {
+                setDrawer(!drawer);
+                setSearch(false);
+                setMenu(null);
+              }}
+            >
+              <Icon name={drawer ? 'x' : 'menu'} size={20} />
+            </button>
           </div>
         </div>
 
@@ -342,6 +374,7 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
             <div style={PANEL_INNER}>
               <p style={{ ...EYEBROW, margin: '0 0 20px' }}>{openItem.menuTitle}</p>
               <div
+                className="vr-rwd-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(4, 1fr)',
@@ -380,10 +413,184 @@ export function HeaderClient({ model }: { model: HeaderModel }) {
             </div>
           </div>
         )}
+        {drawer && (
+          <MobileNav
+            model={model}
+            pathname={pathname}
+            expanded={expanded}
+            onExpand={(key) => setExpanded(expanded === key ? null : key)}
+            onLocale={(locale) => {
+              setDrawer(false);
+              router.push(switchLocalePath(pathname, locale));
+            }}
+            onClose={() => {
+              setDrawer(false);
+              setExpanded(null);
+            }}
+          />
+        )}
       </header>
 
       {dialogOpen && <ContactDialog model={model} onClose={() => setDialogOpen(false)} />}
     </>
+  );
+}
+
+/**
+ * 手機版選單。mockup 只有桌機版，這一塊沒有設計稿 —— 樣式沿用 header 本身的語彙
+ * （#0a0a12 底、細白分隔線、pill 按鈕、#a184f5 eyebrow），不另創一套。
+ * 有子項目的導覽不導航、只展開；父層頁面本身放在子清單的第一列。
+ */
+function MobileNav({
+  model,
+  pathname,
+  expanded,
+  onExpand,
+  onLocale,
+  onClose,
+}: {
+  model: HeaderModel;
+  pathname: string;
+  expanded: string | null;
+  onExpand: (key: string) => void;
+  onLocale: (locale: Locale) => void;
+  onClose: () => void;
+}) {
+  const row: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '18px 0',
+    background: 'transparent',
+    border: 'none',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    color: '#ffffff',
+    font: "500 1.125rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
+    textAlign: 'left',
+    textDecoration: 'none',
+    cursor: 'pointer',
+  };
+
+  return (
+    <div
+      id="vr-mobile-nav"
+      className="vr-mobile-nav"
+      // 選單裡的連結是 client-side 導航，header 不會重新掛載 —— 點到任何連結就自己收起來
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest('a')) onClose();
+      }}
+      style={{
+        position: 'fixed',
+        top: 84,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflowY: 'auto',
+        background: '#0a0a12',
+        padding: '8px clamp(24px, 5vw, 80px) 40px',
+        display: 'block',
+      }}
+    >
+      <nav>
+        {model.items.map((item) => {
+          const active = pathname.startsWith(item.href);
+          if (!item.children) {
+            return (
+              <Link key={item.key} href={item.href} style={{ ...row, color: active ? '#a184f5' : '#ffffff' }}>
+                {item.label}
+              </Link>
+            );
+          }
+          const open = expanded === item.key;
+          return (
+            <div key={item.key}>
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => onExpand(item.key)}
+                style={{ ...row, color: active ? '#a184f5' : '#ffffff' }}
+              >
+                {item.label}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    color: 'rgba(255,255,255,0.5)',
+                    transform: open ? 'rotate(180deg)' : undefined,
+                    transition: 'transform 0.15s ease',
+                  }}
+                >
+                  <Icon name="chevron-down" size={20} />
+                </span>
+              </button>
+              {open && (
+                <div style={{ padding: '8px 0 12px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Link href={item.href} className="vr-mega-link">
+                    <span style={{ ...EYEBROW, display: 'block' }}>{item.menuTitle ?? item.label}</span>
+                  </Link>
+                  {item.children.map((child) => (
+                    <Link key={child.href} href={child.href} className="vr-mega-link">
+                      <span
+                        style={{
+                          display: 'block',
+                          font: "600 0.9375rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
+                          color: '#ffffff',
+                        }}
+                      >
+                        {child.label}
+                      </span>
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: 4,
+                          font: "400 0.8125rem/1.45 'Geologica', 'GenYoGothic TW', sans-serif",
+                          color: 'rgba(255,255,255,0.5)',
+                        }}
+                      >
+                        {child.note}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {model.memberHref && (
+          <Link href={model.memberHref} style={{ ...row, justifyContent: 'flex-start', gap: 12 }}>
+            <Icon name="circle-user-round" size={22} />
+            {model.memberLabel}
+          </Link>
+        )}
+      </nav>
+
+      <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 8 }} aria-label={model.languageLabel} role="group">
+        {LOCALES.map((locale) => (
+          <button
+            key={locale}
+            type="button"
+            className="vr-chip"
+            aria-pressed={locale === model.locale}
+            onClick={() => onLocale(locale)}
+            style={{
+              cursor: 'pointer',
+              background: locale === model.locale ? 'rgba(255,255,255,0.08)' : 'transparent',
+              color: locale === model.locale ? '#ffffff' : undefined,
+            }}
+          >
+            {LOCALE_LABELS[locale]}
+          </button>
+        ))}
+      </div>
+
+      <Link
+        href={model.contactHref}
+        className="vr-cta"
+        style={{ marginTop: 24, width: '100%', height: 52, justifyContent: 'center', fontSize: 16 }}
+      >
+        {model.contactLabel}
+      </Link>
+    </div>
   );
 }
 
@@ -587,6 +794,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
               style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
             />
             <div
+              className="vr-rwd-form"
               style={{
                 marginTop: 24,
                 display: 'grid',

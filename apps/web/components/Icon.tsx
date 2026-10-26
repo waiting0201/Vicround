@@ -362,6 +362,18 @@ const PATHS: Record<string, ReactNode> = {
       <path d="m6 6 12 12" />
     </>
   ),
+  'menu': (
+    <>
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="6" y2="6" />
+      <line x1="4" x2="20" y1="18" y2="18" />
+    </>
+  ),
+  'chevron-down': (
+    <>
+      <path d="m6 9 6 6 6-6" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof PATHS;

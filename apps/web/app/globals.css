@@ -768,3 +768,65 @@ textarea.vr-input {
   max-width: 100%;
   border-radius: 22px;
 }
+
+/*
+ * RWD。mockup 只有桌機版（各 .dc.html 裡沒有任何斷點），版面的 inline style 是確認稿的
+ * 桌機值，**照舊保留**；這裡只在窄螢幕把它們蓋掉。inline style 只能用 !important 蓋，
+ * 所以每條覆寫都帶 !important —— 這是刻意的，不是手滑。
+ *
+ *   vr-rwd-split       左右兩欄（圖文、側欄＋內文、表單＋聯絡資訊）→ < 900px 疊成一欄；
+ *                      圖在右的列加 data-media-right，疊起來時圖排到上面
+ *   vr-rwd-grid        3～4 欄卡片 → < 1024px 兩欄、< 640px 一欄
+ *   vr-rwd-grid-dense  小 chip 格（首頁 6 欄認證）→ 三欄、兩欄
+ *   vr-rwd-form        兩欄表單欄位、短清單 → < 640px 一欄
+ *
+ * 斷點與 header 一致：< 1024px 換成漢堡選單（HeaderClient 的 vr-hd-*）。
+ */
+.vr-hd-mobile {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  .vr-mobile-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .vr-hd-desktop {
+    display: none !important;
+  }
+  .vr-hd-mobile {
+    display: inline-flex !important;
+  }
+  .vr-rwd-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .vr-rwd-grid-dense {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 899px) {
+  .vr-rwd-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+    row-gap: 32px !important;
+  }
+  /* 圖文交錯的列：疊起來之後一律圖在上，文案也不再靠右（桌機版用 marginLeft: auto 貼齊圖） */
+  .vr-rwd-split[data-media-right='true'] > :last-child {
+    order: -1;
+  }
+  .vr-rwd-split[data-media-right='true'] > * {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .vr-rwd-grid,
+  .vr-rwd-form {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .vr-rwd-grid-dense {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

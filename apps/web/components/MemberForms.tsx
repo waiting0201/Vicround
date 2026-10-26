@@ -218,7 +218,7 @@ export function MemberForms({
           </button>
         </form>
       ) : (
-        <form onSubmit={onRegister} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <form className="vr-rwd-form" onSubmit={onRegister} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <label style={labelStyle}>
             {labels.register.name}
             <input type="text" name="fullName" autoComplete="name" required style={fieldStyle} />

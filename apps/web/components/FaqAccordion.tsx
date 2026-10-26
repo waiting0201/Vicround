@@ -43,6 +43,7 @@ export function FaqAccordion({
 
   return (
     <div
+      className="vr-rwd-split"
       style={{
         display: 'grid',
         gridTemplateColumns: '260px 1fr',

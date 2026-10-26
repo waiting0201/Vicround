@@ -95,6 +95,7 @@ export function FeatureGridBlock({ block, columns }: { block: ContentBlock; colu
     <>
       <BlockHeading block={block} />
       <div
+        className="vr-rwd-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${count}, 1fr)`,
@@ -156,6 +157,7 @@ export function StatBandBlock({ block }: { block: ContentBlock }) {
     <>
       <BlockHeading block={block} />
       <div
+        className="vr-rwd-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.min(block.items.length || 3, 3)}, 1fr)`,
@@ -400,6 +402,7 @@ export function BlockSection({
 export function StepCards({ steps, accent = '#6436ef' }: { steps: ProcessStep[]; accent?: string }) {
   return (
     <div
+      className="vr-rwd-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${Math.min(steps.length || 4, 4)}, 1fr)`,
@@ -462,6 +465,7 @@ export function MediaTextSplitBlock({
 
   return (
     <div
+      className="vr-rwd-split"
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -489,7 +493,7 @@ export function CertificationCards({
   columns?: number;
 }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 20, marginTop: 40 }}>
+    <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 20, marginTop: 40 }}>
       {certifications.map((certification) => (
         <CertChip
           key={certification.slug}
@@ -509,6 +513,7 @@ export function CertificationCards({
 export function TestimonialCards({ testimonials }: { testimonials: Testimonial[] }) {
   return (
     <div
+      className="vr-rwd-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${Math.min(testimonials.length || 3, 3)}, 1fr)`,
@@ -559,6 +564,7 @@ export function MilestoneTimeline({ block }: { block: ContentBlock }) {
 
   return (
     <div
+      className="vr-rwd-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${Math.min(entries.length || 4, 4)}, 1fr)`,
@@ -601,6 +607,7 @@ export function OfferingGrid({
 }) {
   return (
     <div
+      className="vr-rwd-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${columns ?? Math.min(block.items.length || 3, 3)}, 1fr)`,

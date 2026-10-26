@@ -54,7 +54,7 @@ export default async function SolutionsPage({ params }: Params) {
 
         <section>
           <Container style={{ padding: '0 clamp(24px, 5vw, 80px) clamp(64px, 9vw, 120px)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               {solutions.map((solution) => (
                 <div
                   key={solution.slug}

@@ -82,6 +82,7 @@ export default async function ContactPage({ params }: Params) {
         {/* ============ 表單 + 直接聯絡 ============ */}
         <section>
           <Container
+            className="vr-rwd-split"
             style={{
               padding: 'clamp(40px, 5vw, 64px) clamp(24px, 5vw, 80px)',
               display: 'grid',
@@ -236,7 +237,7 @@ export default async function ContactPage({ params }: Params) {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 24 }}>
+            <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 24 }}>
               {locationList.map((location) => (
                 <div key={`${location.city}-${location.type}`} style={{ ...cardStyle, gap: 10 }}>
                   <span

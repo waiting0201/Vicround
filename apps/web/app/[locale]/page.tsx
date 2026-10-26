@@ -183,6 +183,8 @@ export default async function HomePage({ params }: Params) {
 
               return (
                 <div
+                  className="vr-rwd-split"
+                  data-media-right={imageRight}
                   key={category.slug}
                   style={{
                     display: 'grid',
@@ -207,7 +209,7 @@ export default async function HomePage({ params }: Params) {
         >
           <SectionHeading eyebrow={industries?.eyebrow ?? ''} title={industries?.title ?? ''} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, marginTop: 56 }}>
+          <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, marginTop: 56 }}>
             {(industries?.reference?.solutions ?? []).map((solution) => (
               <Link
                 key={solution.slug}
@@ -258,7 +260,7 @@ export default async function HomePage({ params }: Params) {
           </div>
 
           <p style={{ ...monoLabelStyle, margin: '32px 0 0' }}>{t('certification.partners')}</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginTop: 12 }}>
+          <div className="vr-rwd-grid-dense" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginTop: 12 }}>
             {/* PartnerBrands 還沒有資料（logo 待客戶提供），先留與 mockup 相同的版位 */}
             {partners.length > 0
               ? partners.map((partner) => (

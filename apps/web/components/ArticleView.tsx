@@ -216,6 +216,7 @@ export function ArticleView({
         {/* ============ 內文 + 側欄 ============ */}
         <section>
           <Container
+            className="vr-rwd-split"
             style={{
               padding: 'clamp(40px, 5vw, 64px) clamp(24px, 5vw, 80px) clamp(48px, 6vw, 80px)',
               display: 'grid',
@@ -321,7 +322,7 @@ export function ArticleView({
         {article.previous || article.next ? (
           <section style={{ borderTop: '1px solid var(--page-border)' }}>
             <Container style={{ padding: 'clamp(32px, 4vw, 48px) clamp(24px, 5vw, 80px)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div className="vr-rwd-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 {[
                   { link: article.previous, label: t('article.previous'), align: 'left' as const },
                   { link: article.next, label: t('article.next'), align: 'right' as const },
@@ -365,7 +366,7 @@ export function ArticleView({
               >
                 {variant === 'event' ? t('news.more') : t('article.keepReading')}
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 32 }}>
+              <div className="vr-rwd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 32 }}>
                 {related.map((item) => (
                   <Link
                     key={item.slug}
