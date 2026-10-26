@@ -629,6 +629,15 @@ const FIELD: React.CSSProperties = {
 function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => void }) {
   const d = model.dialog;
   const [reference, setReference] = useState<string | null>(null);
+
+  // dialog 開著時鎖住底下的頁面捲動（手機上滑到 dialog 底端會連帶捲動整頁）
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
   const [failed, setFailed] = useState(false);
   const [sending, setSending] = useState(false);
   // 每次送出失敗就遞增，讓 Turnstile 換一個新 token（token 只能用一次）
@@ -691,7 +700,7 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'clamp(12px, 4vw, 24px)',
         fontFamily: "'Geologica', 'GenYoGothic TW', 'Noto Sans TC', system-ui, sans-serif",
       }}
     >
@@ -700,11 +709,12 @@ function ContactDialog({ model, onClose }: { model: HeaderModel; onClose: () => 
         style={{
           width: '100%',
           maxWidth: 600,
-          maxHeight: '90vh',
+          // dvh：手機瀏覽器的網址列會吃掉 vh 的一截，用 vh 時 dialog 底端會被蓋住
+          maxHeight: '90dvh',
           overflow: 'auto',
           background: '#ffffff',
           border: '1px solid rgba(20,20,31,0.12)',
-          padding: 32,
+          padding: 'clamp(20px, 6vw, 32px)',
           borderRadius: 22,
         }}
       >

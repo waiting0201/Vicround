@@ -61,24 +61,42 @@ export function Turnstile({ locale, resetKey = 0 }: { locale: string; resetKey?:
   const widgetId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return;
+    const element = container.current;
+    if (!TURNSTILE_SITE_KEY || !element) return;
 
     let cancelled = false;
+    let observer: ResizeObserver | undefined;
+    let size: 'normal' | 'compact' | null = null;
+
+    // normal 版固定 300px 寬，手機上的表單放不下；窄於此改用 150px 的 compact 版。
+    // 寬度會變（轉向、DevTools 切裝置），所以持續監看，跨過門檻就換版重畫 ——
+    // 重畫會讓已通過的驗證重來一次，但只發生在跨門檻那一下。
+    const render = (turnstile: TurnstileApi) => {
+      const next = element.clientWidth < 300 ? 'compact' : 'normal';
+      if (cancelled || next === size) return;
+
+      if (widgetId.current) turnstile.remove(widgetId.current);
+      size = next;
+      widgetId.current = turnstile.render(element, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: 'light',
+        size,
+        language: locale === 'zh-Hant' ? 'zh-tw' : 'en',
+      });
+    };
 
     loadTurnstile()
       .then((turnstile) => {
-        if (cancelled || !container.current) return;
-        widgetId.current = turnstile.render(container.current, {
-          sitekey: TURNSTILE_SITE_KEY,
-          theme: 'light',
-          language: locale === 'zh-Hant' ? 'zh-tw' : 'en',
-        });
+        render(turnstile);
+        observer = new ResizeObserver(() => render(turnstile));
+        observer.observe(element);
       })
       // script 載不到（被擋、離線）就不顯示 —— 後端會回 bot-check 失敗，表單顯示送出失敗
       .catch(() => {});
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
       if (widgetId.current) window.turnstile?.remove(widgetId.current);
       widgetId.current = null;
     };
@@ -90,5 +108,6 @@ export function Turnstile({ locale, resetKey = 0 }: { locale: string; resetKey?:
 
   if (!TURNSTILE_SITE_KEY) return null;
 
-  return <div ref={container} style={{ marginTop: 18, minHeight: 65 }} />;
+  // 寬度由父層決定、不被裡面的元件撐開（minWidth: 0），ResizeObserver 量到的才是可用寬度
+  return <div ref={container} style={{ marginTop: 18, minHeight: 65, minWidth: 0, maxWidth: '100%' }} />;
 }

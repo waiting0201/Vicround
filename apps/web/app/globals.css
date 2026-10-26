@@ -829,4 +829,10 @@ textarea.vr-input {
   .vr-rwd-grid-dense {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+  /* iOS Safari 對焦到字級 < 16px 的欄位會自動放大畫面，dialog 跟著跑版。全站欄位一律 16px */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
