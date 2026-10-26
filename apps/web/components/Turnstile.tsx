@@ -1,7 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TURNSTILE_SITE_KEY } from '@/lib/features';
+
+/** normal 版元件的固定尺寸（Cloudflare 規格）。 */
+const WIDGET_WIDTH = 300;
+const WIDGET_HEIGHT = 65;
 
 /** Turnstile 塞進表單的隱藏欄位名稱。 */
 export const TURNSTILE_FIELD = 'cf-turnstile-response';
@@ -57,46 +61,44 @@ function loadTurnstile(): Promise<TurnstileApi> {
  * </p>
  */
 export function Turnstile({ locale, resetKey = 0 }: { locale: string; resetKey?: number }) {
+  const frame = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
+  const [scale, setScale] = useState(1);
 
+  // normal 版固定 300×65，手機上的表單放不下。compact 版（150×140）又小到難點，
+  // 所以一律用 normal，再依可用寬度等比縮小 —— 寬度變了（轉向、DevTools 切裝置）只改縮放，
+  // 不重畫元件，已通過的驗證也不會重來。
   useEffect(() => {
-    const element = container.current;
+    const element = frame.current;
     if (!TURNSTILE_SITE_KEY || !element) return;
 
+    const observer = new ResizeObserver(() => {
+      setScale(Math.min(1, element.clientWidth / WIDGET_WIDTH));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+
     let cancelled = false;
-    let observer: ResizeObserver | undefined;
-    let size: 'normal' | 'compact' | null = null;
-
-    // normal 版固定 300px 寬，手機上的表單放不下；窄於此改用 150px 的 compact 版。
-    // 寬度會變（轉向、DevTools 切裝置），所以持續監看，跨過門檻就換版重畫 ——
-    // 重畫會讓已通過的驗證重來一次，但只發生在跨門檻那一下。
-    const render = (turnstile: TurnstileApi) => {
-      const next = element.clientWidth < 300 ? 'compact' : 'normal';
-      if (cancelled || next === size) return;
-
-      if (widgetId.current) turnstile.remove(widgetId.current);
-      size = next;
-      widgetId.current = turnstile.render(element, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: 'light',
-        size,
-        language: locale === 'zh-Hant' ? 'zh-tw' : 'en',
-      });
-    };
 
     loadTurnstile()
       .then((turnstile) => {
-        render(turnstile);
-        observer = new ResizeObserver(() => render(turnstile));
-        observer.observe(element);
+        if (cancelled || !container.current) return;
+        widgetId.current = turnstile.render(container.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          theme: 'light',
+          language: locale === 'zh-Hant' ? 'zh-tw' : 'en',
+        });
       })
       // script 載不到（被擋、離線）就不顯示 —— 後端會回 bot-check 失敗，表單顯示送出失敗
       .catch(() => {});
 
     return () => {
       cancelled = true;
-      observer?.disconnect();
       if (widgetId.current) window.turnstile?.remove(widgetId.current);
       widgetId.current = null;
     };
@@ -108,6 +110,19 @@ export function Turnstile({ locale, resetKey = 0 }: { locale: string; resetKey?:
 
   if (!TURNSTILE_SITE_KEY) return null;
 
-  // 寬度由父層決定、不被裡面的元件撐開（minWidth: 0），ResizeObserver 量到的才是可用寬度
-  return <div ref={container} style={{ marginTop: 18, minHeight: 65, minWidth: 0, maxWidth: '100%' }} />;
+  // 外框的寬度由父層決定（minWidth: 0，不被裡面的元件撐開），ResizeObserver 量的就是可用寬度；
+  // transform 不影響排版，所以外框高度要自己跟著縮放
+  return (
+    <div ref={frame} style={{ marginTop: 18, minWidth: 0, maxWidth: '100%', height: WIDGET_HEIGHT * scale }}>
+      <div
+        ref={container}
+        style={{
+          width: WIDGET_WIDTH,
+          minHeight: WIDGET_HEIGHT,
+          transform: scale < 1 ? `scale(${scale})` : undefined,
+          transformOrigin: 'left top',
+        }}
+      />
+    </div>
+  );
 }
