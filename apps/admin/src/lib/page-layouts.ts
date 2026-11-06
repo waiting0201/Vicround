@@ -1,3 +1,4 @@
+import { IMAGE_SPECS, type ImageSpec } from './image';
 /**
  * 固定頁面的欄位對照：**每一頁、每一個版塊，前台實際讀了哪些欄位、顯示在哪裡**。
  *
@@ -19,6 +20,8 @@ export type FieldCopy = {
   hint?: string;
   /** 前台以純文字輸出的內文（`{block.body}`）不能給富文字編輯器，否則 `<p>` 會原樣印出來。 */
   plainText?: boolean;
+  /** 圖片欄位的版位規格；給了就取代欄位定義上的預設（例如首頁主視覺是 8:3，不是 16:3）。 */
+  image?: ImageSpec;
 };
 
 export type PageTextField =
@@ -150,7 +153,7 @@ export const PAGE_LAYOUTS: Record<string, PageLayout> = {
     fields: {
       title: { label: '頁面名稱', hint: '只用在後台清單。首頁的瀏覽器分頁標題取自下方「首頁主視覺」的大標。' },
     },
-    heroImage: { label: '主視覺背景圖', hint: '首頁最上方的大幅照片。留空時前台不顯示這張圖，只留下方的大標與說明。' },
+    heroImage: { label: '主視覺背景圖', image: IMAGE_SPECS.homeHero, hint: '首頁最上方的大幅照片。留空時前台不顯示這張圖，只留下方的大標與說明。' },
     blocks: {
       hero: {
         name: '首頁主視覺',

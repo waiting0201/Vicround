@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -12,10 +12,17 @@ import {
   cx,
 } from '@/ui';
 import { CULTURES } from '@/lib/enums';
-import { containerOf, createPendingMedia, isPendingMedia, releasePendingMedia } from '@/lib/pending-media';
+import {
+  containerOf,
+  createPendingMedia,
+  isPendingMedia,
+  releasePendingMedia,
+  type PendingMedia,
+} from '@/lib/pending-media';
 import { useItem, useList } from '@/lib/queries';
 import { resourceOf, type FieldDef } from '@/lib/resources';
 import { formatBytes, isValidSlug, rowTitle, toSlug } from '@/lib/format';
+import { describeImageSpec, prepareImage } from '@/lib/image';
 
 /**
  * 把一條欄位定義（`lib/resources.ts` 的 `FieldDef`）畫成一個輸入控制項。
@@ -63,6 +70,9 @@ export function FieldControl({ field, value, onChange, error, disabled, values }
 function buildHint(field: FieldDef, text: string): string | undefined {
   if (field.maxLength && text.length > field.maxLength * 0.8) {
     return `${text.length} / ${field.maxLength} 字`;
+  }
+  if (field.image) {
+    return [field.hint, describeImageSpec(field.image)].filter(Boolean).join(' ');
   }
   if (field.type === 'html' && !field.hint) {
     return '直接輸入 HTML；所見即所得編輯器尚未接上。';
@@ -341,12 +351,21 @@ function MediaControl({
 
   const isPrivate = containerOf(field.container, values ?? {}) === 'member-documents';
 
-  function pick(file: File | undefined) {
+  const [processing, setProcessing] = useState(false);
+
+  async function pick(file: File | undefined) {
     if (!file) return;
-    releasePendingMedia(value);
-    onChange(createPendingMedia(file, field.container));
     // 清掉 input 的值，否則連續選同一個檔案不會觸發 change。
     if (fileInput.current) fileInput.current.value = '';
+    // 只有標了版位規格的圖片欄位才縮圖轉檔——下載中心的檔案欄位要的是原檔。
+    setProcessing(true);
+    try {
+      const prepared = field.image ? await prepareImage(file, field.image) : { file };
+      releasePendingMedia(value);
+      onChange(createPendingMedia(prepared.file, field.container, prepared.originalSize));
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function clear() {
@@ -369,7 +388,7 @@ function MediaControl({
         accept={field.accept}
         className="sr-only"
         disabled={readOnly}
-        onChange={(event) => pick(event.target.files?.[0])}
+        onChange={(event) => void pick(event.target.files?.[0])}
       />
 
       <div className="flex items-center gap-3">
@@ -390,12 +409,21 @@ function MediaControl({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm text-[var(--fg-1)]">
-            {hasValue ? (fileName ?? (isLoading ? '載入中…' : assetId)) : '尚未選擇檔案'}
+            {processing
+              ? '縮圖與轉檔中…'
+              : hasValue
+                ? (fileName ?? (isLoading ? '載入中…' : assetId))
+                : '尚未選擇檔案'}
           </p>
-          {hasValue && (
+          {hasValue && !processing && (
             <p className="text-xs text-[var(--fg-3)]">
-              {typeof size === 'number' && formatBytes(size)}
-              {pending && !pending.uploadedId && (typeof size === 'number' ? '・' : '') + '儲存時上傳'}
+              {[
+                typeof size === 'number' ? formatBytes(size) : null,
+                pending?.originalSize ? `已縮圖轉 WebP，原檔 ${formatBytes(pending.originalSize)}` : null,
+                pending && !pending.uploadedId ? '儲存時上傳' : null,
+              ]
+                .filter(Boolean)
+                .join('・')}
             </p>
           )}
         </div>
@@ -403,7 +431,7 @@ function MediaControl({
         <Button
           variant="secondary"
           size="sm"
-          disabled={readOnly}
+          disabled={readOnly || processing}
           onClick={() => fileInput.current?.click()}
         >
           {hasValue ? '更換檔案' : '選擇檔案'}
@@ -449,11 +477,23 @@ function MediaListControl({
 
   const entries = Array.isArray(value) ? (value as unknown[]) : [];
 
-  function pick(files: FileList | null) {
+  const [processing, setProcessing] = useState(false);
+
+  async function pick(files: FileList | null) {
     if (!files?.length) return;
-    const added = Array.from(files).map((file) => createPendingMedia(file, field.container));
-    onChange([...entries, ...added]);
+    const picked = Array.from(files);
     if (fileInput.current) fileInput.current.value = '';
+    setProcessing(true);
+    try {
+      const added: PendingMedia[] = [];
+      for (const file of picked) {
+        const prepared = field.image ? await prepareImage(file, field.image) : { file };
+        added.push(createPendingMedia(prepared.file, field.container, prepared.originalSize));
+      }
+      onChange([...entries, ...added]);
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function remove(entry: unknown) {
@@ -470,7 +510,7 @@ function MediaListControl({
         accept={field.accept}
         className="sr-only"
         disabled={readOnly}
-        onChange={(event) => pick(event.target.files)}
+        onChange={(event) => void pick(event.target.files)}
       />
 
       {entries.length > 0 && (
@@ -490,12 +530,13 @@ function MediaListControl({
         <Button
           variant="secondary"
           size="sm"
-          disabled={readOnly}
+          disabled={readOnly || processing}
           onClick={() => fileInput.current?.click()}
         >
           {entries.length ? '再加檔案' : '選擇檔案'}
         </Button>
-        {entries.length > 0 && (
+        {processing && <span className="text-xs text-[var(--fg-3)]">縮圖與轉檔中…</span>}
+        {!processing && entries.length > 0 && (
           <span className="text-xs text-[var(--fg-3)]">
             {entries.length} 個檔案
             {entries.some((entry) => isPendingMedia(entry) && !entry.uploadedId) && '・新選的儲存時上傳'}

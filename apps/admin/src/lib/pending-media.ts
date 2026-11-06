@@ -21,12 +21,18 @@ export type PendingMedia = {
   /** `URL.createObjectURL` 的本機網址，給縮圖預覽用。 */
   previewUrl: string;
   container: FieldDef['container'];
+  /** 選檔時縮圖／轉 WebP 過的話，原檔大小（畫面上顯示「原檔 x MB」）。 */
+  originalSize?: number;
   /** 上傳過就記住 id：存檔在後半段失敗時，再按一次儲存不會把同一個檔案傳第二次。 */
   uploadedId?: string;
 };
 
-export function createPendingMedia(file: File, container: FieldDef['container']): PendingMedia {
-  return { kind: 'pending-media', file, previewUrl: URL.createObjectURL(file), container, uploadedId: undefined };
+export function createPendingMedia(
+  file: File,
+  container: FieldDef['container'],
+  originalSize?: number,
+): PendingMedia {
+  return { kind: 'pending-media', file, previewUrl: URL.createObjectURL(file), container, originalSize, uploadedId: undefined };
 }
 
 export function isPendingMedia(value: unknown): value is PendingMedia {

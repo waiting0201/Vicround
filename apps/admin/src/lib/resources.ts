@@ -1,3 +1,4 @@
+import { IMAGE_SPECS, type ImageSpec } from './image';
 import {
   ARTICLE_TYPE_OPTIONS,
   BLOCK_TYPE_OPTIONS,
@@ -92,6 +93,8 @@ export type FieldDef = {
   container?: MediaContainer | ((values: Record<string, unknown>) => MediaContainer);
   /** `media` 欄位的 `accept`。限制在檔案選擇器就先擋掉，不必等後端回 415。 */
   accept?: string;
+  /** 圖片欄位的版位規格：欄位下方顯示建議尺寸，選檔時也用它的寬度當縮圖上限。 */
+  image?: ImageSpec;
 };
 
 export type MediaContainer = 'public-media' | 'member-documents';
@@ -305,6 +308,7 @@ function pickFields(fields: FieldDef[], copies: Partial<Record<string, FieldCopy
         ...field,
         label: copy.label,
         hint: copy.hint,
+        ...(copy.image ? { image: copy.image } : {}),
         ...(copy.plainText
           ? {
               type: 'textarea' as const,
@@ -392,7 +396,7 @@ const categories: ResourceDef = {
       label: '主視覺',
       type: 'media',
       scope: 'base',
-      accept: IMAGE_ACCEPT,
+      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.banner,
       hint: '這條產品線頁面（與底下各產品頁）最上方的大幅橫幅照片。留空時前台不顯示這條圖帶。',
     },
     SORT_FIELD,
@@ -488,10 +492,10 @@ const products: ResourceDef = {
       label: '主視覺',
       type: 'media',
       scope: 'base',
-      accept: IMAGE_ACCEPT,
+      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.product,
       hint: '產品卡片與產品頁最上方使用的主要照片。',
     },
-    { name: 'gallery', label: '產品圖庫', type: 'mediaList', scope: 'base', wide: true, accept: IMAGE_ACCEPT, hint: '產品頁的多張圖／輪播圖，可以放好幾張。' },
+    { name: 'gallery', label: '產品圖庫', type: 'mediaList', scope: 'base', wide: true, accept: IMAGE_ACCEPT, image: IMAGE_SPECS.product, hint: '產品頁的多張圖／輪播圖，可以放好幾張。' },
     {
       name: 'solutionIds',
       label: '關聯產業',
@@ -568,7 +572,7 @@ const solutions: ResourceDef = {
       label: '主視覺',
       type: 'media',
       scope: 'base',
-      accept: IMAGE_ACCEPT,
+      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.banner,
       hint: '這個產業頁面最上方的大幅橫幅照片。留空時前台不顯示這條圖帶。',
     },
     {
@@ -667,7 +671,7 @@ const articles: ResourceDef = {
       label: '主視覺',
       type: 'media',
       scope: 'base',
-      accept: IMAGE_ACCEPT,
+      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.articleHero,
       hint: '文章列表卡片與文章頁最上方使用的圖片。',
     },
     { name: 'readingMinutes', label: '閱讀分鐘數', type: 'number', scope: 'base', hint: '顯示在文章頁「閱讀時間」；留空就不顯示。' },
@@ -747,7 +751,7 @@ const PAGE_BASE_FIELDS: FieldDef[] = [
     label: '主視覺',
     type: 'media',
     scope: 'base',
-    accept: IMAGE_ACCEPT,
+    accept: IMAGE_ACCEPT, image: IMAGE_SPECS.banner,
     hint: '這頁最上方橫幅使用的大幅照片。',
   },
 ];
@@ -876,7 +880,7 @@ const exhibitions: ResourceDef = {
       label: '主視覺',
       type: 'media',
       scope: 'base',
-      accept: IMAGE_ACCEPT,
+      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.articleHero,
       hint: '展會頁最上方使用的橫幅照片。',
     },
     SORT_FIELD,
@@ -1038,7 +1042,7 @@ const downloads: ResourceDef = {
       options: [],
       hint: '這份檔案本身的語言（例如 PDF 內文是英文還是中文），留空表示語言中立（例如純圖表、無文字的檔案）。',
     },
-    { name: 'thumbnailMediaAssetId', label: '縮圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, hint: '下載清單裡顯示的小圖，留空會用預設圖示。' },
+    { name: 'thumbnailMediaAssetId', label: '縮圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.badge, hint: '下載清單裡顯示的小圖，留空會用預設圖示。' },
     {
       name: 'productIds',
       label: '關聯產品',
@@ -1117,7 +1121,7 @@ const authors: ResourceDef = {
   baseFields: [
     SLUG_FIELD,
     { name: 'initials', label: '縮寫', type: 'text', scope: 'base', maxLength: 4, hint: '沒有照片時顯示的圓形縮寫，例如「TW」。' },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.avatar },
     SORT_FIELD,
   ],
   translationFields: [
@@ -1175,7 +1179,7 @@ const certifications: ResourceDef = {
       refType: 'downloads',
       hint: '連到「下載中心」裡的證書檔案，前台認證卡的下載按鈕會用它；要先在下載中心建好那筆文件才能在這裡選到。',
     },
-    { name: 'logoMediaAssetId', label: '標章圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'logoMediaAssetId', label: '標章圖', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.badge },
     {
       name: 'productIds',
       label: '涵蓋產品',
@@ -1239,7 +1243,7 @@ const milestones: ResourceDef = {
   baseFields: [
     { name: 'year', label: '年份', type: 'number', scope: 'base', required: true, hint: '西元四位數年份，例：1998。' },
     { name: 'month', label: '月份', type: 'number', scope: 'base', hint: '非必填，只用來在同一年多筆事件時決定先後順序。' },
-    { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.content },
     SORT_FIELD,
   ],
   translationFields: [
@@ -1292,7 +1296,7 @@ const locations: ResourceDef = {
       wide: true,
       hint: 'Google 地圖分享連結，要以 https:// 開頭；點「查看地圖」按鈕會直接開這個連結。',
     },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.content },
     SORT_FIELD,
   ],
   translationFields: [
@@ -1324,7 +1328,7 @@ const caseStudies: ResourceDef = {
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。不可出現客戶的品牌、Logo 或圖案——OEM／ODM 成品照不能用，檔名也不要帶客戶名稱。' },
+    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.caseStudy, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。不可出現客戶的品牌、Logo 或圖案——OEM／ODM 成品照不能用，檔名也不要帶客戶名稱。' },
     {
       name: 'productIds',
       label: '關聯產品',
@@ -1375,7 +1379,7 @@ const testimonials: ResourceDef = {
   baseFields: [
     { name: 'partnerBrandId', label: '合作品牌', type: 'reference', scope: 'base', refType: 'partner-brands' },
     { name: 'solutionId', label: '關聯產業', type: 'reference', scope: 'base', refType: 'solutions', hint: '選了之後這則見證也會出現在對應產業頁。' },
-    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+    { name: 'mediaAssetId', label: '照片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.avatar },
     SORT_FIELD,
   ],
   translationFields: [
@@ -1406,7 +1410,7 @@ const partnerBrands: ResourceDef = {
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'logoMediaAssetId', label: 'Logo', type: 'media', scope: 'base', required: true, accept: IMAGE_ACCEPT, hint: '建議透明底 PNG，避免出現白色方塊。' },
+    { name: 'logoMediaAssetId', label: 'Logo', type: 'media', scope: 'base', required: true, accept: IMAGE_ACCEPT, image: IMAGE_SPECS.partnerLogo, hint: '建議透明底 PNG，避免出現白色方塊。' },
     { name: 'websiteUrl', label: '官方網站', type: 'url', scope: 'base', maxLength: 512, wide: true, hint: '完整網址，要以 https:// 開頭；留空的話 Logo 不會是連結。' },
     { name: 'isLogoWallVisible', label: '顯示於 Logo 牆', type: 'boolean', scope: 'base', hint: '關掉的話這筆品牌資料還在，但不會出現在首頁與合作頁的 Logo 牆。' },
     SORT_FIELD,
@@ -1504,7 +1508,7 @@ const processFlows: ResourceDef = {
         { name: 'stepNumber', label: '步驟編號', type: 'number', scope: 'base', required: true, hint: '顯示在步驟卡片上的數字，例如 1、2、3，跟下面的「排序」分開設定。' },
         { name: 'iconName', label: '圖示', type: 'icon', scope: 'base' },
         { name: 'accentColorHex', label: '色條', type: 'color', scope: 'base', hint: '這個步驟卡片旁邊的裝飾色條，選一個跟其他步驟區分開的顏色即可，沒有固定色號規則。' },
-        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT },
+        { name: 'mediaAssetId', label: '圖片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.content },
         SORT_FIELD,
       ],
       translationFields: [
