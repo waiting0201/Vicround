@@ -241,15 +241,8 @@ const autoFill = (min: number, gap = 20): React.CSSProperties => ({
   gap,
 });
 
-/**
- * 產品輔助色（CIS p.9：PANTONE 2097 C，三條產品線共用，與各產品主色成對使用）。
- * 型號 chip、應用場景色條、數值帶用它；產品主色只留給剖面色帶（2026-11-09 客戶指定）。
- * 取確認稿設計系統的 2097C token，與「應用場景」小標題的紫同一色。
- */
-const PRODUCT_SECONDARY = 'var(--purple-500)';
-
-/** 型號代碼 chip —— 產品線頁 family 卡的同一顆。 */
-const codeChip: React.CSSProperties = {
+/** 型號代碼 chip —— 產品線頁 family 卡的同一顆。字與底都取產品線輔助色。 */
+const codeChip = (color: string): React.CSSProperties => ({
   borderRadius: 12,
   width: 'fit-content',
   maxWidth: '100%',
@@ -257,13 +250,13 @@ const codeChip: React.CSSProperties = {
   minWidth: 48,
   padding: '0 12px',
   height: 32,
-  background: 'rgba(100,54,239,0.1)',
-  color: PRODUCT_SECONDARY,
+  background: `color-mix(in srgb, ${color} 10%, #ffffff)`,
+  color,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   font: "500 13px/1 'IBM Plex Mono', monospace",
-};
+});
 
 const newBadge: React.CSSProperties = {
   font: "500 10px/1 'IBM Plex Mono', monospace",
@@ -296,6 +289,8 @@ export default async function ProductPage({ params }: Params) {
   const name = data.name ?? slug;
   const categorySlug = data.categorySlug ?? category;
   const categoryName = data.category?.name ?? categorySlug;
+  // 產品線輔助色（CIS p.8 各產品線的標準色）：型號 chip、應用場景色條、數值帶與剖面色帶共用。
+  const lineColor = CATEGORY_CIS_COLOR[categorySlug]?.color ?? 'var(--purple-500)';
   const categoryPath = `${ROUTES.products}/${category}`;
   const path = `${categoryPath}/${slug}`;
   // banner 沿用所屬產品線在後台設的圖；產品線沒傳圖，這裡也不顯示圖帶。
@@ -430,7 +425,7 @@ export default async function ProductPage({ params }: Params) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                {data.code ? <span style={codeChip}>{data.code}</span> : null}
+                {data.code ? <span style={codeChip(lineColor)}>{data.code}</span> : null}
                 {data.isNew ? <span style={newBadge}>{t('common.new')}</span> : null}
                 {data.brand ? <span style={monoLabel}>{data.brand}</span> : null}
               </div>
@@ -439,7 +434,7 @@ export default async function ProductPage({ params }: Params) {
 
               {/* 應用場景：確認稿 news-article 的引言方塊語彙（淺紫底 + 左側色條）。 */}
               {data.applicationNote ? (
-                <div style={{ borderRadius: 14, padding: '22px 24px', background: 'var(--page-raised)', borderLeft: `3px solid ${PRODUCT_SECONDARY}` }}>
+                <div style={{ borderRadius: 14, padding: '22px 24px', background: 'var(--page-raised)', borderLeft: `3px solid ${lineColor}` }}>
                   <p style={eyebrowStyle}>{t('product.usedIn')}</p>
                   <p style={{ ...bodyCopy, marginTop: 12, color: 'var(--page-fg)' }}>{data.applicationNote}</p>
                 </div>
@@ -464,7 +459,7 @@ export default async function ProductPage({ params }: Params) {
                           display: 'block',
                           // 較長的值（「GRS-certified base」）降一級，數值帶才不會被撐高。
                           font: `500 ${row.value.length > 12 ? 'clamp(1.25rem, 2vw, 1.5rem)' : 'clamp(1.75rem, 3vw, 2.25rem)'}/1.15 'Geologica', 'GenYoGothic TW', sans-serif`,
-                          color: PRODUCT_SECONDARY,
+                          color: lineColor,
                           overflowWrap: 'anywhere',
                         }}
                       >
@@ -505,7 +500,7 @@ export default async function ProductPage({ params }: Params) {
               ) : null}
               <CrossSectionDiagram
                 layers={layers}
-                color={CATEGORY_CIS_COLOR[categorySlug]?.color ?? PRODUCT_SECONDARY}
+                color={lineColor}
                 lightest={CATEGORY_CIS_COLOR[categorySlug]?.lightest ?? 40}
                 thickness={thickness}
                 label={t('product.crossSection')}
@@ -579,7 +574,7 @@ export default async function ProductPage({ params }: Params) {
               <div style={{ ...autoFill(240), marginTop: 40 }}>
                 {siblings.map(({ ref, detail }) => (
                   <Link key={ref.slug} href={productHref(ref)} className="vr-card-link" style={{ ...cardStyle, padding: '28px 26px', textDecoration: 'none' }}>
-                    {ref.code ? <span style={codeChip}>{ref.code}</span> : null}
+                    {ref.code ? <span style={codeChip(lineColor)}>{ref.code}</span> : null}
                     <span style={{ font: "600 1.0625rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif", color: 'var(--page-fg)' }}>
                       {ref.name ?? ref.slug}
                       {detail?.isNew ? <span style={{ ...newBadge, marginLeft: 10, verticalAlign: 'middle' }}>{t('common.new')}</span> : null}

@@ -52,10 +52,10 @@ export const CATEGORY_DEEP: Record<string, string> = {
 };
 
 /**
- * 產品線的 CIS 標準色（CIS p.8），只用在產品詳情頁的剖面色帶——客戶指定剖面圖要用這組
- * 色系與其 10% 一階的淡色（2026-11-09）。詳情頁其餘的強調（型號 chip、應用場景色條、
- * 數值帶）改走 CIS p.9 的產品輔助色 2097C，兩者刻意分開：Cool Gray 2C 這類淺色拿來
- * 當文字色會看不見。以產品線 slug 為鍵。
+ * 產品線輔助色＝CIS p.8 各產品線的標準色與其 10% 一階的淡色（2026-11-09 客戶指定）。
+ * 產品詳情頁的剖面色帶、型號 chip、應用場景色條、數值帶都用它，依產品線分色——
+ * 不是 CIS p.9 那個三線共用的 2097C 紫。以產品線 slug 為鍵。
+ * 注意：Cool Gray 2C 與 3105 C 當白底文字對比偏低，這是客戶指定的取捨。
  */
 export const CATEGORY_CIS_COLOR: Record<string, { color: string; lightest: number }> = {
   // lightest：剖面最上層（最淡）取幾 % 的淡色。Cool Gray 2C 本身就淺，40% 在白底上幾乎看不見，
