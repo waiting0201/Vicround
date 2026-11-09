@@ -53,6 +53,7 @@ public sealed class BlobMediaStorage(BlobServiceClient client, ILogger<BlobMedia
         string container,
         string blobPath,
         TimeSpan lifetime,
+        string? downloadFileName = null,
         CancellationToken cancellationToken = default)
     {
         var blob = client.GetBlobContainerClient(container).GetBlobClient(blobPath);
@@ -74,6 +75,22 @@ public sealed class BlobMediaStorage(BlobServiceClient client, ILogger<BlobMedia
             StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5),
         };
 
+        if (downloadFileName is { Length: > 0 })
+        {
+            builder.ContentDisposition = ContentDispositionFor(downloadFileName);
+        }
+
         return Task.FromResult(blob.GenerateSasUri(builder));
+    }
+
+    /// <summary>
+    /// RFC 6266：<c>filename</c> 給只認 ASCII 的舊客戶端（非 ASCII 字元換成底線），
+    /// <c>filename*</c> 帶 UTF-8 原名——中文檔名靠它才不會變亂碼。
+    /// </summary>
+    public static string ContentDispositionFor(string fileName)
+    {
+        var name = Path.GetFileName(fileName.Trim());
+        var ascii = new string(name.Select(c => c is >= ' ' and <= '~' and not '"' and not '\\' ? c : '_').ToArray());
+        return $"attachment; filename=\"{ascii}\"; filename*=UTF-8''{Uri.EscapeDataString(name)}";
     }
 }

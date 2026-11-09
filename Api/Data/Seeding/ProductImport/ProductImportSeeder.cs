@@ -76,6 +76,8 @@ public sealed class ProductImportSeeder(
             await ImportDownloadAsync(download, cancellationToken);
         }
 
+        await RetireDownloadsAsync(catalog.RetireDownloads, cancellationToken);
+
         foreach (var certification in catalog.Certifications)
         {
             await FillCertificationAsync(certification, cancellationToken);
@@ -307,12 +309,17 @@ public sealed class ProductImportSeeder(
                     Culture = culture,
                     Title = text.Title,
                     Description = text.Description,
+                    FileName = text.FileName,
                 });
             }
 
             db.Downloads.Add(download);
             await db.SaveChangesAsync(cancellationToken);
             Count("下載");
+        }
+        else if (source.OverwriteTexts)
+        {
+            await OverwriteDownloadTextsAsync(download, source, cancellationToken);
         }
 
         var products = await db.Products
@@ -356,6 +363,75 @@ public sealed class ProductImportSeeder(
                     Count("下載↔認證");
                 }
             }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+    }
+
+    /// <summary>
+    /// 「只補缺不覆寫」的唯一例外，逐筆以 <c>overwriteTexts</c> 開啟：客戶親自校過的標題、說明與
+    /// 下載檔名（例如 2026-10-30 的光學膜第三方認證清單）要蓋掉匯入當時整理的文字。
+    /// 每次重跑都會再蓋一次，所以後台要改這幾筆，先把旗標拿掉。
+    /// </summary>
+    private async Task OverwriteDownloadTextsAsync(Download download, DownloadSource source, CancellationToken cancellationToken)
+    {
+        var translations = await db.DownloadTranslations.AsTracking()
+            .Where(t => t.DownloadId == download.Id)
+            .ToListAsync(cancellationToken);
+        var changed = 0;
+
+        foreach (var (culture, text) in source.Texts())
+        {
+            var translation = translations.SingleOrDefault(t => t.Culture == culture);
+
+            if (translation is null)
+            {
+                db.DownloadTranslations.Add(new DownloadTranslation
+                {
+                    DownloadId = download.Id,
+                    Culture = culture,
+                    Title = text.Title,
+                    Description = text.Description,
+                    FileName = text.FileName,
+                });
+                changed++;
+                continue;
+            }
+
+            if (translation.Title != text.Title || translation.Description != text.Description || translation.FileName != text.FileName)
+            {
+                translation.Title = text.Title;
+                translation.Description = text.Description;
+                translation.FileName = text.FileName;
+                changed++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        Count("下載文字覆寫", changed);
+    }
+
+    /// <summary>
+    /// 清單上已發布的下載改成草稿；已經是草稿的不動。每次重跑都會執行，所以後台重新發布的
+    /// 項目會再被拉下來——要留的話，從 <c>retireDownloads</c> 拿掉。
+    /// </summary>
+    private async Task RetireDownloadsAsync(List<string> slugs, CancellationToken cancellationToken)
+    {
+        if (slugs.Count == 0)
+        {
+            return;
+        }
+
+        var downloads = await db.Downloads.AsTracking()
+            .Where(d => slugs.Contains(d.Slug) && d.Status == ContentStatus.Published)
+            .ToListAsync(cancellationToken);
+
+        foreach (var download in downloads)
+        {
+            download.Status = ContentStatus.Draft;
+            download.PublishedAt = null;
+            Count("下架下載");
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -617,6 +693,9 @@ public sealed class ProductImportSeeder(
 
         /// <summary>要下架的佔位 family slug。</summary>
         public List<string> Retire { get; set; } = [];
+
+        /// <summary>要下架的下載 slug（過期或被新版取代的報告）。改成草稿，不刪——後台還看得到。</summary>
+        public List<string> RetireDownloads { get; set; } = [];
     }
 
     /// <summary>每個來源物件都有 <c>en</c> 與 <c>zh-Hant</c> 兩份文字。</summary>
@@ -671,9 +750,12 @@ public sealed class ProductImportSeeder(
         public string File { get; set; } = string.Empty;
         public List<string> Products { get; set; } = [];
         public string? Certification { get; set; }
+
+        /// <summary>已存在時仍以 JSON 的文字蓋掉翻譯列——見 <see cref="OverwriteDownloadTextsAsync"/>。</summary>
+        public bool OverwriteTexts { get; set; }
     }
 
-    private sealed record DownloadText(string Title, string? Description);
+    private sealed record DownloadText(string Title, string? Description, string? FileName);
 
     private sealed class CertificationSource : Bilingual<CertificationText>
     {

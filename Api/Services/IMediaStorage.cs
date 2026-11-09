@@ -22,10 +22,15 @@ public interface IMediaStorage
     /// 它的有效期就是損害的上限。
     /// </para>
     /// </summary>
+    /// <param name="downloadFileName">
+    /// 有值時以 <c>Content-Disposition: attachment</c> 簽進 SAS，瀏覽器存檔時用這個名字
+    /// （Blob 名稱是 slug，不適合直接給人看）。
+    /// </param>
     Task<Uri> CreateReadLinkAsync(
         string container,
         string blobPath,
         TimeSpan lifetime,
+        string? downloadFileName = null,
         CancellationToken cancellationToken = default);
 }
 

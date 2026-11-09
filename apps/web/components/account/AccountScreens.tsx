@@ -134,7 +134,8 @@ export function DownloadsScreen({
     onRequest: string; version: string; validUntil: string; failed: string;
   };
 }) {
-  const state = useRemote<MemberDownload[]>(listDownloads);
+  const load = useCallback(() => listDownloads(locale), [locale]);
+  const state = useRemote<MemberDownload[]>(load);
   const [failed, setFailed] = useState<string | null>(null);
 
   /**
@@ -144,7 +145,7 @@ export function DownloadsScreen({
   async function open(slug: string) {
     setFailed(null);
     try {
-      const link = await createDownloadLink(slug);
+      const link = await createDownloadLink(slug, locale);
       window.location.assign(link.url);
     } catch {
       setFailed(labels.failed);

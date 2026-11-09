@@ -46,6 +46,13 @@ public class DownloadTranslation : SeoTranslation
 
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
+
+    /// <summary>
+    /// 這個語系的會員下載到的檔名（含副檔名），簽 SAS 時以 <c>Content-Disposition</c> 帶出。
+    /// <c>null</c> 時沿用 <see cref="MediaAsset.FileName"/>。Blob 名稱刻意用 slug，客戶指定的
+    /// 中英文檔名只能放這裡。
+    /// </summary>
+    public string? FileName { get; set; }
 }
 
 public class DownloadProduct

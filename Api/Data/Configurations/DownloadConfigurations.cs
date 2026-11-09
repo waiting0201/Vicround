@@ -44,6 +44,7 @@ public class DownloadTranslationConfiguration : TranslationConfiguration<Downloa
     {
         builder.Property(t => t.Title).HasMaxLength(300).IsRequired();
         builder.Property(t => t.Description).HasMaxLength(1000);
+        builder.Property(t => t.FileName).HasMaxLength(260);
 
         builder.HasOne(t => t.Download)
             .WithMany(d => d.Translations)

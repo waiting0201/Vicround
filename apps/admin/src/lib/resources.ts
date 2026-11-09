@@ -1057,6 +1057,16 @@ const downloads: ResourceDef = {
   translationFields: [
     { name: 'title', label: '標題', type: 'text', scope: 'translation', required: true, maxLength: 300, wide: true },
     { name: 'description', label: '說明', type: 'textarea', scope: 'translation', maxLength: 1000, rows: 3, wide: true },
+    {
+      name: 'fileName',
+      label: '下載檔名',
+      type: 'text',
+      scope: 'translation',
+      maxLength: 260,
+      wide: true,
+      placeholder: 'vicround-…-test-report-20260511.pdf',
+      hint: '會員在這個語系下載時存成的檔名，要含副檔名。留空就用上傳時的原始檔名。只對限會員與私有檔案有效，公開檔案走直連網址。',
+    },
     ...SEO_FIELDS,
   ],
 };

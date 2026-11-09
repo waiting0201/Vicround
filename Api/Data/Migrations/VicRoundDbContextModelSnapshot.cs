@@ -1537,6 +1537,10 @@ namespace VicRound.Api.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("FileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
                     b.Property<int?>("OgImageMediaAssetId")
                         .HasColumnType("int");
 

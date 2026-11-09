@@ -220,13 +220,16 @@ export type MemberDownload = {
   canDownload: boolean;
 };
 
-export async function listDownloads(): Promise<MemberDownload[]> {
-  return accountFetch<MemberDownload[]>('/downloads');
+/** 語系的真相來源是網址：一定要帶 `culture`，否則後端只能看瀏覽器的 Accept-Language。 */
+export async function listDownloads(locale: string): Promise<MemberDownload[]> {
+  return accountFetch<MemberDownload[]>(`/downloads?culture=${encodeURIComponent(locale)}`);
 }
 
-/** 換一個十分鐘後失效的下載連結。不要快取回傳值。 */
-export async function createDownloadLink(slug: string): Promise<{ url: string; expiresAt: string }> {
-  return accountFetch(`/downloads/${encodeURIComponent(slug)}/link`, { method: 'POST' });
+/** 換一個十分鐘後失效的下載連結。不要快取回傳值。檔名依 `locale` 決定。 */
+export async function createDownloadLink(slug: string, locale: string): Promise<{ url: string; expiresAt: string }> {
+  return accountFetch(`/downloads/${encodeURIComponent(slug)}/link?culture=${encodeURIComponent(locale)}`, {
+    method: 'POST',
+  });
 }
 
 export type SampleRequestSummary = {

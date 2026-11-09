@@ -620,8 +620,15 @@ Downloads (Routable — /{locale}/resources/downloads#{slug})
   Status, SortOrder, 三時間戳
 
 DownloadTranslations (DownloadId, Culture)
-  Title nvarchar(300), Description nvarchar(1000), + SEO 四欄
+  Title nvarchar(300), Description nvarchar(1000),
+  FileName nvarchar(260) NULL  -- 這個語系的下載檔名（2026-11-09）；NULL = 沿用 MediaAssets.FileName
+  + SEO 四欄
 ```
+
+**下載檔名**：Blob 名稱刻意用 slug，客戶指定的中英文檔名放 `DownloadTranslations.FileName`。
+Account API 簽 SAS 時以 `Content-Disposition: attachment` 帶出（`filename` 為 ASCII 退路、
+`filename*` 為 UTF-8 原名），依 `?culture=` 選語系——前台兩支會員下載呼叫都要帶它。
+公開檔案走 CDN 直連，沒有這一層。
 
 ### 權限判定（Application 層規則）
 
@@ -1416,6 +1423,9 @@ C 層另有兩支：`ContentImportSeeder`（`import-content`，確認稿文案�
 產品、下載、案例可帶 `status: "Draft"`（開發中或資料不齊的產品，2026-10-20）；`retire` 列出的佔位 family
 在匯入時改為草稿，還掛在它們底下的既有型號搬到 JSON 指定的新 family——只搬「還掛在佔位 family」的，
 編輯者在後台調整過的不動。
+`retireDownloads` 列出要下架的下載（過期或被取代的報告），每次匯入都把仍是已發布的改成草稿。
+下載可帶 `overwriteTexts: true`：已存在時仍以 JSON 的標題、說明與 `fileName` 覆寫翻譯列——
+**只用在客戶親自校過的文字**（首例：2026-10-30 光學膜第三方認證清單），後台要改那幾筆就先拿掉旗標。
 
 **不上站的素材**（2026-10-20 整理第二批時確立）：客戶資料夾裡標「內部教育訓練」的案例海報、內文／檔名／
 資料夾名帶客戶名稱的內測與檢驗報告、印有買方名稱的第三方報告、圖片裡有客戶品牌的 EDM。這些不建下載，

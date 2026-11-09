@@ -70,7 +70,7 @@ public sealed class AccountDownloadsHandler(
             r.Version,
             r.DocumentDate?.ToDateTime(TimeOnly.MinValue),
             r.ValidUntil?.ToDateTime(TimeOnly.MinValue),
-            r.FileName,
+            r.Translation?.FileName ?? r.FileName,
             r.FileSizeBytes,
             r.MimeType,
             CanDownload: r.AccessLevel != DownloadAccessLevel.OnRequest
@@ -83,6 +83,7 @@ public sealed class AccountDownloadsHandler(
 
     public async Task<IActionResult> CreateLinkAsync(HttpRequest req, string slug)
     {
+        var culture = LangResolver.Resolve(req);
         var today = DateOnly.FromDateTime(Clock.UtcNow);
 
         var download = await db.Downloads
@@ -95,6 +96,10 @@ public sealed class AccountDownloadsHandler(
                 BlobPath = d.MediaAsset!.BlobPath,
                 Url = d.MediaAsset!.Url,
                 IsPrivate = d.MediaAsset!.IsPrivate,
+                // 與清單同一套 fallback：本語系 → 預設語系 → 原始檔名。
+                FileName = d.Translations.Where(t => t.Culture == culture).Select(t => t.FileName).FirstOrDefault()
+                    ?? d.Translations.Where(t => t.Culture == CultureCodes.Default).Select(t => t.FileName).FirstOrDefault()
+                    ?? d.MediaAsset!.FileName,
             })
             .SingleOrDefaultAsync(req.HttpContext.RequestAborted)
             ?? throw AppException.NotFound("找不到這份文件。");
@@ -123,7 +128,7 @@ public sealed class AccountDownloadsHandler(
         }
 
         var uri = await storage.CreateReadLinkAsync(
-            download.Container, download.BlobPath, LinkLifetime, req.HttpContext.RequestAborted);
+            download.Container, download.BlobPath, LinkLifetime, download.FileName, req.HttpContext.RequestAborted);
 
         return Link(req, new DownloadLinkDto(uri.ToString(), Clock.UtcNow.Add(LinkLifetime)));
     }
