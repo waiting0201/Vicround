@@ -52,25 +52,15 @@ export const CATEGORY_DEEP: Record<string, string> = {
 };
 
 /**
- * 產品詳情頁在**淺色底**上的文字用強調色（編號、數值帶、型號 chip）。
- * 取自確認稿 `product-*.dc.html` 的實際色值——500 階的亮色（`CATEGORY_ACCENT`）
- * 放在白底上對比不足，確認稿在淺色頁改用較深的一階。以產品線 slug 為鍵。
- */
-export const CATEGORY_TEXT_ACCENT: Record<string, string> = {
-  'optical-film': '#1f6ab4',
-  'textile-foam': '#a2540f',
-  acoustic: '#0f8a76',
-};
-
-/**
  * 產品線的 CIS 標準色（CIS p.8），只用在產品詳情頁的剖面色帶——客戶指定剖面圖要用這組
- * 色系與其 10% 一階的淡色（2026-11-09）。其餘介面仍走確認稿的強調色，兩者刻意分開：
- * Cool Gray 2C 這類淺色拿來當文字色會看不見。以產品線 slug 為鍵。
+ * 色系與其 10% 一階的淡色（2026-11-09）。詳情頁其餘的強調（型號 chip、應用場景色條、
+ * 數值帶）改走 CIS p.9 的產品輔助色 2097C，兩者刻意分開：Cool Gray 2C 這類淺色拿來
+ * 當文字色會看不見。以產品線 slug 為鍵。
  */
 export const CATEGORY_CIS_COLOR: Record<string, { color: string; lightest: number }> = {
   // lightest：剖面最上層（最淡）取幾 % 的淡色。Cool Gray 2C 本身就淺，40% 在白底上幾乎看不見，
-  // 所以聲學類從 60% 起跳。
+  // 所以聲學類從 60% 起跳；紡織泡棉的 1925 C 飽和度高，客戶指定最淡層壓到 20%。
   'optical-film': { color: '#71d6e0', lightest: 40 }, // PANTONE 3105 C
-  'textile-foam': { color: '#e7004b', lightest: 40 }, // PANTONE 1925 C
+  'textile-foam': { color: '#e7004b', lightest: 20 }, // PANTONE 1925 C
   acoustic: { color: '#cfcfcd', lightest: 60 }, // PANTONE Cool Gray 2C
 };
