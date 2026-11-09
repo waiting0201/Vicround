@@ -27,7 +27,7 @@ import { pageMetadata } from '@/lib/seo';
  * 這一頁是「產品線頁再深一層」，版型逐區塊沿用 `product-*.dc.html` 與 `PageBanner` 的語彙，
  * 對照 `mockup/Rounded Design/product-detail.dc.html`：
  * PageBanner（沿用該產品線的 banner 與強調色）→ 麵包屑 → Overview（圖 + 說明 + 關鍵數值帶）→
- * 剖面結構（步驟卡）→ 規格表 → 認證（點開全站唯一的認證彈窗）→ 文件（下載列）→
+ * 剖面結構（由上而下的色帶）→ 規格表 → 認證（點開全站唯一的認證彈窗）→ 文件（下載列）→
  * 同系列型號（產品線頁的 family 卡）→ PageCTA。
  * 各區依「實際有哪些」由上而下交錯白／淺紫底，就像產品線頁那樣。family 與型號共用這一頁。
  * 客戶案例不在這一頁——它掛在產業頁（`/solutions/{slug}`），產品只是案例裡的連結。
@@ -87,10 +87,97 @@ async function getProduct(locale: Locale, slug: string) {
  */
 function splitCrossSection(rows: SpecificationRow[], label: string) {
   const index = rows.findIndex((row) => row.label === label);
-  if (index < 0) return { layers: [] as string[], rows };
+  if (index < 0) return { layers: [] as Layer[], rows };
 
-  const layers = rows[index].value.split(/\s*[/／]\s*/).filter(Boolean);
+  const layers = rows[index].value
+    .split(/\s*[/／]\s*/)
+    .filter(Boolean)
+    .map(parseLayer);
   return { layers, rows: rows.filter((_, i) => i !== index) };
+}
+
+/**
+ * 一層可帶左側註記，寫法同規格書的「Anti-glare Coating → Functional Layer」：
+ * 箭頭左邊是註記（這一層的處理），右邊是層名。沒有箭頭就只有層名。
+ */
+type Layer = { name: string; annotation: string | null };
+
+function parseLayer(text: string): Layer {
+  const match = text.match(/^(.+?)\s*(?:→|->)\s*(.+)$/);
+  return match ? { annotation: match[1], name: match[2] } : { annotation: null, name: text };
+}
+
+/**
+ * 剖面圖：照業界規格書的畫法，各層是一條由上而下疊起來的色帶，層名在右、
+ * 註記（若有）在左，最右側用括號標總厚度（取規格表的「Thickness」列；沒有就不畫）。
+ * 色帶用產品線強調色，由上往下逐層加深，相鄰兩層才分得開。
+ */
+function CrossSectionDiagram({ layers, accent, thickness, label }: { layers: Layer[]; accent: string; thickness: string | null; label: string }) {
+  const hasAnnotations = layers.some((layer) => layer.annotation);
+  const tint = (index: number) => {
+    const share = layers.length === 1 ? 45 : 22 + Math.round((index / (layers.length - 1)) * 48);
+    return `color-mix(in srgb, ${accent} ${share}%, #ffffff)`;
+  };
+  const caption: React.CSSProperties = {
+    font: "400 0.9375rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
+    color: 'var(--page-fg)',
+    overflowWrap: 'anywhere',
+  };
+
+  return (
+    <div style={{ marginTop: 40, display: 'flex', alignItems: 'stretch', gap: 'clamp(12px, 2vw, 24px)' }}>
+      <ol
+        aria-label={label}
+        style={{
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+          flex: 1,
+          minWidth: 0,
+          display: 'grid',
+          // 色帶欄吃掉剩餘寬度：剖面圖本身就是這一區的主角，跟規格書一樣是一整塊寬的板材。
+          gridTemplateColumns: `${hasAnnotations ? 'minmax(0, max-content) ' : ''}minmax(96px, 1fr) minmax(0, max-content)`,
+          columnGap: 'clamp(12px, 2vw, 24px)',
+          alignItems: 'center',
+        }}
+      >
+        {layers.map((layer, index) => (
+          <li key={`${index}-${layer.name}`} style={{ display: 'contents' }}>
+            {hasAnnotations ? (
+              <span style={{ ...caption, textAlign: 'right', color: 'var(--page-muted)' }}>
+                {layer.annotation ? (
+                  <>
+                    {layer.annotation} <span aria-hidden="true">→</span>
+                  </>
+                ) : null}
+              </span>
+            ) : null}
+            <span
+              aria-hidden="true"
+              style={{
+                alignSelf: 'stretch',
+                minHeight: 'clamp(40px, 4vw, 52px)',
+                background: tint(index),
+                borderTop: index === 0 ? 'none' : '1px solid rgba(255,255,255,0.7)',
+                borderRadius: index === 0 ? '6px 6px 0 0' : index === layers.length - 1 ? '0 0 6px 6px' : 0,
+              }}
+            />
+            <span style={{ ...caption, padding: '8px 0' }}>{layer.name}</span>
+          </li>
+        ))}
+      </ol>
+
+      {thickness ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <span
+            aria-hidden="true"
+            style={{ alignSelf: 'stretch', width: 10, border: '1.5px solid var(--page-muted)', borderLeft: 'none', borderRadius: '0 4px 4px 0' }}
+          />
+          <span style={{ ...caption, font: "500 0.9375rem/1.35 'IBM Plex Mono', monospace", whiteSpace: 'nowrap' }}>{thickness}</span>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -132,11 +219,6 @@ const cardBody: React.CSSProperties = {
   font: "400 0.875rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
   color: 'var(--page-muted)',
   textWrap: 'pretty',
-};
-
-const cardTitle: React.CSSProperties = {
-  font: "600 1rem/1.3 'Geologica', 'GenYoGothic TW', sans-serif",
-  color: 'var(--page-fg)',
 };
 
 const autoFill = (min: number, gap = 20): React.CSSProperties => ({
@@ -209,6 +291,7 @@ export default async function ProductPage({ params }: Params) {
 
   const { layers, rows: specRows } = splitCrossSection(data.specifications ?? [], t('product.crossSectionLabels'));
   const crossSectionNote = (data.specifications ?? []).find((row) => row.label === t('product.crossSectionLabels'))?.note;
+  const thickness = (data.specifications ?? []).find((row) => row.label === t('product.thicknessLabel'))?.value ?? null;
   const highlights = (data.specifications ?? []).filter((row) => row.isHighlighted);
 
   // 主圖排在圖庫第一張（後端刻意不把它重複收進 `images`）。沒有任何圖時退回該產品線的情境圖。
@@ -390,7 +473,7 @@ export default async function ProductPage({ params }: Params) {
 
         {/*
           ============ 剖面結構 ============
-          沒有前例，用「How it is made」的步驟卡組出來：每一層一張卡，編號由上而下。
+          照客戶規格書的畫法（2026-11-09 客戶要求）：色帶由上而下疊成剖面，不是左右排的卡片。
         */}
         {layers.length > 0 ? (
           <BlockSection id="structure" raised={raised('structure')}>
@@ -398,21 +481,7 @@ export default async function ProductPage({ params }: Params) {
             {crossSectionNote ? (
               <p style={{ ...bodyCopy, margin: '16px 0 0', lineHeight: 1.6, color: 'var(--page-muted)' }}>{crossSectionNote}</p>
             ) : null}
-            <div style={{ ...autoFill(200), marginTop: 40 }}>
-              {layers.map((layer, index) => (
-                <div key={`${index}-${layer}`} style={cardStyle}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <span style={{ font: "500 14px/1 'IBM Plex Mono', monospace", color: accent }}>
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span style={{ ...monoLabel, lineHeight: 1 }}>
-                      {index === 0 ? t('product.top') : index === layers.length - 1 ? t('product.bottom') : ''}
-                    </span>
-                  </div>
-                  <span style={cardTitle}>{layer}</span>
-                </div>
-              ))}
-            </div>
+            <CrossSectionDiagram layers={layers} accent={accent} thickness={thickness} label={t('product.crossSection')} />
           </BlockSection>
         ) : null}
 
