@@ -61,3 +61,16 @@ export const CATEGORY_TEXT_ACCENT: Record<string, string> = {
   'textile-foam': '#a2540f',
   acoustic: '#0f8a76',
 };
+
+/**
+ * 產品線的 CIS 標準色（CIS p.8），只用在產品詳情頁的剖面色帶——客戶指定剖面圖要用這組
+ * 色系與其 10% 一階的淡色（2026-11-09）。其餘介面仍走確認稿的強調色，兩者刻意分開：
+ * Cool Gray 2C 這類淺色拿來當文字色會看不見。以產品線 slug 為鍵。
+ */
+export const CATEGORY_CIS_COLOR: Record<string, { color: string; lightest: number }> = {
+  // lightest：剖面最上層（最淡）取幾 % 的淡色。Cool Gray 2C 本身就淺，40% 在白底上幾乎看不見，
+  // 所以聲學類從 60% 起跳。
+  'optical-film': { color: '#71d6e0', lightest: 40 }, // PANTONE 3105 C
+  'textile-foam': { color: '#e7004b', lightest: 40 }, // PANTONE 1925 C
+  acoustic: { color: '#cfcfcd', lightest: 60 }, // PANTONE Cool Gray 2C
+};

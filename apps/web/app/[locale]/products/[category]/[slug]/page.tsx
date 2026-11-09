@@ -15,7 +15,7 @@ import { getCategory, type Certification, type Download, type SpecificationRow }
 import { translator } from '@/lib/i18n';
 import { requireLocale, type Locale } from '@/lib/locale';
 import { localeHref } from '@/lib/nav';
-import { CATEGORY_TEXT_ACCENT, categoryImage } from '@/lib/page-assets';
+import { CATEGORY_CIS_COLOR, CATEGORY_TEXT_ACCENT, categoryImage } from '@/lib/page-assets';
 import { ROUTES } from '@/lib/routes';
 import { breadcrumbSchema, productSchema, type ProductSchemaInput } from '@/lib/schema';
 import { pageMetadata } from '@/lib/seo';
@@ -110,13 +110,27 @@ function parseLayer(text: string): Layer {
 /**
  * 剖面圖：照業界規格書的畫法，各層是一條由上而下疊起來的色帶，層名在右、
  * 註記（若有）在左，最右側用括號標總厚度（取規格表的「Thickness」列；沒有就不畫）。
- * 色帶用產品線強調色，由上往下逐層加深，相鄰兩層才分得開。
+ * 色帶用產品線的 CIS 標準色，最下層是 100% 原色、往上逐層變淡（最淡到 `lightest`，
+ * 依產品線而定），每一層都落在 CIS 色票 10% 一階的淡色上，相鄰兩層才分得開。
  */
-function CrossSectionDiagram({ layers, accent, thickness, label }: { layers: Layer[]; accent: string; thickness: string | null; label: string }) {
+function CrossSectionDiagram({
+  layers,
+  color,
+  lightest,
+  thickness,
+  label,
+}: {
+  layers: Layer[];
+  color: string;
+  lightest: number;
+  thickness: string | null;
+  label: string;
+}) {
   const hasAnnotations = layers.some((layer) => layer.annotation);
   const tint = (index: number) => {
-    const share = layers.length === 1 ? 45 : 22 + Math.round((index / (layers.length - 1)) * 48);
-    return `color-mix(in srgb, ${accent} ${share}%, #ffffff)`;
+    const share =
+      layers.length === 1 ? 100 : Math.round((lightest + (index / (layers.length - 1)) * (100 - lightest)) / 10) * 10;
+    return `color-mix(in srgb, ${color} ${share}%, #ffffff)`;
   };
   const caption: React.CSSProperties = {
     font: "400 0.9375rem/1.35 'Geologica', 'GenYoGothic TW', sans-serif",
@@ -314,8 +328,9 @@ export default async function ProductPage({ params }: Params) {
   const hasFamilySection = Boolean(data.parent) || variants.length > 0;
 
   // 區段依「實際存在的」由上而下交錯白／淺紫底（Overview 固定是白底）。
+  // 剖面結構固定白底、不參與交錯：CIS 色票的淡色是對白底定義的，放在淺紫底上淺色層會糊掉
+  // （2026-11-09 客戶選定）。它和 Overview 之間改用一條細線分開。
   const present = [
-    layers.length > 0 && 'structure',
     specRows.length > 0 && 'specs',
     certifications.length > 0 && 'certifications',
     downloadGroups.length > 0 && 'downloads',
@@ -476,13 +491,21 @@ export default async function ProductPage({ params }: Params) {
           照客戶規格書的畫法（2026-11-09 客戶要求）：色帶由上而下疊成剖面，不是左右排的卡片。
         */}
         {layers.length > 0 ? (
-          <BlockSection id="structure" raised={raised('structure')}>
-            <h2 style={sectionTitleStyle}>{t('product.crossSection')}</h2>
-            {crossSectionNote ? (
-              <p style={{ ...bodyCopy, margin: '16px 0 0', lineHeight: 1.6, color: 'var(--page-muted)' }}>{crossSectionNote}</p>
-            ) : null}
-            <CrossSectionDiagram layers={layers} accent={accent} thickness={thickness} label={t('product.crossSection')} />
-          </BlockSection>
+          <div style={{ borderTop: '1px solid var(--page-border)' }}>
+            <BlockSection id="structure">
+              <h2 style={sectionTitleStyle}>{t('product.crossSection')}</h2>
+              {crossSectionNote ? (
+                <p style={{ ...bodyCopy, margin: '16px 0 0', lineHeight: 1.6, color: 'var(--page-muted)' }}>{crossSectionNote}</p>
+              ) : null}
+              <CrossSectionDiagram
+                layers={layers}
+                color={CATEGORY_CIS_COLOR[categorySlug]?.color ?? accent}
+                lightest={CATEGORY_CIS_COLOR[categorySlug]?.lightest ?? 40}
+                thickness={thickness}
+                label={t('product.crossSection')}
+              />
+            </BlockSection>
+          </div>
         ) : null}
 
         {/* ============ 規格表 ============ */}
