@@ -35,13 +35,14 @@ export function categoryImage(slug: string): string | undefined {
 }
 
 /**
- * 產品線的強調色。取自設計系統的 category token（`app/ds/tokens/colors.css`），
- * 不從 CMS 的 `AccentColorHex` 讀 —— 顏色是設計系統的決定，不是編輯者的內容。
+ * 產品線的強調色（編號、數值帶、型號 chip）＝產品線輔助色，即 CIS p.8 的三色
+ * （2026-11-10 客戶指定，原本取設計系統的 category token）。以產品線 type 為鍵；
+ * 色值與下方 `CATEGORY_CIS_COLOR` 同源。不從 CMS 的 `AccentColorHex` 讀。
  */
 export const CATEGORY_ACCENT: Record<string, string> = {
-  opticalFilm: 'var(--optical-500)',
-  textileFoam: 'var(--textile-500)',
-  acoustic: 'var(--acoustic-500)',
+  opticalFilm: '#71d6e0', // PANTONE 3105 C
+  textileFoam: '#e7004b', // PANTONE 1925 C
+  acoustic: '#cfcfcd', // PANTONE Cool Gray 2C
 };
 
 /** 產品線頁的深色情境底（mockup 的 challenge／overview 圖底）。 */

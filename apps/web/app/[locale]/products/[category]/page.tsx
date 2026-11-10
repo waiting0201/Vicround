@@ -170,7 +170,7 @@ export default async function ProductLinePage({ params }: Params) {
                       minWidth: 48,
                       padding: '0 12px',
                       height: 32,
-                      background: 'rgba(100,54,239,0.1)',
+                      background: `color-mix(in srgb, ${accent} 14%, transparent)`,
                       color: accent,
                       display: 'inline-flex',
                       alignItems: 'center',
