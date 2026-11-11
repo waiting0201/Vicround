@@ -442,6 +442,11 @@ public sealed class AdminCrudService(
         }
     }
 
+    /// <summary>
+    /// 要修改的實體一律從這裡取。DbContext 預設 <c>NoTracking</c>，連 <c>FindAsync</c> 回來的都是
+    /// Detached：直接改它的屬性、或對它的導覽 <c>LoadAsync</c> 再改，<c>SaveChanges</c> 都寫進 0 列
+    /// 且不報錯——後台會顯示「已儲存」，資料庫卻沒動。
+    /// </summary>
     private async Task<object?> FindTrackedAsync(Type type, object key, CancellationToken ct)
     {
         var instance = await db.FindAsync(type, [key], ct);
@@ -718,7 +723,8 @@ public sealed class AdminCrudService(
 
         foreach (var item in items.EnumerateArray())
         {
-            var row = await db.FindAsync(child.Entity, [ExistingId(item)!.Value], ct)
+            // 一定要是追蹤中的實體：底下的 Collection(...).LoadAsync 只在母體被追蹤時才追蹤載入的翻譯列
+            var row = await FindTrackedAsync(child.Entity, ExistingId(item)!.Value, ct)
                 ?? throw new InvalidOperationException($"{child.Entity.Name} 在查詢後消失了。");
 
             AdminMapper.Apply(row, childType, OnlyFields(item, child.EditableFields!));
