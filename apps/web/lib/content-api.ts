@@ -537,7 +537,9 @@ export function getArticles(
   return apiGet<Paged<ArticleListItem>>('/articles', {
     culture,
     query,
-    tags: [tag.articles(query.type)],
+    // 後端存文章時只送 `articles`（RevalidationTags.For），不分類型；
+    // 只掛 `articles:{type}` 的話，分類清單在發布後永遠不會更新。
+    tags: query.type ? [tag.articles(), tag.articles(query.type)] : [tag.articles()],
   });
 }
 

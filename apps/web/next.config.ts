@@ -43,6 +43,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        /**
+         * ⚠️ 內容頁的 HTML **不可以**讓 CDN 自己留著。
+         *
+         * 這些頁面是預先產生的，Next 預設會送出 `s-maxage=31536000`；SWA 內建的
+         * 邊緣快取照單全收，於是發布後 `revalidateTag` 明明成功（Next 這一側已經是
+         * 新內容），訪客拿到的卻是邊緣上那份舊 HTML，最長一年，而且沒有任何錯誤訊息。
+         * 改成每次都回源確認：Next 自己的快取仍在，回源很便宜。
+         *
+         * Next 只在回應還沒有 Cache-Control 時才補上預設值，所以這裡先設就會生效。
+         */
+        source: '/:locale(en|zh-Hant)/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
+      },
+      {
         source: '/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
