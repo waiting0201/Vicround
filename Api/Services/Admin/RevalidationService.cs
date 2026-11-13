@@ -132,7 +132,13 @@ public static class RevalidationTags
 
             case "exhibitions":
                 // 首頁也有展覽的 reference block，而首頁沒有掛 `articles:exhibitions`。
-                tags.AddRange(["articles:exhibitions", "page:resources", "page:news", "page:home"]);
+                // 掛了展會的新聞內頁也印著攤位與日期，那些頁面只認 `articles`。
+                tags.AddRange(["articles:exhibitions", "articles", "page:resources", "page:news", "page:home"]);
+                break;
+
+            // 作者沒有自己的頁面，署名出現在每一篇文章內頁。
+            case "authors":
+                tags.Add("articles");
                 break;
 
             case "process-flows":

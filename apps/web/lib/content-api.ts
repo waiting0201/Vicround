@@ -501,8 +501,9 @@ export function getCategories(culture: Locale) {
   return apiGet<CategoryListItem[]>('/categories', { culture, tags: [tag.categories()] });
 }
 
+/** 產品線頁的產品卡來自這支端點，而改產品只會送 `products`——不掛的話下架的產品會留在頁面上。 */
 export function getCategory(culture: Locale, slug: string) {
-  return apiGet<CategoryDetail>(`/categories/${slug}`, { culture, tags: [tag.category(slug)] });
+  return apiGet<CategoryDetail>(`/categories/${slug}`, { culture, tags: [tag.category(slug), tag.products()] });
 }
 
 export function getProducts(
@@ -544,7 +545,8 @@ export function getArticles(
 }
 
 export function getArticle(culture: Locale, slug: string) {
-  return apiGet<ArticleDetail>(`/articles/${slug}`, { culture, tags: [tag.article(slug)] });
+  // 內頁帶著作者與展會的資料；改那兩者時後端送的是 `articles`。
+  return apiGet<ArticleDetail>(`/articles/${slug}`, { culture, tags: [tag.article(slug), tag.articles()] });
 }
 
 export function getExhibitions(culture: Locale, upcoming?: boolean) {

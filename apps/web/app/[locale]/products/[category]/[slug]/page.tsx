@@ -73,10 +73,11 @@ const DOWNLOAD_GROUPS = [
   ['catalogue', 'product.groupCatalogue'],
 ] as const;
 
+/** 文件區的每一份都是後台「下載中心」的一筆，改它們只會送 `downloads`，所以這一頁也要掛。 */
 async function getProduct(locale: Locale, slug: string) {
   return apiGet<Product>(`/products/${slug}`, {
     culture: locale,
-    tags: [tag.products(), tag.product(slug)],
+    tags: [tag.products(), tag.product(slug), tag.downloads()],
   });
 }
 

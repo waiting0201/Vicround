@@ -19,6 +19,7 @@ public interface INavigationReadService
 /// 指向產品線／產業的項目，<b>小標（與產品線的短名）以實體自己的欄位為準</b>
 /// （<c>MenuNote</c>、<c>ShortName</c>）：導覽沒有後台，編輯者只改得到實體那一份，
 /// <c>NavigationItemTranslations</c> 的 seed 文字只在實體沒填時才用。
+/// 只套用在頁首選單：常用搜尋的 chip 也指向產品線，但它的文字是搜尋詞，不是產品線名稱。
 /// </para>
 /// </summary>
 public sealed class NavigationReadService(IDbConnection db) : INavigationReadService
@@ -50,14 +51,14 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
              LEFT JOIN Downloads d ON d.Id = e.RefDownloadId AND d.Status = @Published
              {DownloadReaders.HomeProduct("d", "dhp")}
              {Sql.TranslationJoin("NavigationItemTranslations", "NavigationItemId")}
-             LEFT JOIN CategoryTranslations ct ON ct.CategoryId = c.Id AND ct.Culture = @Culture
-             LEFT JOIN CategoryTranslations cf ON cf.CategoryId = c.Id AND cf.Culture = @DefaultCulture
-             LEFT JOIN SolutionTranslations st ON st.SolutionId = s.Id AND st.Culture = @Culture
-             LEFT JOIN SolutionTranslations sf ON sf.SolutionId = s.Id AND sf.Culture = @DefaultCulture
+             LEFT JOIN CategoryTranslations ct ON ct.CategoryId = c.Id AND ct.Culture = @Culture AND e.Location = @Header
+             LEFT JOIN CategoryTranslations cf ON cf.CategoryId = c.Id AND cf.Culture = @DefaultCulture AND e.Location = @Header
+             LEFT JOIN SolutionTranslations st ON st.SolutionId = s.Id AND st.Culture = @Culture AND e.Location = @Header
+             LEFT JOIN SolutionTranslations sf ON sf.SolutionId = s.Id AND sf.Culture = @DefaultCulture AND e.Location = @Header
              WHERE e.Status = @Published AND (@Location IS NULL OR e.Location = @Location)
              ORDER BY e.Location, e.SortOrder, e.Id
              """,
-            new { culture, DefaultCulture = CultureCodes.Default, Sql.Published, Location = locationValue }))
+            new { culture, DefaultCulture = CultureCodes.Default, Sql.Published, Location = locationValue, Header = (byte)NavigationLocation.Header }))
             .ToList();
 
         var childrenByParent = rows.Where(r => r.ParentId is not null).ToLookup(r => r.ParentId!.Value);
