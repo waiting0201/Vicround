@@ -131,7 +131,8 @@ public static class RevalidationTags
                 break;
 
             case "exhibitions":
-                tags.AddRange(["articles:exhibitions", "page:resources", "page:news"]);
+                // 首頁也有展覽的 reference block，而首頁沒有掛 `articles:exhibitions`。
+                tags.AddRange(["articles:exhibitions", "page:resources", "page:news", "page:home"]);
                 break;
 
             case "process-flows":

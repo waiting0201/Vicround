@@ -387,6 +387,9 @@ public sealed class AdminCrudService(
         }
 
         await db.SaveChangesAsync(ct);
+
+        // 排序也是內容變更：少了這一行，後台拖完順序、前台的靜態頁永遠是舊順序。
+        await revalidation.RevalidateAsync(RevalidationTags.For(resource.Slug, null), ct);
     }
 
 
