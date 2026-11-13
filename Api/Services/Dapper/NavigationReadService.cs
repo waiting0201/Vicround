@@ -15,6 +15,11 @@ public interface INavigationReadService
 /// 導覽（database.md §10）。站內連結存的是 <c>Ref*Id</c> 而非硬編 URL，
 /// 因此<b>路徑在這一層解析</b>——實體改 slug 時導覽自動跟著改，
 /// 不會出現「選單指向已被 301 的舊路徑」。
+/// <para>
+/// 指向產品線／產業的項目，<b>小標（與產品線的短名）以實體自己的欄位為準</b>
+/// （<c>MenuNote</c>、<c>ShortName</c>）：導覽沒有後台，編輯者只改得到實體那一份，
+/// <c>NavigationItemTranslations</c> 的 seed 文字只在實體沒填時才用。
+/// </para>
 /// </summary>
 public sealed class NavigationReadService(IDbConnection db) : INavigationReadService
 {
@@ -30,7 +35,9 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
                     a.Slug AS ArticleSlug, a.Type AS ArticleType,
                     CASE WHEN {DownloadReaders.Reachable("d", "dhp")} THEN d.Slug END AS DownloadSlug,
                     dhp.CategorySlug AS DownloadCategorySlug, dhp.ProductSlug AS DownloadProductSlug,
-                    {Sql.Coalesce("Label")}, {Sql.Coalesce("Note")},
+                    COALESCE(NULLIF(ct.ShortName, ''), t.Label, NULLIF(cf.ShortName, ''), f.Label) AS Label,
+                    COALESCE(NULLIF(ct.MenuNote, ''), NULLIF(st.MenuNote, ''), t.Note,
+                             NULLIF(cf.MenuNote, ''), NULLIF(sf.MenuNote, ''), f.Note) AS Note,
                     {Sql.Coalesce("MenuTitle")}, {Sql.Coalesce("AriaLabel")},
                     {Sql.HasCulture}
              FROM NavigationItems e
@@ -43,6 +50,10 @@ public sealed class NavigationReadService(IDbConnection db) : INavigationReadSer
              LEFT JOIN Downloads d ON d.Id = e.RefDownloadId AND d.Status = @Published
              {DownloadReaders.HomeProduct("d", "dhp")}
              {Sql.TranslationJoin("NavigationItemTranslations", "NavigationItemId")}
+             LEFT JOIN CategoryTranslations ct ON ct.CategoryId = c.Id AND ct.Culture = @Culture
+             LEFT JOIN CategoryTranslations cf ON cf.CategoryId = c.Id AND cf.Culture = @DefaultCulture
+             LEFT JOIN SolutionTranslations st ON st.SolutionId = s.Id AND st.Culture = @Culture
+             LEFT JOIN SolutionTranslations sf ON sf.SolutionId = s.Id AND sf.Culture = @DefaultCulture
              WHERE e.Status = @Published AND (@Location IS NULL OR e.Location = @Location)
              ORDER BY e.Location, e.SortOrder, e.Id
              """,
