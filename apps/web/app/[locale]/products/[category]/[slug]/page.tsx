@@ -310,11 +310,13 @@ export default async function ProductPage({ params }: Params) {
   const thickness = (data.specifications ?? []).find((row) => row.label === t('product.thicknessLabel'))?.value ?? null;
   const highlights = (data.specifications ?? []).filter((row) => row.isHighlighted);
 
-  // 主圖排在圖庫第一張（後端刻意不把它重複收進 `images`）。沒有任何圖時退回該產品線的情境圖。
-  const gallery = [
-    ...(data.heroImageUrl ? [{ url: data.heroImageUrl, altText: name } as ProductImage] : []),
-    ...(data.images ?? []),
-  ];
+  // `images` 已由後端排好：主視覺第一張、其餘依圖庫順序，不會重複。`heroImageUrl` 只是保險
+  // （API 還沒部署新版時），兩者都沒有時退回該產品線的情境圖。
+  const gallery: ProductImage[] = data.images?.length
+    ? data.images
+    : data.heroImageUrl
+      ? [{ url: data.heroImageUrl, altText: name } as ProductImage]
+      : [];
 
   const downloads = data.downloads ?? [];
   const groupedKinds = new Set<string>(DOWNLOAD_GROUPS.map(([kind]) => kind));

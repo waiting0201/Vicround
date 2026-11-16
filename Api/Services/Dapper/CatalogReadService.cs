@@ -202,7 +202,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     {
         var row = await db.QuerySingleOrDefaultAsync<ProductDetailRow>(
             """
-            SELECT e.Id, e.ParentProductId, e.Slug, e.Code, e.Brand, e.IsNew, c.Slug AS CategorySlug,
+            SELECT e.Id, e.ParentProductId, e.HeroMediaAssetId, e.Slug, e.Code, e.Brand, e.IsNew, c.Slug AS CategorySlug,
                    COALESCE(ct.Name, cf.Name) AS CategoryName,
                    CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS HeroImageUrl,
                    t.Name, t.Summary, t.Description, t.ApplicationNote,
@@ -248,7 +248,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             HeroImageUrl = row.HeroImageUrl,
             Seo = new SeoDto(row.SeoTitle, row.SeoDescription, row.SeoKeywords),
             Specifications = await ContentReaders.SpecificationsAsync(db, "OwnerProductId", row.Id, culture),
-            Images = await ProductImagesAsync(db, culture, row.Id),
+            Images = await ProductImagesAsync(db, culture, row.Id, row.HeroMediaAssetId),
             Certifications = await CertificationReadService.ListAsync(db, culture, category: null, productSlug: row.Slug),
             Downloads = await DownloadReadService.ListAsync(
                 db, culture, kindValue: null, productSlug: row.Slug),
@@ -299,22 +299,38 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     private sealed record ProductRefRow(int OwnerId, string Slug, string CategorySlug, string? Code, string? Name);
 
     /// <summary>圖庫（<c>ProductImages</c>）。private container 的檔案不會出現在公開端點。</summary>
+    /// <summary>
+    /// 產品頁的圖片，主視覺固定排第一張、其餘依圖庫順序。
+    ///
+    /// <para>
+    /// 後台的做法是「圖片傳一次，從裡面點一張當主視覺」，所以主視覺通常本來就在圖庫裡；
+    /// 舊資料（與匯入工具）則可能只設了主視覺、沒放進圖庫。兩種都在這裡收斂成同一份清單，
+    /// 主視覺不會出現兩次，也不會因為沒進圖庫就從產品頁消失。
+    /// </para>
+    /// </summary>
     private static async Task<IReadOnlyList<ProductImageDto>> ProductImagesAsync(
-        IDbConnection db, string culture, int productId)
+        IDbConnection db, string culture, int productId, int? heroMediaAssetId)
     {
         var rows = await db.QueryAsync<ProductImageRow>(
             """
             SELECT m.Url, m.Width, m.Height,
                    COALESCE(t.AltText, f.AltText) AS AltText,
                    COALESCE(t.Caption, f.Caption) AS Caption
-            FROM ProductImages x
-            INNER JOIN MediaAssets m ON m.Id = x.MediaAssetId AND m.IsArchived = 0 AND m.IsPrivate = 0
+            FROM (
+                SELECT x.MediaAssetId, 1 AS Grp, x.SortOrder
+                FROM ProductImages x
+                WHERE x.ProductId = @ProductId
+                  AND (@HeroId IS NULL OR x.MediaAssetId <> @HeroId)
+                UNION ALL
+                SELECT @HeroId, 0, 0 WHERE @HeroId IS NOT NULL
+            ) g
+            INNER JOIN MediaAssets m ON m.Id = g.MediaAssetId AND m.IsArchived = 0 AND m.IsPrivate = 0
             LEFT JOIN MediaAssetTranslations t ON t.MediaAssetId = m.Id AND t.Culture = @Culture
             LEFT JOIN MediaAssetTranslations f ON f.MediaAssetId = m.Id AND f.Culture = @DefaultCulture
-            WHERE x.ProductId = @ProductId AND m.Url IS NOT NULL
-            ORDER BY x.SortOrder
+            WHERE m.Url IS NOT NULL
+            ORDER BY g.Grp, g.SortOrder
             """,
-            new { ProductId = productId, culture, DefaultCulture = CultureCodes.Default });
+            new { ProductId = productId, HeroId = heroMediaAssetId, culture, DefaultCulture = CultureCodes.Default });
 
         return rows.Select(r => new ProductImageDto(r.Url, r.AltText, r.Caption, r.Width, r.Height)).ToList();
     }
@@ -462,7 +478,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
     }
 
     private sealed record ProductDetailRow(
-        int Id, int? ParentProductId, string Slug, string? Code, string? Brand, bool IsNew,
+        int Id, int? ParentProductId, int? HeroMediaAssetId, string Slug, string? Code, string? Brand, bool IsNew,
         string CategorySlug, string? CategoryName, string? HeroImageUrl,
         string? Name, string? Summary, string? Description, string? ApplicationNote,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);

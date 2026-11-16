@@ -43,9 +43,11 @@ export type FieldControlProps = {
   disabled?: boolean;
   /** 同一筆表單的其他欄位值。`media` 欄位用它決定上傳容器（下載項目看存取層級）。 */
   values?: Record<string, unknown>;
+  /** 改同一筆表單的**另一個**欄位。目前只有帶 `heroField` 的 `mediaList` 用：點星號會寫主視覺欄位。 */
+  onFieldChange?: (name: string, value: unknown) => void;
 };
 
-export function FieldControl({ field, value, onChange, error, disabled, values }: FieldControlProps) {
+export function FieldControl({ field, value, onChange, error, disabled, values, onFieldChange }: FieldControlProps) {
   const id = useId();
   const readOnly = disabled || field.readOnly;
   const text = value === null || value === undefined ? '' : String(value);
@@ -61,7 +63,7 @@ export function FieldControl({ field, value, onChange, error, disabled, values }
       required={field.required}
       className={field.wide ? 'md:col-span-2' : undefined}
     >
-      {renderControl({ id, field, value, text, onChange, error: Boolean(error), readOnly, values })}
+      {renderControl({ id, field, value, text, onChange, error: Boolean(error), readOnly, values, onFieldChange })}
     </Field>
   );
 }
@@ -92,9 +94,10 @@ type ControlArgs = {
   error: boolean;
   readOnly?: boolean;
   values?: Record<string, unknown>;
+  onFieldChange?: (name: string, value: unknown) => void;
 };
 
-function renderControl({ id, field, value, text, onChange, error, readOnly, values }: ControlArgs) {
+function renderControl({ id, field, value, text, onChange, error, readOnly, values, onFieldChange }: ControlArgs) {
   switch (field.type) {
     case 'textarea':
     case 'html':
@@ -184,7 +187,16 @@ function renderControl({ id, field, value, text, onChange, error, readOnly, valu
       );
 
     case 'mediaList':
-      return <MediaListControl field={field} value={value} onChange={onChange} readOnly={readOnly} values={values} />;
+      return (
+        <MediaListControl
+          field={field}
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+          values={values}
+          onFieldChange={onFieldChange}
+        />
+      );
 
     case 'reference':
       return (
@@ -466,18 +478,32 @@ function MediaListControl({
   value,
   onChange,
   readOnly,
+  values,
+  onFieldChange,
 }: {
   field: FieldDef;
   value: unknown;
   onChange: (value: unknown) => void;
   readOnly?: boolean;
   values?: Record<string, unknown>;
+  onFieldChange?: (name: string, value: unknown) => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const entries = Array.isArray(value) ? (value as unknown[]) : [];
+  const stored = Array.isArray(value) ? (value as unknown[]) : [];
+
+  // 有主視覺欄位時，主視覺就是清單裡的其中一張。舊資料的主視覺可能沒放進圖庫——
+  // 畫面上照樣把它排在清單裡，編輯者一動清單（加、刪、換主視覺）就會一併寫回圖庫。
+  const heroField = field.heroField && onFieldChange ? field.heroField : undefined;
+  const heroValue = heroField ? values?.[heroField] : undefined;
+  const hero = isPendingMedia(heroValue) || (typeof heroValue === 'string' && heroValue) ? heroValue : null;
+  const entries = hero !== null && !stored.includes(hero) ? [hero, ...stored] : stored;
 
   const [processing, setProcessing] = useState(false);
+
+  function setHero(entry: unknown) {
+    if (heroField) onFieldChange?.(heroField, entry ?? null);
+  }
 
   async function pick(files: FileList | null) {
     if (!files?.length) return;
@@ -491,14 +517,25 @@ function MediaListControl({
         added.push(createPendingMedia(prepared.file, field.container, prepared.originalSize));
       }
       onChange([...entries, ...added]);
+      // 還沒有主視覺時直接用第一張——多數產品只有一張圖，不該要求編輯者多點一下。
+      if (heroField && hero === null) setHero(entries[0] ?? added[0]);
     } finally {
       setProcessing(false);
     }
   }
 
+  function chooseHero(entry: unknown) {
+    // 舊資料的主視覺只是排在畫面上、還不在圖庫裡：換掉它之前先寫回圖庫，否則那張圖就從產品上消失了。
+    if (entries !== stored) onChange(entries);
+    setHero(entry);
+  }
+
   function remove(entry: unknown) {
     releasePendingMedia(entry);
-    onChange(entries.filter((item) => item !== entry));
+    const rest = entries.filter((item) => item !== entry);
+    onChange(rest);
+    // 刪掉的是主視覺就改用剩下的第一張；一張都不剩才清空。
+    if (heroField && entry === hero) setHero(rest[0] ?? null);
   }
 
   return (
@@ -521,6 +558,8 @@ function MediaListControl({
               entry={entry}
               readOnly={readOnly}
               onRemove={() => remove(entry)}
+              isHero={heroField ? entry === hero : undefined}
+              onSetHero={heroField ? () => chooseHero(entry) : undefined}
             />
           ))}
         </ul>
@@ -550,15 +589,20 @@ function MediaListControl({
 /**
  * 圖庫裡的一張。既有的只有 id，縮圖要去把網址讀回來，所以獨立成一個元件各自查詢；
  * 剛選的（`PendingMedia`）直接用本機預覽，虛線框標示「還沒上傳」。
+ * 有主視覺欄位時（`isHero` 不是 undefined），左上角多一顆星號：實心＝主視覺，空心＝點了設為主視覺。
  */
 function MediaListItem({
   entry,
   onRemove,
   readOnly,
+  isHero,
+  onSetHero,
 }: {
   entry: unknown;
   onRemove: () => void;
   readOnly?: boolean;
+  isHero?: boolean;
+  onSetHero?: () => void;
 }) {
   const pending = isPendingMedia(entry) ? entry : null;
   const id = !pending && typeof entry === 'string' ? entry : undefined;
@@ -573,6 +617,7 @@ function MediaListItem({
           'flex h-16 w-16 items-center justify-center overflow-hidden',
           'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
           pending && !pending.uploadedId && 'border-dashed',
+          isHero && 'ring-2 ring-[var(--brand)]',
         )}
         title={pending && !pending.uploadedId ? `${fileName}（儲存時上傳）` : fileName}
       >
@@ -582,6 +627,26 @@ function MediaListItem({
           <Icon name="image" size={18} className="text-[var(--fg-3)]" />
         )}
       </span>
+      {isHero !== undefined && (
+        <button
+          type="button"
+          onClick={isHero ? undefined : onSetHero}
+          disabled={readOnly || isHero}
+          aria-pressed={isHero}
+          aria-label={isHero ? `${fileName} 是主視覺` : `把 ${fileName} 設為主視覺`}
+          title={isHero ? '主視覺' : '設為主視覺'}
+          className={cx(
+            'absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full',
+            'border border-[var(--border-1)] bg-[var(--surface-card)]',
+            isHero
+              ? 'text-[var(--brand)]'
+              : 'text-[var(--fg-3)] hover:bg-[var(--surface-card-alt)] hover:text-[var(--fg-1)]',
+            !isHero && readOnly && 'hidden',
+          )}
+        >
+          <Icon name="star" size={11} fill={isHero ? 'currentColor' : 'none'} />
+        </button>
+      )}
       {!readOnly && (
         <button
           type="button"

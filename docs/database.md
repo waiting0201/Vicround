@@ -323,6 +323,11 @@ CHECK 約束與 filtered index 見 [0.6](#06-owner-triple-模式多型-owner)。
 
 `ProductId`、`MediaAssetId`、`SortOrder`；PK = `(ProductId, MediaAssetId)`。
 
+**主視覺是圖庫裡的其中一張**（2026-11-16 決定）：後台只有一個「產品圖片」欄位，圖片傳一次，
+點星號把其中一張寫進 `Products.HeroMediaAssetId`（產品卡片用它）。舊資料或匯入工具可能只設了
+主視覺、沒放進圖庫，所以公開 API 的 `images` 一律把主視覺排第一、其餘依 `SortOrder`，並排除重複——
+兩種資料形狀在前台看起來一樣。
+
 ### CaseStudies（Addressable）— 客戶案例（2026-09-30 新增）
 
 客戶 2026-09 交來的產品資料每項都附一份「客戶案例表單」：**客戶需求 → 我們的解決方案 → 最終成果**

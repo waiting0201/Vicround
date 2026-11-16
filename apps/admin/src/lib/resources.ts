@@ -95,6 +95,11 @@ export type FieldDef = {
   accept?: string;
   /** 圖片欄位的版位規格：欄位下方顯示建議尺寸，選檔時也用它的寬度當縮圖上限。 */
   image?: ImageSpec;
+  /**
+   * `mediaList` 專用：同一筆資料裡存「主視覺」的欄位名。給了就讓編輯者從清單裡點一張當主視覺，
+   * 而不是另外再傳一次同一張圖——兩個欄位各傳各的，結果就是同一張圖在媒體庫裡兩份、產品頁出現兩次。
+   */
+  heroField?: string;
 };
 
 export type MediaContainer = 'public-media' | 'member-documents';
@@ -488,14 +493,16 @@ const products: ResourceDef = {
     { name: 'isFeatured', label: '精選（首頁／熱銷）', type: 'boolean', scope: 'base', hint: '打開後這個產品會出現在首頁與熱銷區塊。' },
     { name: 'isNew', label: '標記 New', type: 'boolean', scope: 'base', hint: '打開後產品卡片會顯示「New」標籤，沒有自動到期，記得之後手動關掉。' },
     {
-      name: 'heroMediaAssetId',
-      label: '主視覺',
-      type: 'media',
+      name: 'gallery',
+      label: '產品圖片',
+      type: 'mediaList',
       scope: 'base',
-      accept: IMAGE_ACCEPT, image: IMAGE_SPECS.product,
-      hint: '產品卡片與產品頁最上方使用的主要照片。',
+      wide: true,
+      accept: IMAGE_ACCEPT,
+      image: IMAGE_SPECS.product,
+      heroField: 'heroMediaAssetId',
+      hint: '可以一次選好幾張。點圖片上的星號設為主視覺（產品卡片與產品頁第一張），第一次上傳時自動用第一張。',
     },
-    { name: 'gallery', label: '產品圖庫', type: 'mediaList', scope: 'base', wide: true, accept: IMAGE_ACCEPT, image: IMAGE_SPECS.product, hint: '產品頁的多張圖／輪播圖，可以放好幾張。' },
     {
       name: 'solutionIds',
       label: '關聯產業',
