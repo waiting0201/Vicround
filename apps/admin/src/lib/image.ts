@@ -9,7 +9,7 @@
  * </p>
  *
  * <p>
- * 不轉的格式：SVG（向量，轉了反而失真變大）、GIF（可能是動圖）、AVIF（本來就比 WebP 小）、
+ * 不轉的格式：SVG（向量，轉了反而失真變大）、GIF 與動態 WebP／APNG（canvas 只畫得出第一格）、AVIF（本來就比 WebP 小）、
  * 非圖片（PDF）。瀏覽器編不出 WebP（`toBlob` 退回 PNG）或轉完反而更大時，保留原檔。
  * </p>
  */
@@ -61,7 +61,7 @@ export function describeImageSpec(spec: ImageSpec | undefined): string {
     : spec.height
       ? `建議尺寸 ${spec.width} × ${spec.height} px（${ratioOf(spec as Required<ImageSpec>)}，超出比例的部分會被裁掉）`
       : `建議寬度 ${spec.width} px，比例不拘`;
-  const format = 'JPG／PNG 選檔後會自動縮圖並轉成 WebP；透明底請用 PNG，SVG、GIF 以原檔上傳。';
+  const format = 'JPG／PNG 選檔後會自動縮圖並轉成 WebP；透明底請用 PNG，SVG 與 GIF／動態 WebP 等動圖以原檔上傳（動圖不縮圖，請先自行控制檔案大小）。';
   return [size, format].filter(Boolean).join('。');
 }
 
@@ -81,6 +81,8 @@ export type PreparedImage = {
  */
 export async function prepareImage(file: File, spec: ImageSpec | undefined): Promise<PreparedImage> {
   if (!CONVERTIBLE.has(file.type)) return { file };
+  // canvas 只畫得出第一格——動圖一轉就變靜態圖，只能原檔上傳。
+  if (await isAnimated(file)) return { file };
 
   let bitmap: ImageBitmap;
   try {
@@ -116,4 +118,40 @@ export async function prepareImage(file: File, spec: ImageSpec | undefined): Pro
   } finally {
     bitmap.close();
   }
+}
+
+/**
+ * 會走到轉檔的格式裡，只有 WebP 與 PNG（APNG）可能是動圖，從檔頭判斷。
+ *
+ * <p>
+ * WebP：`RIFF....WEBP` 之後是 `VP8X` 延伸標頭時，旗標位元組的 0x02 是動畫。
+ * APNG：`acTL` chunk 一定出現在第一個 `IDAT` 之前，掃到 `IDAT` 就能停。
+ * 讀不懂的檔一律當成不是動圖，交給原本的流程。
+ * </p>
+ */
+async function isAnimated(file: File): Promise<boolean> {
+  try {
+    if (file.type === 'image/webp') {
+      const head = new Uint8Array(await file.slice(0, 21).arrayBuffer());
+      return head.length === 21 && ascii(head, 12, 4) === 'VP8X' && (head[20] & 0x02) !== 0;
+    }
+    if (file.type === 'image/png') {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const view = new DataView(bytes.buffer);
+      // 8 位元組簽章之後，每個 chunk 是 長度(4) + 型別(4) + 資料 + CRC(4)。
+      for (let offset = 8; offset + 8 <= bytes.length; ) {
+        const type = ascii(bytes, offset + 4, 4);
+        if (type === 'acTL') return true;
+        if (type === 'IDAT') return false;
+        offset += 12 + view.getUint32(offset);
+      }
+    }
+  } catch {
+    // 讀檔失敗就照一般圖片處理。
+  }
+  return false;
+}
+
+function ascii(bytes: Uint8Array, start: number, length: number): string {
+  return String.fromCharCode(...bytes.subarray(start, start + length));
 }
