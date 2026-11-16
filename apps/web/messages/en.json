@@ -511,6 +511,9 @@
     "groupTestReport": "Test reports",
     "groupCertificate": "Certificates",
     "groupCatalogue": "Brochures",
-    "groupOther": "Other documents"
+    "groupOther": "Other documents",
+    "galleryPrevious": "Previous image",
+    "galleryNext": "Next image",
+    "galleryShow": "Show image {n}"
   }
 }

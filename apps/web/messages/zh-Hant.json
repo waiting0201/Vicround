@@ -511,6 +511,9 @@
     "groupTestReport": "測試報告",
     "groupCertificate": "證書",
     "groupCatalogue": "型錄與簡介",
-    "groupOther": "其他文件"
+    "groupOther": "其他文件",
+    "galleryPrevious": "上一張",
+    "galleryNext": "下一張",
+    "galleryShow": "顯示第 {n} 張"
   }
 }

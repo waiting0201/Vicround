@@ -8,6 +8,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
+import { ProductGallery } from '@/components/ProductGallery';
 import { DownloadList } from '@/components/ResourceSections';
 import { Container, ImageSlot } from '@/components/sections';
 import { apiGet, tag } from '@/lib/api';
@@ -386,42 +387,16 @@ export default async function ProductPage({ params }: Params) {
             }}
           >
             {gallery.length > 0 ? (
-              // 產品圖多半是行銷海報，要完整看見，所以是 contain 而不是 cover。
-              <div style={{ display: 'grid', gap: 16 }}>
-                {gallery.map((image, index) => (
-                  <figure
-                    key={image.url}
-                    style={{
-                      margin: 0,
-                      borderRadius: 22,
-                      background: 'var(--page-raised)',
-                      border: '1px solid var(--page-border)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}
-                    <img
-                      src={image.url}
-                      alt={image.altText ?? name}
-                      width={image.width ?? undefined}
-                      height={image.height ?? undefined}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 620, objectFit: 'contain' }}
-                    />
-                    {image.caption ? (
-                      <figcaption
-                        style={{
-                          padding: '12px 20px',
-                          font: "400 0.8125rem/1.6 'Geologica', 'GenYoGothic TW', sans-serif",
-                          color: 'var(--page-faint)',
-                        }}
-                      >
-                        {image.caption}
-                      </figcaption>
-                    ) : null}
-                  </figure>
-                ))}
-              </div>
+              <ProductGallery
+                images={gallery}
+                fallbackAlt={name}
+                accent={lineColor}
+                labels={{
+                  previous: t('product.galleryPrevious'),
+                  next: t('product.galleryNext'),
+                  show: t('product.galleryShow'),
+                }}
+              />
             ) : (
               <ImageSlot src={categoryImage(categorySlug)} alt={categoryName} />
             )}

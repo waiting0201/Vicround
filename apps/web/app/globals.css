@@ -836,3 +836,15 @@ textarea.vr-input {
     font-size: 16px !important;
   }
 }
+
+/* 產品頁圖庫換圖時的淡入（components/ProductGallery.tsx） */
+@keyframes vr-gallery-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.vr-gallery-fade {
+  animation: vr-gallery-fade 220ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vr-gallery-fade { animation: none; }
+}
