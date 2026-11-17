@@ -100,6 +100,11 @@ export type FieldDef = {
    * 而不是另外再傳一次同一張圖——兩個欄位各傳各的，結果就是同一張圖在媒體庫裡兩份、產品頁出現兩次。
    */
   heroField?: string;
+  /**
+   * `media`／`mediaList` 專用：除了選檔案，也能貼 YouTube 連結。影片不存進我們的 Blob，
+   * 後端只登記影片 id；前台在同一個位置改嵌入播放器。
+   */
+  youtube?: boolean;
 };
 
 export type MediaContainer = 'public-media' | 'member-documents';
@@ -501,7 +506,8 @@ const products: ResourceDef = {
       accept: IMAGE_ACCEPT,
       image: IMAGE_SPECS.product,
       heroField: 'heroMediaAssetId',
-      hint: '可以一次選好幾張。點圖片上的星號設為主視覺（產品卡片與產品頁第一張），第一次上傳時自動用第一張。',
+      youtube: true,
+      hint: '可以一次選好幾張，也可以貼 YouTube 連結加入影片。點星號設為主視覺（產品頁第一格），第一次上傳時自動用第一張。主視覺是影片時，分享到社群的預覽圖會改用第一張圖片。',
     },
     {
       name: 'solutionIds',
@@ -1345,7 +1351,7 @@ const caseStudies: ResourceDef = {
   ],
   baseFields: [
     SLUG_FIELD,
-    { name: 'mediaAssetId', label: '實品照', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.caseStudy, hint: '優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。不可出現客戶的品牌、Logo 或圖案——OEM／ODM 成品照不能用，檔名也不要帶客戶名稱。' },
+    { name: 'mediaAssetId', label: '成果照片／影片', type: 'media', scope: 'base', accept: IMAGE_ACCEPT, image: IMAGE_SPECS.caseStudy, youtube: true, hint: '顯示在「最終成果」卡片。可以選圖片，也可以貼 YouTube 連結改放影片。優先放實品近照或工藝細節特寫，避免只放 3D 渲染圖。不可出現客戶的品牌、Logo 或圖案——OEM／ODM 成品照與影片都不能用，檔名也不要帶客戶名稱。' },
     {
       name: 'productIds',
       label: '關聯產品',

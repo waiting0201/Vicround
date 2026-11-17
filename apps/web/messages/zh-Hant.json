@@ -352,7 +352,8 @@
     "caseChallenge": "客戶需求",
     "caseSolution": "我們的解決方案",
     "caseResult": "最終成果",
-    "caseResultPending": "成果照片待補"
+    "caseResultPending": "成果照片／影片待補",
+    "casePlay": "播放影片：{title}"
   },
   "faq": {
     "all": "全部問題",
@@ -514,6 +515,7 @@
     "groupOther": "其他文件",
     "galleryPrevious": "上一張",
     "galleryNext": "下一張",
-    "galleryShow": "顯示第 {n} 張"
+    "galleryShow": "顯示第 {n} 張",
+    "galleryPlay": "播放影片：{title}"
   }
 }

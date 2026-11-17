@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, type CSSProperties, type KeyboardEvent, type TouchEvent } from 'react';
+import { PlayBadge, YouTubeEmbed } from './YouTubeEmbed';
 
 /**
  * 產品頁 Overview 左欄的圖庫：一張大圖 + 縮圖列。
@@ -13,6 +14,10 @@ import { useRef, useState, type CSSProperties, type KeyboardEvent, type TouchEve
  * 舞台固定 4:3、`contain`：產品圖有實拍也有行銷海報，比例不一，裁掉海報上的字比留白更糟；
  * 固定比例讓換圖時版面不跳動。所有圖都以縮圖的 `<img>` 出現在 HTML 裡，爬蟲照樣看得到每一張。
  * </p>
+ * <p>
+ * 有 `youTubeId` 的一格是 YouTube 影片（`url` 是它的縮圖）：舞台換成輕量嵌入，按下才載入播放器；
+ * 縮圖列那一格疊一個播放標記。影片在 4:3 舞台裡上下留黑邊，與 YouTube 自己的播放器一致。
+ * </p>
  */
 export type GalleryImage = {
   url: string;
@@ -20,6 +25,8 @@ export type GalleryImage = {
   caption?: string | null;
   width?: number | null;
   height?: number | null;
+  /** 有值時這一格是 YouTube 影片。 */
+  youTubeId?: string | null;
 };
 
 export function ProductGallery({
@@ -32,8 +39,8 @@ export function ProductGallery({
   fallbackAlt: string;
   /** 產品線的強調色：選中的縮圖外框用它。 */
   accent: string;
-  /** `show` 含 `{n}` 佔位（第幾張）。 */
-  labels: { previous: string; next: string; show: string };
+  /** `show` 含 `{n}` 佔位（第幾張）；`play` 含 `{title}` 佔位。 */
+  labels: { previous: string; next: string; show: string; play: string };
 }) {
   const [active, setActive] = useState(0);
   const touchStart = useRef<number | null>(null);
@@ -72,17 +79,29 @@ export function ProductGallery({
           onTouchEnd={many ? onTouchEnd : undefined}
           aria-roledescription={many ? 'carousel' : undefined}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}
-          <img
-            key={current.url}
-            src={current.url}
-            alt={current.altText ?? fallbackAlt}
-            width={current.width ?? undefined}
-            height={current.height ?? undefined}
-            loading="eager"
-            className="vr-gallery-fade"
-            style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
-          />
+          {current.youTubeId ? (
+            // key 讓換到別張再換回來時回到縮圖狀態，不會在背景繼續播放。
+            <YouTubeEmbed
+              key={`yt-${active}`}
+              videoId={current.youTubeId}
+              title={current.altText ?? fallbackAlt}
+              playLabel={labels.play.replace('{title}', current.altText ?? fallbackAlt)}
+              thumbnailUrl={current.url}
+              style={{ position: 'absolute', inset: 0 }}
+            />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */
+            <img
+              key={current.url}
+              src={current.url}
+              alt={current.altText ?? fallbackAlt}
+              width={current.width ?? undefined}
+              height={current.height ?? undefined}
+              loading="eager"
+              className="vr-gallery-fade"
+              style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          )}
 
           {many ? (
             <>
@@ -92,9 +111,12 @@ export function ProductGallery({
               <button type="button" aria-label={labels.next} onClick={() => go(1)} style={{ ...arrow, right: 12 }}>
                 <Chevron direction="right" />
               </button>
-              <span style={counter} aria-live="polite">
-                {active + 1} / {images.length}
-              </span>
+              {/* 影片那一格不顯示張數：右下角正好是 YouTube 播放器的標誌與全螢幕鈕。 */}
+              {current.youTubeId ? null : (
+                <span style={counter} aria-live="polite">
+                  {active + 1} / {images.length}
+                </span>
+              )}
             </>
           ) : null}
         </div>
@@ -115,6 +137,7 @@ export function ProductGallery({
                   aria-current={selected ? 'true' : undefined}
                   style={{
                     ...thumb,
+                    position: 'relative',
                     borderColor: selected ? accent : 'var(--page-border)',
                     boxShadow: selected ? `0 0 0 1px ${accent}` : 'none',
                     opacity: selected ? 1 : 0.62,
@@ -127,6 +150,7 @@ export function ProductGallery({
                     loading="lazy"
                     style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
                   />
+                  {image.youTubeId ? <PlayBadge /> : null}
                 </button>
               </li>
             );

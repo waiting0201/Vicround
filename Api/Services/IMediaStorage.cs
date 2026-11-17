@@ -41,4 +41,7 @@ public static class MediaContainers
 {
     public const string Public = "public-media";
     public const string MemberDocuments = "member-documents";
+
+    /// <summary>不是 Blob 容器：標示「檔案在 YouTube」的 <see cref="Models.Entities.MediaAssetType.YouTube"/> 資產。</summary>
+    public const string YouTube = "youtube";
 }

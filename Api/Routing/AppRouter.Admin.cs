@@ -165,6 +165,7 @@ public sealed partial class AppRouter
 
             // 媒體上傳是 multipart，不能走一般的 JSON 路徑。
             ("POST", ["admin", "media"]) => Nullable(adminMedia.UploadAsync(req)),
+            ("POST", ["admin", "media", "youtube"]) => Nullable(adminMedia.AddYouTubeAsync(req)),
 
             // 有狀態機的動作：能不能走到下一步由後端決定，不是前端傳什麼就是什麼。
             ("POST", ["admin", "members", var memberId, var action]) => Nullable(adminAction.MemberAsync(req, memberId, action)),

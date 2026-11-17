@@ -286,3 +286,12 @@ export async function uploadMedia(
 
   return unwrap<AdminRow>(res);
 }
+
+/**
+ * 加入一支 YouTube 影片（`POST /media/youtube`）。不上傳檔案，後端只登記影片 id 與縮圖，
+ * 回傳的媒體資產跟上傳的圖片一樣，可以放進產品圖片或案例的成果欄位。
+ * 同一支影片已登記過時回的是既有那一筆。
+ */
+export function addYouTubeMedia(url: string) {
+  return apiFetch<AdminRow>('/media/youtube', { method: 'POST', body: JSON.stringify({ url }) });
+}

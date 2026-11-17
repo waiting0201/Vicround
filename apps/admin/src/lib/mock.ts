@@ -397,6 +397,31 @@ export function mockUpload(file: File, container = 'public-media'): Record<strin
   return row;
 }
 
+/** mock 模式的「加入 YouTube」：只認最常見的兩種網址，夠用來在沒有後端時看畫面。 */
+function mockYouTube(url: string): Record<string, unknown> | null {
+  const id = /(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/.exec(url)?.[1]
+    ?? (/^[A-Za-z0-9_-]{11}$/.test(url.trim()) ? url.trim() : null);
+  if (!id) return null;
+  const rows = ensure('media');
+  const row: Row = {
+    id: `media-new-${nextId++}`,
+    translations: {},
+    fileName: `YouTube ${id}`,
+    container: 'youtube',
+    blobPath: id,
+    url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    mimeType: 'video/youtube',
+    fileSizeBytes: 0,
+    type: 'youTube',
+    isPrivate: false,
+    isArchived: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  rows.unshift(row);
+  return row;
+}
+
 /**
  * 把一次 `fetch` 對應成一個假回應。路徑形狀刻意與 docs/cms-api.md 的
  * Admin API 完全一致，換成真後端時 `api.ts` 以外不需要改任何一行。
@@ -431,6 +456,11 @@ export async function mockFetch(path: string, init: RequestInit): Promise<Respon
     if (segments[1] === 'me') return json(ME);
     if (segments[1] === 'logout') return json(null, 204);
     return json({ accessToken: 'mock-access-token' });
+  }
+
+  if (method === 'POST' && segments[0] === 'media' && segments[1] === 'youtube') {
+    const row = mockYouTube(String(body.url ?? ''));
+    return row ? json(row, 201) : json({ detail: '看不出這是哪一支 YouTube 影片。' }, 400);
   }
 
   const [type, id, action, culture] = segments;

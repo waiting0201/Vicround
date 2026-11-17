@@ -387,12 +387,13 @@ export function blockTypeMeta(value: string): BlockTypeMeta | undefined {
 
 /* ---------------- 媒體與設定 ---------------- */
 
-export type MediaAssetType = 'image' | 'video' | 'document' | 'other';
+export type MediaAssetType = 'image' | 'video' | 'document' | 'youTube' | 'other';
 
 export const MEDIA_TYPE_LABEL: Record<MediaAssetType, string> = {
   image: '圖片',
   video: '影片',
   document: '文件',
+  youTube: 'YouTube',
   other: '其他',
 };
 

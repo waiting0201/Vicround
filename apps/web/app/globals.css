@@ -848,3 +848,9 @@ textarea.vr-input {
 @media (prefers-reduced-motion: reduce) {
   .vr-gallery-fade { animation: none; }
 }
+
+/* YouTube 輕量嵌入的播放鈕（components/YouTubeEmbed.tsx）：滑過時換成 YouTube 紅 */
+button:hover > .vr-yt-play,
+button:focus-visible > .vr-yt-play {
+  background: #ff0033 !important;
+}

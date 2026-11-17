@@ -204,7 +204,9 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             """
             SELECT e.Id, e.ParentProductId, e.HeroMediaAssetId, e.Slug, e.Code, e.Brand, e.IsNew, c.Slug AS CategorySlug,
                    COALESCE(ct.Name, cf.Name) AS CategoryName,
-                   CASE WHEN m.IsPrivate = 1 THEN NULL ELSE m.Url END AS HeroImageUrl,
+                   CASE WHEN m.IsPrivate = 1 THEN NULL
+                        WHEN m.Type = @YouTube THEN COALESCE(gi.Url, m.Url)
+                        ELSE m.Url END AS HeroImageUrl,
                    t.Name, t.Summary, t.Description, t.ApplicationNote,
                    t.SeoTitle, t.SeoDescription, t.SeoKeywords
             FROM Products e
@@ -212,10 +214,28 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             LEFT JOIN CategoryTranslations ct ON ct.CategoryId = c.Id AND ct.Culture = @Culture
             LEFT JOIN CategoryTranslations cf ON cf.CategoryId = c.Id AND cf.Culture = @DefaultCulture
             LEFT JOIN MediaAssets m ON m.Id = e.HeroMediaAssetId AND m.IsArchived = 0
+            -- 主視覺是 YouTube 影片時，OG 圖與 schema 的 image 改用圖庫的第一張實際圖片；
+            -- 圖庫裡只有影片才退回 YouTube 縮圖（4:3 的 hqdefault 上下帶黑邊，當分享圖不好看）。
+            OUTER APPLY (
+                SELECT TOP 1 gm.Url
+                FROM ProductImages gx
+                INNER JOIN MediaAssets gm ON gm.Id = gx.MediaAssetId
+                WHERE gx.ProductId = e.Id AND gm.Type = @Image
+                  AND gm.IsArchived = 0 AND gm.IsPrivate = 0 AND gm.Url IS NOT NULL
+                ORDER BY gx.SortOrder
+            ) gi
             INNER JOIN ProductTranslations t ON t.ProductId = e.Id AND t.Culture = @Culture
             WHERE e.Slug = @Slug AND e.Status = @Published
             """,
-            new { culture, DefaultCulture = CultureCodes.Default, Slug = slug, Sql.Published });
+            new
+            {
+                culture,
+                DefaultCulture = CultureCodes.Default,
+                Slug = slug,
+                Sql.Published,
+                Image = (byte)MediaAssetType.Image,
+                YouTube = (byte)MediaAssetType.YouTube,
+            });
 
         if (row is null)
         {
@@ -298,7 +318,6 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
 
     private sealed record ProductRefRow(int OwnerId, string Slug, string CategorySlug, string? Code, string? Name);
 
-    /// <summary>圖庫（<c>ProductImages</c>）。private container 的檔案不會出現在公開端點。</summary>
     /// <summary>
     /// 產品頁的圖片，主視覺固定排第一張、其餘依圖庫順序。
     ///
@@ -314,6 +333,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         var rows = await db.QueryAsync<ProductImageRow>(
             """
             SELECT m.Url, m.Width, m.Height,
+                   CASE WHEN m.Type = @YouTube THEN m.BlobPath END AS YouTubeId,
                    COALESCE(t.AltText, f.AltText) AS AltText,
                    COALESCE(t.Caption, f.Caption) AS Caption
             FROM (
@@ -330,9 +350,16 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
             WHERE m.Url IS NOT NULL
             ORDER BY g.Grp, g.SortOrder
             """,
-            new { ProductId = productId, HeroId = heroMediaAssetId, culture, DefaultCulture = CultureCodes.Default });
+            new
+            {
+                ProductId = productId,
+                HeroId = heroMediaAssetId,
+                culture,
+                DefaultCulture = CultureCodes.Default,
+                YouTube = (byte)MediaAssetType.YouTube,
+            });
 
-        return rows.Select(r => new ProductImageDto(r.Url, r.AltText, r.Caption, r.Width, r.Height)).ToList();
+        return rows.Select(r => new ProductImageDto(r.Url, r.AltText, r.Caption, r.Width, r.Height, r.YouTubeId)).ToList();
     }
 
     /// <summary>頁面與產品線頁的 <c>ProductGrid</c> reference block：只取前幾筆，不分頁。</summary>
@@ -483,5 +510,7 @@ public sealed class CatalogReadService(IDbConnection db) : ICatalogReadService
         string? Name, string? Summary, string? Description, string? ApplicationNote,
         string? SeoTitle, string? SeoDescription, string? SeoKeywords);
 
-    private sealed record ProductImageRow(string Url, int? Width, int? Height, string? AltText, string? Caption);
+    // Dapper 依欄位「順序」對建構式參數，順序要跟 SELECT 一致。
+    private sealed record ProductImageRow(
+        string Url, int? Width, int? Height, string? YouTubeId, string? AltText, string? Caption);
 }

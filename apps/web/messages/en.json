@@ -352,7 +352,8 @@
     "caseChallenge": "Challenge",
     "caseSolution": "Solution",
     "caseResult": "Result",
-    "caseResultPending": "Result photos pending"
+    "caseResultPending": "Result photos / video pending",
+    "casePlay": "Play video: {title}"
   },
   "faq": {
     "all": "All questions",
@@ -514,6 +515,7 @@
     "groupOther": "Other documents",
     "galleryPrevious": "Previous image",
     "galleryNext": "Next image",
-    "galleryShow": "Show image {n}"
+    "galleryShow": "Show image {n}",
+    "galleryPlay": "Play video: {title}"
   }
 }

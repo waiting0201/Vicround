@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VicRound.Api.Common;
 using VicRound.Api.Data;
 using VicRound.Api.Models.Entities;
@@ -24,7 +26,9 @@ namespace VicRound.Api.Handlers;
 public sealed class AdminMediaHandler(
     VicRoundDbContext db,
     IMediaStorage storage,
-    IAdminCrudService crud)
+    IAdminCrudService crud,
+    IHttpClientFactory httpClients,
+    ILogger<AdminMediaHandler> logger)
 {
     /// <summary>單檔上限。超過就擋在這裡，而不是讓 Functions host 用一個看不懂的錯誤結束。</summary>
     private const long MaxBytes = 50 * 1024 * 1024;
@@ -91,6 +95,123 @@ public sealed class AdminMediaHandler(
         CacheControl.NoStore(req.HttpContext.Response);
         return new ObjectResult(ApiResponse.Ok(row)) { StatusCode = 201 };
     }
+
+    /// <summary>
+    /// 加入 YouTube 影片（<c>POST /api/admin/media/youtube</c>，body <c>{ "url": "..." }</c>）。
+    ///
+    /// <para>
+    /// 不上傳任何檔案，只建一筆 <see cref="MediaAssetType.YouTube"/> 的媒體資產，之後就跟圖片一樣
+    /// 放進產品圖庫或案例的成果欄位。同一支影片已經登記過就直接回那一筆，不重複建立。
+    /// </para>
+    /// <para>
+    /// 先問 YouTube 的 oEmbed：順便取影片標題當檔名，也擋掉「私人影片」與「擁有者關閉嵌入」——
+    /// 這兩種放上前台只會是一塊播不出來的黑框。oEmbed 連不上時不擋，用影片 id 當檔名照樣建立。
+    /// </para>
+    /// </summary>
+    public async Task<IActionResult> AddYouTubeAsync(HttpRequest req)
+    {
+        var ct = req.HttpContext.RequestAborted;
+
+        YouTubeRequest body;
+        try
+        {
+            body = await req.ReadFromJsonAsync<YouTubeRequest>(ct) ?? new YouTubeRequest();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw AppException.BadRequest(ErrorCodes.ValidationFormat, "請求主體必須是合法的 JSON。");
+        }
+
+        var videoId = YouTubeLinks.ParseId(body.Url)
+            ?? throw AppException.BadRequest(ErrorCodes.ValidationFormat, "看不出這是哪一支 YouTube 影片，請貼影片頁或分享鈕給的網址。");
+
+        var existing = await db.MediaAssets
+            .Where(m => m.Container == MediaContainers.YouTube && m.BlobPath == videoId && !m.IsArchived)
+            .Select(m => (int?)m.Id)
+            .FirstOrDefaultAsync(ct);
+
+        if (existing is null)
+        {
+            var title = await YouTubeTitleAsync(videoId, ct);
+
+            var asset = new MediaAsset
+            {
+                Container = MediaContainers.YouTube,
+                BlobPath = videoId,
+                Url = YouTubeLinks.ThumbnailUrl(videoId),
+                IsPrivate = false,
+                Type = MediaAssetType.YouTube,
+                MimeType = "video/youtube",
+                FileName = Truncate(title ?? $"YouTube {videoId}", 260),
+                Width = 480,
+                Height = 360,
+                PublishedAt = Clock.UtcNow,
+            };
+
+            db.MediaAssets.Add(asset);
+            await db.SaveChangesAsync(ct);
+            existing = asset.Id;
+        }
+
+        var row = await crud.GetAsync(AdminResources.Find("media")!, existing.Value.ToString(), ct);
+
+        CacheControl.NoStore(req.HttpContext.Response);
+        return new ObjectResult(ApiResponse.Ok(row)) { StatusCode = 201 };
+    }
+
+    private async Task<string?> YouTubeTitleAsync(string videoId, CancellationToken ct)
+    {
+        var oembed = $"https://www.youtube.com/oembed?format=json&url={Uri.EscapeDataString(YouTubeLinks.WatchUrl(videoId))}";
+
+        HttpResponseMessage response;
+        try
+        {
+            var client = httpClients.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
+            response = await client.GetAsync(oembed, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "YouTube oEmbed 查不到 {VideoId}，改用影片 id 當檔名。", videoId);
+            return null;
+        }
+
+        using (response)
+        {
+            switch ((int)response.StatusCode)
+            {
+                case 401 or 403:
+                    throw AppException.BadRequest(ErrorCodes.ValidationFormat, "這支影片的擁有者不允許嵌入其他網站，請在 YouTube 後台開啟「允許嵌入」。");
+                case 400 or 404:
+                    throw AppException.BadRequest(ErrorCodes.ValidationFormat, "找不到這支影片。私人影片無法嵌入，請改成「公開」或「不公開」。");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("YouTube oEmbed 回 {Status}（{VideoId}），改用影片 id 當檔名。", (int)response.StatusCode, videoId);
+                return null;
+            }
+
+            try
+            {
+                var payload = await response.Content.ReadFromJsonAsync<OEmbed>(ct);
+                return string.IsNullOrWhiteSpace(payload?.Title) ? null : payload.Title.Trim();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return null;
+            }
+        }
+    }
+
+    private static string Truncate(string value, int max) => value.Length <= max ? value : value[..max];
+
+    private sealed class YouTubeRequest
+    {
+        public string? Url { get; set; }
+    }
+
+    private sealed record OEmbed(string? Title);
 
     private static MediaAssetType MediaTypeOf(string contentType) => contentType switch
     {

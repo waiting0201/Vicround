@@ -19,6 +19,7 @@ import { PageBanner } from '@/components/PageBanner';
 import { PageCTA } from '@/components/PageCTA';
 import { PageShell } from '@/components/PageShell';
 import { Container } from '@/components/sections';
+import { YouTubeEmbed } from '@/components/YouTubeEmbed';
 import type { ContentBlock } from '@/lib/content-api';
 import { getProducts, getSolution, getSolutions } from '@/lib/content-api';
 import { localizeHtml } from '@/lib/html';
@@ -305,8 +306,11 @@ export default async function SolutionPage({ params }: Params) {
                       ['solutions.caseResult', study.result],
                     ] as const
                   ).map(([label, body], index) => {
-                    // 成果卡：客戶給的案例圖放這裡（實品照或案例海報）；圖與文字都還沒有才顯示待補。
-                    const image = label === 'solutions.caseResult' ? study.imageUrl : null;
+                    // 成果卡：客戶給的案例圖放這裡（實品照、案例海報或 YouTube 影片）；
+                    // 圖與文字都還沒有才顯示待補。
+                    const isResult = label === 'solutions.caseResult';
+                    const video = isResult ? (study.youTubeId ?? null) : null;
+                    const image = isResult ? study.imageUrl : null;
 
                     return (
                       <div key={label} style={cardStyle}>
@@ -321,7 +325,15 @@ export default async function SolutionPage({ params }: Params) {
                         >
                           {t(label)}
                         </span>
-                        {image ? (
+                        {video ? (
+                          <YouTubeEmbed
+                            videoId={video}
+                            title={study.title ?? t(label)}
+                            playLabel={t('solutions.casePlay').replace('{title}', study.title ?? t(label))}
+                            thumbnailUrl={image}
+                            style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: 14 }}
+                          />
+                        ) : image ? (
                           // 海報字很密，卡片裡只是縮圖——點開看原圖。
                           <a href={image} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
                             {/* eslint-disable-next-line @next/next/no-img-element -- 圖片優化已關閉，見 next.config.ts */}

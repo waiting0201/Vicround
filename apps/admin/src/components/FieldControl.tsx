@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Badge,
   Button,
@@ -19,7 +20,8 @@ import {
   releasePendingMedia,
   type PendingMedia,
 } from '@/lib/pending-media';
-import { useItem, useList } from '@/lib/queries';
+import { addYouTubeMedia, ApiError } from '@/lib/api';
+import { keys, useItem, useList } from '@/lib/queries';
 import { resourceOf, type FieldDef } from '@/lib/resources';
 import { formatBytes, isValidSlug, rowTitle, toSlug } from '@/lib/format';
 import { describeImageSpec, prepareImage } from '@/lib/image';
@@ -388,8 +390,14 @@ function MediaControl({
   const hasValue = Boolean(pending || assetId);
   const url = pending ? pending.previewUrl : typeof asset?.url === 'string' ? asset.url : undefined;
   const fileName = pending ? pending.file.name : typeof asset?.fileName === 'string' ? asset.fileName : undefined;
-  const isImage = pending ? pending.file.type.startsWith('image/') : String(asset?.type ?? '') === 'image';
-  const size = pending ? pending.file.size : typeof asset?.fileSizeBytes === 'number' ? asset.fileSizeBytes : undefined;
+  const isYouTube = !pending && String(asset?.type ?? '') === 'youTube';
+  // YouTube 資產的 `url` 是影片縮圖，跟圖片一樣直接顯示。
+  const isImage = pending ? pending.file.type.startsWith('image/') : isYouTube || String(asset?.type ?? '') === 'image';
+  const size = pending
+    ? pending.file.size
+    : !isYouTube && typeof asset?.fileSizeBytes === 'number'
+      ? asset.fileSizeBytes
+      : undefined;
 
   return (
     <div className="flex flex-col gap-2">
@@ -407,7 +415,7 @@ function MediaControl({
         {hasValue && (
           <span
             className={cx(
-              'flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden',
+              'relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden',
               'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
             )}
           >
@@ -416,6 +424,7 @@ function MediaControl({
             ) : (
               <Icon name={isImage ? 'image' : 'file-text'} size={18} className="text-[var(--fg-3)]" />
             )}
+            {isYouTube && <YouTubeBadge />}
           </span>
         )}
 
@@ -430,6 +439,7 @@ function MediaControl({
           {hasValue && !processing && (
             <p className="text-xs text-[var(--fg-3)]">
               {[
+                isYouTube ? 'YouTube 影片' : null,
                 typeof size === 'number' ? formatBytes(size) : null,
                 pending?.originalSize ? `已縮圖轉 WebP，原檔 ${formatBytes(pending.originalSize)}` : null,
                 pending && !pending.uploadedId ? '儲存時上傳' : null,
@@ -454,6 +464,17 @@ function MediaControl({
           </Button>
         )}
       </div>
+
+      {field.youtube && (
+        <YouTubeAdder
+          disabled={readOnly || processing}
+          label={hasValue ? '改用 YouTube 影片' : '改貼 YouTube 連結'}
+          onAdded={(mediaId) => {
+            releasePendingMedia(value);
+            onChange(mediaId);
+          }}
+        />
+      )}
 
       {isPrivate && (
         <p className="text-xs text-[var(--fg-3)]">
@@ -524,6 +545,13 @@ function MediaListControl({
     }
   }
 
+  function addYouTube(mediaId: string) {
+    // 同一支影片已經在清單裡（後端對同一支影片回同一筆）就不重複加。
+    if (entries.includes(mediaId)) return;
+    onChange([...entries, mediaId]);
+    if (heroField && hero === null) setHero(entries[0] ?? mediaId);
+  }
+
   function chooseHero(entry: unknown) {
     // 舊資料的主視覺只是排在畫面上、還不在圖庫裡：換掉它之前先寫回圖庫，否則那張圖就從產品上消失了。
     if (entries !== stored) onChange(entries);
@@ -565,7 +593,7 @@ function MediaListControl({
         </ul>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="secondary"
           size="sm"
@@ -574,6 +602,7 @@ function MediaListControl({
         >
           {entries.length ? '再加檔案' : '選擇檔案'}
         </Button>
+        {field.youtube && <YouTubeAdder disabled={readOnly || processing} label="加入 YouTube" onAdded={addYouTube} />}
         {processing && <span className="text-xs text-[var(--fg-3)]">縮圖與轉檔中…</span>}
         {!processing && entries.length > 0 && (
           <span className="text-xs text-[var(--fg-3)]">
@@ -609,12 +638,13 @@ function MediaListItem({
   const { data } = useItem('media', id);
   const url = pending ? pending.previewUrl : typeof data?.url === 'string' ? data.url : undefined;
   const fileName = pending ? pending.file.name : typeof data?.fileName === 'string' ? data.fileName : (id ?? '');
+  const isYouTube = !pending && String(data?.type ?? '') === 'youTube';
 
   return (
     <li className="relative">
       <span
         className={cx(
-          'flex h-16 w-16 items-center justify-center overflow-hidden',
+          'relative flex h-16 w-16 items-center justify-center overflow-hidden',
           'rounded-[var(--radius-sm)] border border-[var(--border-1)] bg-[var(--surface-card-alt)]',
           pending && !pending.uploadedId && 'border-dashed',
           isHero && 'ring-2 ring-[var(--brand)]',
@@ -626,6 +656,7 @@ function MediaListItem({
         ) : (
           <Icon name="image" size={18} className="text-[var(--fg-3)]" />
         )}
+        {isYouTube && <YouTubeBadge />}
       </span>
       {isHero !== undefined && (
         <button
@@ -662,6 +693,128 @@ function MediaListItem({
         </button>
       )}
     </li>
+  );
+}
+
+/** 縮圖右下角的播放標記：一眼看出這一格是 YouTube 影片，不是圖片。 */
+function YouTubeBadge() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute bottom-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-white"
+    >
+      <Icon name="play" size={8} fill="currentColor" />
+    </span>
+  );
+}
+
+/**
+ * 「貼 YouTube 連結」：按下才展開一格輸入框，按「加入」**當下就向後端登記**，回來的是一筆
+ * 媒體資產 id，之後跟上傳的圖片一樣放進欄位值。
+ *
+ * <p>
+ * 不比照檔案「存檔時才上傳」：登記影片只是寫一列 metadata，沒有大檔案要等；當下就送，
+ * 後端才能馬上告訴編輯者「這支是私人影片／擁有者不允許嵌入」，而不是存檔時整張表單失敗。
+ * Enter 要攔下來——輸入框在整張編輯表單裡，否則一按 Enter 就把表單送出了。
+ * </p>
+ */
+function YouTubeAdder({
+  label,
+  disabled,
+  onAdded,
+}: {
+  label: string;
+  disabled?: boolean;
+  onAdded: (mediaId: string) => void;
+}) {
+  const client = useQueryClient();
+  const inputId = useId();
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!url.trim() || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const row = await addYouTubeMedia(url.trim());
+      // 欄位的縮圖會用 id 去查這一筆，直接放進快取就不必再打一次 API。
+      client.setQueryData(keys.item('media', row.id), row);
+      onAdded(row.id);
+      setUrl('');
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '加入失敗，請稍後再試。');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={disabled}
+        icon={<Icon name="youtube" size={14} />}
+        onClick={() => setOpen(true)}
+      >
+        {label}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <label htmlFor={inputId} className="sr-only">
+          YouTube 影片網址
+        </label>
+        <Input
+          id={inputId}
+          type="url"
+          autoFocus
+          value={url}
+          error={Boolean(error)}
+          placeholder="https://www.youtube.com/watch?v=… 或 https://youtu.be/…"
+          className="min-w-0 flex-1"
+          disabled={busy}
+          onChange={(event) => setUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              void submit();
+            } else if (event.key === 'Escape') {
+              setOpen(false);
+            }
+          }}
+        />
+        <Button variant="secondary" size="sm" loading={busy} disabled={!url.trim()} onClick={() => void submit()}>
+          加入
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={() => {
+            setOpen(false);
+            setUrl('');
+            setError(null);
+          }}
+        >
+          取消
+        </Button>
+      </div>
+      {error ? (
+        <p className="text-xs text-[var(--danger-500)]" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p className="text-xs text-[var(--fg-3)]">影片要設成「公開」或「不公開」，並允許嵌入；私人影片放不上去。</p>
+      )}
+    </div>
   );
 }
 

@@ -321,6 +321,7 @@ contact-inquiries | business-domains
 
 ```
 POST   /api/admin/media                            ✅ multipart upload -> Blob，回媒體列
+POST   /api/admin/media/youtube                    ✅ { url } -> 登記 YouTube 影片（oEmbed 驗證可嵌入），回媒體列；同一支影片回既有那筆
 GET    /api/admin/media                            ✅ 一般清單（`unused=true` 尚未做）
 POST   /api/admin/members/{id}/approve             ✅
 POST   /api/admin/members/{id}/reject              ✅ {reviewNote}（必填）

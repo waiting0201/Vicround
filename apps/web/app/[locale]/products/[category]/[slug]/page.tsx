@@ -44,6 +44,8 @@ type ProductImage = {
   caption?: string | null;
   width?: number | null;
   height?: number | null;
+  /** 有值時這一格是 YouTube 影片，`url` 是它的縮圖。 */
+  youTubeId?: string | null;
 };
 
 /** 連到另一個產品所需的最少欄位（family ↔ 型號）。 */
@@ -395,6 +397,7 @@ export default async function ProductPage({ params }: Params) {
                   previous: t('product.galleryPrevious'),
                   next: t('product.galleryNext'),
                   show: t('product.galleryShow'),
+                  play: t('product.galleryPlay'),
                 }}
               />
             ) : (

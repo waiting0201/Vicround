@@ -137,6 +137,12 @@ public enum MediaAssetType : byte
     Image = 1,
     Video = 2,
     Document = 3,
+
+    /// <summary>
+    /// 嵌入的 YouTube 影片：檔案不在我們的 Blob。<c>BlobPath</c> 存 11 碼影片 id，
+    /// <c>Url</c> 存 YouTube 的縮圖網址——只認得圖片的地方（卡片、OG、後台縮圖）照樣有圖可顯示。
+    /// </summary>
+    YouTube = 4,
     Other = 99,
 }
 

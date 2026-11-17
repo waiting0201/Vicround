@@ -131,14 +131,23 @@ public sealed record CaseStudyDto
 
     /// <summary>客戶尚未提供成果與實品照時為 null。</summary>
     public string? Result { get; init; }
+
+    /// <summary>成果照片。<see cref="YouTubeId"/> 有值時是那支影片的縮圖。</summary>
     public string? ImageUrl { get; init; }
+
+    /// <summary>成果放的是 YouTube 影片時的 11 碼 id；前台據此改嵌入播放器。</summary>
+    public string? YouTubeId { get; init; }
 
     /// <summary>案例用到的產品（<c>CaseStudyProducts</c>），供產業頁連到產品頁。</summary>
     public IReadOnlyList<ProductRefDto> Products { get; init; } = [];
 }
 
-/// <summary>圖庫的一張圖。<c>Width</c>／<c>Height</c> 讓前台先留位，避免版面跳動。</summary>
-public sealed record ProductImageDto(string Url, string? AltText, string? Caption, int? Width, int? Height);
+/// <summary>
+/// 圖庫的一張圖。<c>Width</c>／<c>Height</c> 讓前台先留位，避免版面跳動。
+/// <c>YouTubeId</c> 有值時這一格是 YouTube 影片，<c>Url</c> 則是它的縮圖。
+/// </summary>
+public sealed record ProductImageDto(
+    string Url, string? AltText, string? Caption, int? Width, int? Height, string? YouTubeId = null);
 
 public sealed record SolutionListItemDto
 {

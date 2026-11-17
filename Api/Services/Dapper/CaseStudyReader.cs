@@ -17,12 +17,20 @@ internal static class CaseStudyReader
     /// </summary>
     public static async Task<IReadOnlyList<CaseStudyDto>> ForSolutionAsync(IDbConnection db, string culture, int solutionId)
     {
-        var args = new { SolutionId = solutionId, culture, DefaultCulture = CultureCodes.Default, Sql.Published };
+        var args = new
+        {
+            SolutionId = solutionId,
+            culture,
+            DefaultCulture = CultureCodes.Default,
+            Sql.Published,
+            YouTube = (byte)MediaAssetType.YouTube,
+        };
 
         var rows = (await db.QueryAsync<CaseStudyRow>(
             $"""
              SELECT e.Id, e.Slug,
                     CASE WHEN m.IsPrivate = 1 OR m.IsArchived = 1 THEN NULL ELSE m.Url END AS ImageUrl,
+                    CASE WHEN m.IsArchived = 0 AND m.Type = @YouTube THEN m.BlobPath END AS YouTubeId,
                     {Sql.Coalesce("ClientProfile")}, {Sql.Coalesce("ProjectName")}, {Sql.Coalesce("Title")},
                     {Sql.Coalesce("Challenge")}, {Sql.Coalesce("Solution")}, {Sql.Coalesce("Result")}
              FROM CaseStudySolutions x
@@ -62,12 +70,13 @@ internal static class CaseStudyReader
             Solution = r.Solution,
             Result = r.Result,
             ImageUrl = r.ImageUrl,
+            YouTubeId = r.YouTubeId,
             Products = products[r.Id].ToList(),
         }).ToList();
     }
 
     private sealed record CaseStudyRow(
-        int Id, string Slug, string? ImageUrl, string? ClientProfile, string? ProjectName, string? Title,
+        int Id, string Slug, string? ImageUrl, string? YouTubeId, string? ClientProfile, string? ProjectName, string? Title,
         string? Challenge, string? Solution, string? Result);
 
     private sealed record CaseStudyProductRow(int CaseStudyId, string Slug, string CategorySlug, string? Code, string? Name);

@@ -99,7 +99,10 @@ export type CaseStudy = {
   challenge: string | null;
   solution: string | null;
   result: string | null;
+  /** 成果照片；`youTubeId` 有值時是那支影片的縮圖。 */
   imageUrl: string | null;
+  /** 成果放的是 YouTube 影片時的影片 id（舊版 API 沒有這個欄位）。 */
+  youTubeId?: string | null;
   products: ProductRef[];
 };
 

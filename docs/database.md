@@ -937,7 +937,7 @@ SiteSettingTranslations   (SettingKey, Culture) → Value nvarchar(max)
 
 ## 11 媒體資產
 
-**API**：`POST /api/admin/media`、`GET /api/admin/media`。公開端不直接暴露媒體端點。
+**API**：`POST /api/admin/media`、`POST /api/admin/media/youtube`、`GET /api/admin/media`。公開端不直接暴露媒體端點。
 
 ```
 MediaAssets
@@ -963,6 +963,13 @@ MediaAssetTranslations (MediaAssetId, Culture)
 
 `MediaAssets` **沒有 `Slug`、沒有 `ContentStatus`**——它不是可發佈內容，用 `IsArchived` 隱藏即可。
 **二進位永不進 SQL**（[CLAUDE.md](../CLAUDE.md) 硬性 convention）。
+
+**YouTube 影片**（2026-11-17，客戶要求產品主圖與案例成果能放影片）也是一筆 `MediaAssets`，
+`Type = YouTube (4)`、`Container = 'youtube'`（不是 Blob 容器）、`BlobPath` 存 11 碼影片 id、
+`Url` 存 YouTube 的 `hqdefault` 縮圖。這樣產品圖庫（`ProductImages`）與案例（`CaseStudies.MediaAssetId`）
+不必加欄位就能放影片，只認得圖片的地方（後台縮圖、OG）也照樣有圖可顯示。公開 API 在
+`ProductImageDto` 與 `CaseStudyDto` 多給一個 `youTubeId`，前台據此改成點了才載入的嵌入播放器。
+產品主視覺是影片時，`heroImageUrl`（OG 圖）改用圖庫裡第一張實際圖片。
 
 ---
 
