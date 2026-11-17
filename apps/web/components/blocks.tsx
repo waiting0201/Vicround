@@ -357,6 +357,8 @@ export function ProductComparisonTable({
 export function MediaSlot({ url, ratio = '4 / 3' }: { url?: string | null; ratio?: string }) {
   return (
     <div
+      // 空框只在桌機兩欄版型裡有意義（撐住另一欄）；手機疊成一欄後就只是一大塊空白，見 globals.css
+      className={url ? undefined : 'vr-media-empty'}
       aria-hidden={url ? undefined : true}
       style={{
         aspectRatio: ratio,

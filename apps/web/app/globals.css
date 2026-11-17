@@ -819,6 +819,10 @@ textarea.vr-input {
   .vr-rwd-split[data-media-right='true'] > * {
     margin-left: 0 !important;
   }
+  /* 還沒有圖的虛線版位（MediaSlot）：桌機靠它撐住兩欄，疊成一欄後只剩一整塊空白，直接收掉 */
+  .vr-media-empty {
+    display: none !important;
+  }
 }
 
 @media (max-width: 639px) {
