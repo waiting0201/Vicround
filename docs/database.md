@@ -1436,6 +1436,11 @@ C 層另有兩支：`ContentImportSeeder`（`import-content`，確認稿文案�
 在匯入時改為草稿，還掛在它們底下的既有型號搬到 JSON 指定的新 family——只搬「還掛在佔位 family」的，
 編輯者在後台調整過的不動。
 `retireDownloads` 列出要下架的下載（過期或被取代的報告），每次匯入都把仍是已發布的改成草稿。
+產品可帶 `gallery`（2026-11-19，客戶交來的產品組圖）：`[{ file, en: { alt }, zh-Hant: { alt } }]`。
+產品**還沒有圖庫**時整組寫入 `ProductImages`、第一張設為主視覺（換掉從 EDM 擷取的舊主圖）；已有圖庫的
+不動排序與主視覺，只替檔名相同、還沒有 alt 的圖補說明。圖庫媒體的冪等鍵是
+`product-docs:gallery:{ProductId}:{sha256}`——每個產品各一份，兩個產品共用同一張圖時 alt 才能各寫各的產品名。
+圖檔先在本機轉成 WebP（寬 ≤ 1600、q85，與後台上傳的轉檔一致）再放進 `reference/product-docs/`。
 下載可帶 `overwriteTexts: true`：已存在時仍以 JSON 的標題、說明與 `fileName` 覆寫翻譯列——
 **只用在客戶親自校過的文字**（首例：2026-10-30 光學膜第三方認證清單），後台要改那幾筆就先拿掉旗標。
 

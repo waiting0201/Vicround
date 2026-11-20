@@ -179,6 +179,8 @@ public sealed class ProductImportSeeder(
             await MoveOffRetiredFamilyAsync(product, source.Parent, cancellationToken);
         }
 
+        await ImportGalleryAsync(product, source, cancellationToken);
+
         // 關聯不論產品是否新建都補：後台若刪掉了某條關聯，這裡會再加回來——
         // 但那正是「只補缺」的定義，要永久拿掉請改 JSON。
         var solutionIds = await db.Solutions
@@ -585,19 +587,121 @@ public sealed class ProductImportSeeder(
         db.ChangeTracker.Clear();
     }
 
+    // ── 產品圖庫 ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 客戶交來的產品組圖（2026-11-19 起）。產品<b>還沒有圖庫</b>時整組寫入、第一張設為主視覺——
+    /// 這會換掉匯入時從 EDM 擷取的舊主圖，那張本來就是組圖到位前的替代品。
+    /// <para>
+    /// 已經有圖庫的產品不動排序與主視覺（那是編輯在後台排過的），只替檔名相同、還沒有 alt 的圖補上說明：
+    /// 例如編輯先從後台傳了同一組圖，客戶的 SEO 說明晚到。
+    /// </para>
+    /// </summary>
+    private async Task ImportGalleryAsync(Product product, ProductSource source, CancellationToken cancellationToken)
+    {
+        if (source.Gallery.Count == 0)
+        {
+            return;
+        }
+
+        var existing = await db.ProductImages
+            .Where(i => i.ProductId == product.Id)
+            .Select(i => new { i.MediaAssetId, i.MediaAsset!.FileName })
+            .ToListAsync(cancellationToken);
+
+        if (existing.Count == 0)
+        {
+            var sort = 0;
+            foreach (var image in source.Gallery)
+            {
+                // 每個產品各一份 MediaAsset（scope = 產品 Id）：alt 是寫在媒體上的，
+                // 兩個產品共用同一張底部特寫時，說明各自寫自己的產品名。
+                var assetId = await UploadAsync(
+                    image.File, $"products/{source.Slug}-{sort + 1:00}", false, cancellationToken, scope: product.Id.ToString());
+                await FillAltTextAsync(assetId, image, cancellationToken);
+
+                db.ProductImages.Add(new ProductImage { ProductId = product.Id, MediaAssetId = assetId, SortOrder = sort });
+                if (sort == 0)
+                {
+                    product.HeroMediaAssetId = assetId;
+                }
+
+                sort++;
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            Count("產品圖庫", sort);
+            return;
+        }
+
+        foreach (var image in source.Gallery)
+        {
+            var stem = Path.GetFileNameWithoutExtension(image.File);
+            var match = existing.FirstOrDefault(e =>
+                string.Equals(Path.GetFileNameWithoutExtension(e.FileName), stem, StringComparison.OrdinalIgnoreCase));
+
+            if (match is not null)
+            {
+                await FillAltTextAsync(match.MediaAssetId, image, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>只補空的 alt；編輯在媒體庫改過的說明不蓋掉。</summary>
+    private async Task FillAltTextAsync(int mediaAssetId, GallerySource image, CancellationToken cancellationToken)
+    {
+        var translations = await db.MediaAssetTranslations
+            .AsTracking()
+            .Where(t => t.MediaAssetId == mediaAssetId)
+            .ToListAsync(cancellationToken);
+
+        var filled = 0;
+        foreach (var (culture, text) in image.Texts())
+        {
+            if (string.IsNullOrWhiteSpace(text.Alt))
+            {
+                continue;
+            }
+
+            var row = translations.FirstOrDefault(t => t.Culture == culture);
+            if (row is null)
+            {
+                db.MediaAssetTranslations.Add(new MediaAssetTranslation
+                {
+                    MediaAssetId = mediaAssetId,
+                    Culture = culture,
+                    AltText = text.Alt,
+                });
+                filled++;
+            }
+            else if (string.IsNullOrWhiteSpace(row.AltText))
+            {
+                row.AltText = text.Alt;
+                filled++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        Count("圖片說明", filled);
+    }
+
     // ── 媒體 ────────────────────────────────────────────────────────────────
 
     /// <summary>
     /// 上傳並建 MediaAsset，回傳其 Id。冪等鍵是內容雜湊加容器：同一份 PDF 被兩個產品資料夾各放一份
     /// （客戶交來的資料常這樣）只會存一次；同一檔案若同時要公開與私有則是兩份，互不影響。
+    /// 給了 <paramref name="scope"/> 就只在該範圍內去重（產品圖庫：每個產品一份，alt 才能各寫各的）。
     /// </summary>
-    private async Task<int> UploadAsync(string relativePath, string blobStem, bool isPrivate, CancellationToken cancellationToken)
+    private async Task<int> UploadAsync(
+        string relativePath, string blobStem, bool isPrivate, CancellationToken cancellationToken, string? scope = null)
     {
         var (content, fileName) = await ReadSourceAsync(relativePath, cancellationToken);
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         var sha256 = Convert.ToHexStringLower(SHA256.HashData(content));
 
-        var key = $"{SourcePrefix}:{(isPrivate ? "private" : "public")}:{sha256}";
+        var key = scope is null
+            ? $"{SourcePrefix}:{(isPrivate ? "private" : "public")}:{sha256}"
+            : $"{SourcePrefix}:gallery:{scope}:{sha256}";
         var existing = await db.MediaAssets
             .Where(m => m.LegacySourceKey == key)
             .Select(m => (int?)m.Id)
@@ -722,10 +826,19 @@ public sealed class ProductImportSeeder(
         public ContentStatus Status { get; set; } = ContentStatus.Published;
         public int SortOrder { get; set; }
         public string? Hero { get; set; }
+        public List<GallerySource> Gallery { get; set; } = [];
         public List<string> Solutions { get; set; } = [];
         public List<string> Certifications { get; set; } = [];
         public List<SpecSource> Specifications { get; set; } = [];
     }
+
+    /// <summary>產品圖庫的一張圖：檔案（相對 --root）與兩個語系的 alt。</summary>
+    private sealed class GallerySource : Bilingual<GalleryText>
+    {
+        public string File { get; set; } = string.Empty;
+    }
+
+    private sealed record GalleryText(string? Alt);
 
     private sealed record ProductText(
         string Name, string? Summary, string? Description, string? ApplicationNote, string? SeoTitle, string? SeoDescription);
